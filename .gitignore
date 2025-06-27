@@ -1,0 +1,44 @@
+
+# Add these to your existing .gitignore
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.*.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Testing
+coverage/
+.nyc_output/
+
+# Build
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Misc
+*.pem
+.vercel
+.netlify
+
+# Never commit these
+private/
+secrets/
+*.key
+*.cert
