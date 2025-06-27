@@ -1,49 +1,133 @@
-import { Shield } from 'lucide-react'
-import Header from './components/Header'
+// src/App.tsx
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Sidebar from './components/Sidebar';
+import Header from './components/Header';
+import Dashboard from './pages/Dashboard';
+import BillingView from './pages/Billing';
+import AppsView from './pages/Apps';
+import MailView from './pages/Mail';
+import ActivityView from './pages/Activity';
+import SettingsView from './pages/Settings';
+import LoginPage from './pages/Login';
+// import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-function App() {
-  // Mock data para testing
-  const mockUser = {
-    nombre: 'Alex',
-    apellido: 'Rodriguez'
-  }
-  
-  const mockTenant = {
-    nombre: 'Mi Empresa Demo'
-  }
+// Temporary mock auth
+const useMockAuth = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [user] = useState({
+    id: '1',
+    email: 'demo@forvara.com',
+    fullName: 'Demo User'
+  });
+
+  const signIn = async (credentials: any) => {
+    // Mock login
+    console.log('Mock login:', credentials);
+    setIsAuthenticated(true);
+  };
+
+  const signOut = async () => {
+    setIsAuthenticated(false);
+  };
+
+  return { isAuthenticated, user, signIn, signOut };
+};
+
+// Protected Route wrapper
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated } = useMockAuth();
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+};
+
+// Main Layout with Sidebar
+const MainLayout = ({ children }: { children: React.ReactNode }) => {
+  const [currentView, setCurrentView] = useState('dashboard');
+  const { user, signOut } = useMockAuth();
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header currentUser={mockUser} currentTenant={mockTenant} />
-      
-      {/* Main Content Area */}
-      <main className="p-6">
-        <div className="text-center py-20">
-          <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Shield className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold text-text mb-4">Bienvenido a Forvara</h1>
-          <p className="text-accent text-lg mb-8">Tu hub empresarial sin abuso de precios</p>
-          
-          {/* App Grid Placeholder */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {['Elaris ERP', 'Forvara Mail', 'Analytics'].map((app) => (
-              <div key={app} className="bg-surface border border-secondary/20 rounded-xl p-6 hover:border-accent/50 transition-colors">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center mb-4">
-                  <Shield className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-text font-semibold mb-2">{app}</h3>
-                <p className="text-accent text-sm mb-4">Aplicación empresarial</p>
-                <button className="w-full bg-gradient-to-r from-primary to-secondary text-white py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">
-                  Abrir
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </main>
+    <div className="flex h-screen bg-background">
+      <Sidebar 
+        onNavigate={setCurrentView} 
+        currentView={currentView}
+        user={user}
+        onSignOut={signOut}
+      />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header user={user} />
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
+      </div>
     </div>
-  )
+  );
+};
+
+function App() {
+  const { isAuthenticated, signIn } = useMockAuth();
+
+  // Set theme on mount
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }, []);
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/login" element={
+          isAuthenticated ? <Navigate to="/" /> : <LoginPage onLogin={signIn} />
+        } />
+        
+        <Route path="/" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Dashboard />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/billing" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <BillingView />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/apps" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <AppsView />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/mail" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <MailView />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/activity" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ActivityView />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <SettingsView />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;

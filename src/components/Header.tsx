@@ -1,61 +1,44 @@
-import { Shield, Bell, Settings, ChevronDown } from 'lucide-react'
+import React from 'react';
+import { Bell, Search } from 'lucide-react';
 
 interface HeaderProps {
-  currentUser?: {
-    nombre: string
-    apellido: string
-    avatar_url?: string
-  }
-  currentTenant?: {
-    nombre: string
-  }
+  user: any;
 }
 
-export default function Header({ currentUser, currentTenant }: HeaderProps) {
+const Header: React.FC<HeaderProps> = ({ user }) => {
   return (
-    <header className="bg-surface border-b border-secondary/20 px-6 py-4 flex items-center justify-between">
-      {/* Logo Forvara */}
-      <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-          <Shield className="w-6 h-6 text-white" />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-text">FORVARA</h1>
-          {currentTenant && (
-            <p className="text-sm text-accent">{currentTenant.nombre}</p>
-          )}
+    <header className="h-16 bg-surface border-b border-white/10 px-8 flex items-center justify-between">
+      <div className="flex-1 max-w-2xl">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text/50" />
+          <input
+            type="text"
+            placeholder="Search apps, billing, settings..."
+            className="w-full pl-10 pr-4 py-2 bg-background rounded-lg border border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+          />
         </div>
       </div>
-
-      {/* User Area */}
-      <div className="flex items-center space-x-4">
-        {/* Notifications */}
-        <button className="relative p-2 text-accent hover:text-text transition-colors">
-          <Bell className="w-5 h-5" />
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full"></span>
+      
+      <div className="flex items-center gap-4 ml-8">
+        <button className="relative p-2 hover:bg-white/5 rounded-lg transition-colors">
+          <Bell className="w-5 h-5 text-text/70" />
+          <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full"></span>
         </button>
-
-        {/* User Menu */}
-        <div className="flex items-center space-x-3 px-3 py-2 bg-background rounded-lg border border-secondary/20 hover:border-accent/50 transition-colors cursor-pointer">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium text-white">
-              {currentUser ? `${currentUser.nombre[0]}${currentUser.apellido[0]}` : 'U'}
+        
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-sm font-medium">{user.fullName}</p>
+            <p className="text-xs text-text/60">{user.email}</p>
+          </div>
+          <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+            <span className="text-sm font-medium text-primary">
+              {user.fullName?.charAt(0) || 'U'}
             </span>
           </div>
-          <div className="text-sm">
-            <p className="text-text font-medium">
-              {currentUser ? `${currentUser.nombre} ${currentUser.apellido}` : 'Usuario'}
-            </p>
-            <p className="text-accent text-xs">Admin</p>
-          </div>
-          <ChevronDown className="w-4 h-4 text-accent" />
         </div>
-
-        {/* Settings */}
-        <button className="p-2 text-accent hover:text-text transition-colors">
-          <Settings className="w-5 h-5" />
-        </button>
       </div>
     </header>
-  )
-}
+  );
+};
+
+export default Header;
