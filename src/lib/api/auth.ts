@@ -1,4 +1,6 @@
+// src/lib/api/auth.ts
 import { supabase, api } from './client';
+import { ForvaraUser } from '../../lib/forvara-sdk';
 
 export interface User {
   id: string;
@@ -6,7 +8,10 @@ export interface User {
   phone?: string;
   fullName?: string;
   avatarUrl?: string;
-  forvara_email?: string;
+  // Extender con los campos de ForvaraUser
+  nombre?: string;
+  apellido?: string;
+  telefono?: string;
 }
 
 export interface Tenant {
@@ -24,47 +29,41 @@ export interface UserTenant {
 }
 
 export const authService = {
-  // Sign up with email or phone
-  async signUp(credentials: { email?: string; phone?: string; password: string }) {
-    const { data, error } = await supabase.auth.signUp(credentials);
-    if (error) throw error;
-    return data;
-  },
-
-  // Sign in
-  async signIn(credentials: { email?: string; phone?: string; password: string }) {
-    const { data, error } = await supabase.auth.signInWithPassword(credentials);
-    if (error) throw error;
-    return data;
-  },
-
-  // Sign out
-  async signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  },
-
-  // Get current user
+  // Los métodos ya no son necesarios aquí porque usamos el SDK
+  // Pero los dejamos por compatibilidad temporal
+  
   async getCurrentUser(): Promise<User | null> {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Usar el SDK en su lugar
+    const { forvaraService } = await import('../../services/forvara');
+    const user = forvaraService.getCurrentUser();
     if (!user) return null;
-
-    // Get extended profile from API
-    try {
-      const profile = await api.get<User>('/api/users/me');
-      return profile;
-    } catch {
-      // Fallback to Supabase user
-      return {
-        id: user.id,
-        email: user.email,
-        phone: user.phone
-      };
-    }
+    
+    return {
+      id: user.id,
+      email: user.email,
+      phone: user.telefono,
+      fullName: `${user.nombre} ${user.apellido}`,
+      nombre: user.nombre,
+      apellido: user.apellido,
+      telefono: user.telefono
+    };
   },
 
-  // Get user's tenants
   async getUserTenants(): Promise<UserTenant[]> {
-    return api.get<UserTenant[]>('/api/tenants');
+    const { forvaraService } = await import('../../services/forvara');
+    const user = forvaraService.getCurrentUser();
+    if (!user) return [];
+    
+    return user.tenants.map(t => ({
+      tenant: {
+        id: t.id,
+        name: t.nombre,
+        identifier: t.ruc,
+        logo_url: undefined,
+        settings: {}
+      },
+      role: t.rol as any,
+      joinedAt: new Date().toISOString()
+    }));
   }
 };

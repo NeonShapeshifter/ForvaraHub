@@ -1,11 +1,17 @@
+// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User as SupabaseUser } from '@supabase/supabase-js';
-import { supabase, api } from '../lib/api/client';
-import { authService, User, Tenant, UserTenant } from '../lib/api/auth';
+import { forvaraService } from '../services/forvara';
+import { ForvaraUser } from '../lib/forvara-sdk';
+
+interface Tenant {
+  id: string;
+  nombre: string;
+  ruc: string;
+  rol: string;
+}
 
 interface AuthContextType {
-  user: User | null;
-  supabaseUser: SupabaseUser | null;
+  user: ForvaraUser | null;
   tenants: Tenant[];
   currentTenant: Tenant | null;
   loading: boolean;
@@ -28,8 +34,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
+  const [user, setUser] = useState<ForvaraUser | null>(null);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,21 +44,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     initializeAuth();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth event:', event);
-      
-      if (event === 'SIGNED_IN' && session) {
-        await loadUserData(session.user);
-      } else if (event === 'SIGNED_OUT') {
-        clearUserData();
-      } else if (event === 'TOKEN_REFRESHED') {
-        // Token was refreshed, update our state if needed
-        console.log('Token refreshed');
-      }
+    // Listen for SDK events
+    forvaraService.client.on('auth:login', (event) => {
+      console.log('Auth login event:', event);
+      loadUserData();
     });
 
-    return () => subscription.unsubscribe();
+    forvaraService.client.on('auth:logout', () => {
+      console.log('Auth logout event');
+      clearUserData();
+    });
+
+    forvaraService.client.on('auth:tenant-changed', (event) => {
+      console.log('Tenant changed event:', event);
+      const tenant = user?.tenants.find(t => t.id === event.data.tenantId);
+      if (tenant) {
+        setCurrentTenant({
+          id: tenant.id,
+          nombre: tenant.nombre,
+          ruc: tenant.ruc,
+          rol: tenant.rol
+        });
+      }
+    });
   }, []);
 
   const initializeAuth = async () => {
@@ -61,11 +74,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       setError(null);
 
-      // Check for existing session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        await loadUserData(session.user);
+      // Check if user is authenticated
+      if (forvaraService.isAuthenticated()) {
+        await loadUserData();
       }
     } catch (err) {
       console.error('Auth initialization error:', err);
@@ -75,30 +86,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const loadUserData = async (supabaseUser: SupabaseUser) => {
+  const loadUserData = async () => {
     try {
-      setSupabaseUser(supabaseUser);
+      const currentUser = forvaraService.getCurrentUser();
+      if (currentUser) {
+        setUser(currentUser);
+        setTenants(currentUser.tenants.map(t => ({
+          id: t.id,
+          nombre: t.nombre,
+          ruc: t.ruc,
+          rol: t.rol
+        })));
 
-      // Get extended user profile from ForvaraCore
-      const profile = await authService.getCurrentUser();
-      if (profile) {
-        setUser(profile);
-
-        // Get user's tenants
-        const userTenants = await authService.getUserTenants();
-        const tenantList = userTenants.map(ut => ut.tenant);
-        setTenants(tenantList);
-
-        // Select tenant
-        const savedTenantId = localStorage.getItem('currentTenantId');
-        const tenantToSelect = savedTenantId 
-          ? tenantList.find(t => t.id === savedTenantId) 
-          : tenantList[0];
-
-        if (tenantToSelect) {
-          setCurrentTenant(tenantToSelect);
-          // Store tenant in API context for subsequent requests
-          api.setCurrentTenant(tenantToSelect.id);
+        // If there's a current tenant in the SDK, use it
+        const currentTenantId = forvaraService.getCurrentTenant();
+        if (currentTenantId) {
+          const tenant = currentUser.tenants.find(t => t.id === currentTenantId);
+          if (tenant) {
+            setCurrentTenant({
+              id: tenant.id,
+              nombre: tenant.nombre,
+              ruc: tenant.ruc,
+              rol: tenant.rol
+            });
+          }
+        } else if (currentUser.tenants.length === 1) {
+          // Auto-select if only one tenant
+          await selectTenant(currentUser.tenants[0].id);
         }
       }
     } catch (err) {
@@ -109,11 +123,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearUserData = () => {
     setUser(null);
-    setSupabaseUser(null);
     setTenants([]);
     setCurrentTenant(null);
-    localStorage.removeItem('currentTenantId');
-    api.setCurrentTenant(null);
   };
 
   const signIn = async (credentials: { email?: string; phone?: string; password: string }) => {
@@ -121,13 +132,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(null);
       setLoading(true);
 
-      const { data, error } = await authService.signIn(credentials);
+      const identifier = credentials.email || credentials.phone || '';
+      const response = await forvaraService.login(identifier, credentials.password);
       
-      if (error) throw error;
-      
-      if (data.user) {
-        await loadUserData(data.user);
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to sign in');
       }
+      
+      // Load user data will be triggered by the auth:login event
     } catch (err: any) {
       console.error('Sign in error:', err);
       setError(err.message || 'Failed to sign in');
@@ -137,32 +149,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (credentials: { email?: string; phone?: string; password: string; fullName?: string }) => {
+  const signUp = async (credentials: { 
+    email?: string; 
+    phone?: string; 
+    password: string; 
+    fullName?: string 
+  }) => {
     try {
       setError(null);
       setLoading(true);
 
-      // First sign up with Supabase
-      const { data, error } = await authService.signUp(credentials);
+      // Parse full name into nombre and apellido
+      const [nombre, ...apellidoParts] = (credentials.fullName || 'Usuario').split(' ');
+      const apellido = apellidoParts.join(' ') || 'Nuevo';
+
+      const response = await forvaraService.register({
+        nombre,
+        apellido,
+        telefono: credentials.phone || '',
+        email: credentials.email,
+        password: credentials.password
+      });
       
-      if (error) throw error;
-
-      // Then create profile in ForvaraCore
-      if (data.user && credentials.fullName) {
-        try {
-          await api.post('/api/users/profile', {
-            full_name: credentials.fullName,
-            phone: credentials.phone
-          });
-        } catch (profileError) {
-          console.error('Profile creation error:', profileError);
-          // Continue even if profile creation fails
-        }
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to sign up');
       }
 
-      if (data.user) {
-        await loadUserData(data.user);
-      }
+      // After successful registration, log them in
+      const identifier = credentials.email || credentials.phone || '';
+      await signIn({ 
+        email: credentials.email, 
+        phone: credentials.phone, 
+        password: credentials.password 
+      });
     } catch (err: any) {
       console.error('Sign up error:', err);
       setError(err.message || 'Failed to sign up');
@@ -175,36 +194,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setError(null);
-      await authService.signOut();
-      clearUserData();
+      await forvaraService.logout();
+      // clearUserData will be triggered by the auth:logout event
     } catch (err: any) {
       console.error('Sign out error:', err);
       setError(err.message || 'Failed to sign out');
     }
   };
 
-  const selectTenant = (tenantId: string) => {
-    const tenant = tenants.find(t => t.id === tenantId);
-    if (tenant) {
-      setCurrentTenant(tenant);
-      localStorage.setItem('currentTenantId', tenantId);
-      api.setCurrentTenant(tenantId);
-      
-      // Refresh user data with new tenant context
-      refreshUser();
+  const selectTenant = async (tenantId: string) => {
+    try {
+      const success = await forvaraService.selectTenant(tenantId);
+      if (success) {
+        const tenant = tenants.find(t => t.id === tenantId);
+        if (tenant) {
+          setCurrentTenant(tenant);
+        }
+      }
+    } catch (err) {
+      console.error('Select tenant error:', err);
+      setError('Failed to select tenant');
     }
   };
 
   const refreshUser = async () => {
-    if (supabaseUser) {
-      await loadUserData(supabaseUser);
-    }
+    await loadUserData();
   };
 
   return (
     <AuthContext.Provider value={{
       user,
-      supabaseUser,
       tenants,
       currentTenant,
       loading,

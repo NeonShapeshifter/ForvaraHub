@@ -1,18 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, 
-  X, 
-  LayoutDashboard, 
-  CreditCard, 
-  Grid3x3, 
-  Mail, 
-  Activity, 
-  Settings,
+  Command, 
+  ArrowUp, 
+  ArrowDown, 
+  Enter,
   Package,
-  FileText,
+  Mail,
+  CreditCard,
+  Settings,
+  Activity,
   Users,
-  ChevronRight,
-  Command
+  FileText,
+  BarChart3,
+  HelpCircle,
+  LogOut,
+  Building2,
+  Moon,
+  Sun,
+  ChevronRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalStore } from '../stores/useGlobalStore';

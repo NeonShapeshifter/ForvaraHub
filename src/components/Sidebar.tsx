@@ -1,3 +1,4 @@
+// src/components/Sidebar.tsx
 import React, { useState } from 'react';
 import { 
   LayoutDashboard, 
@@ -12,7 +13,9 @@ import {
   Building2,
   LogOut,
   ChevronDown,
-  Package
+  Package,
+  Users,
+  UserPlus
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -47,8 +50,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, currentView, user, onSign
       ]
     },
     {
-      section: 'account',
+      section: 'manage',
       items: [
+        { id: 'team', label: 'Team', icon: Users },
         { id: 'settings', label: 'Settings', icon: Settings },
         { id: 'help', label: 'Help & Support', icon: HelpCircle }
       ]
@@ -124,6 +128,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onNavigate, currentView, user, onSign
               <span className="font-medium">1.2/3 GB</span>
             </div>
           </div>
+          <button 
+            onClick={() => handleNavClick('team')}
+            className="w-full mt-3 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          >
+            <UserPlus className="w-4 h-4" />
+            Invite Team
+          </button>
         </div>
       </nav>
 
