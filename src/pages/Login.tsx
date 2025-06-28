@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Shield, Mail, Phone, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 
-const LoginPage = ({ onLogin }: { onLogin: (credentials: any) => Promise<void> }) => {
+const LoginPage = ({ onLogin, onSignUp }: { onLogin: (credentials: any) => Promise<void>; onSignUp?: (credentials: any) => Promise<void> }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [showPassword, setShowPassword] = useState(false);
@@ -12,24 +12,44 @@ const LoginPage = ({ onLogin }: { onLogin: (credentials: any) => Promise<void> }
     email: '',
     phone: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    fullName: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (isSignUp && formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
+    if (isSignUp) {
+      if (formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
+      if (!formData.fullName.trim()) {
+        setError('Please enter your full name');
+        return;
+      }
     }
 
     setLoading(true);
     try {
-      await onLogin({
+      const credentials = {
         [loginMethod]: formData[loginMethod],
-        password: formData.password
-      });
+        password: formData.password,
+        ...(isSignUp && { fullName: formData.fullName })
+      };
+
+      if (isSignUp && onSignUp) {
+        await onSignUp(credentials);
+      } else {
+        await onLogin(credentials);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed');
+    } finally {
+      setLoading(false);
+    }
+  };
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     } finally {
@@ -102,6 +122,21 @@ const LoginPage = ({ onLogin }: { onLogin: (credentials: any) => Promise<void> }
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignUp && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Full Name</label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 bg-background rounded-lg border border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+            )}
+
             {loginMethod === 'email' ? (
               <div>
                 <label className="block text-sm font-medium mb-2">Email</label>
