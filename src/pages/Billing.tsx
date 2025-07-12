@@ -1,413 +1,696 @@
-// src/pages/Billing.tsx
-import React, { useState } from 'react';
-import { 
-  CreditCard, 
-  Package, 
-  Users, 
-  HardDrive, 
-  TrendingUp, 
+import React, { useState } from 'react'
+import {
+  CreditCard,
+  DollarSign,
   Calendar,
-  Plus,
+  Download,
+  Eye,
+  ChevronRight,
   Check,
   X,
   AlertCircle,
   Zap,
-  Download,
-  ChevronRight,
-  Loader2
-} from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useBillingSummary, useUsageStats } from '../hooks/useBilling';
-import { useInstalledApps, useAvailableApps } from '../hooks/useApps';
+  Crown,
+  Package,
+  Users,
+  Clock,
+  TrendingUp,
+  Receipt,
+  Plus,
+  ExternalLink,
+  FileText,
+  Shield,
+  Star,
+  Sparkles
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs'
+import { useTenantStore } from '@/stores/tenantStore'
 
-const BillingView = () => {
-  const { currentTenant } = useAuth();
-  const [selectedTab, setSelectedTab] = useState<'overview' | 'subscriptions' | 'invoices'>('overview');
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [selectedApp, setSelectedApp] = useState<string | null>(null);
+interface Subscription {
+  id: string
+  app_name: string
+  app_id: string
+  plan_name: string
+  status: 'active' | 'trial' | 'cancelled' | 'past_due'
+  amount: number
+  billing_cycle: 'monthly' | 'yearly'
+  current_period_start: string
+  current_period_end: string
+  trial_end?: string
+  users_limit: number
+  users_used: number
+  features: string[]
+  next_billing_date: string
+  auto_renew: boolean
+}
 
-  // Fetch real data
-  const { data: billingSummary, loading: billingLoading } = useBillingSummary();
-  const { data: usageStats, loading: usageLoading } = useUsageStats();
-  const { data: installedApps, loading: appsLoading } = useInstalledApps();
-  const { data: availableApps } = useAvailableApps();
+interface Invoice {
+  id: string
+  number: string
+  amount: number
+  status: 'paid' | 'pending' | 'failed' | 'refunded'
+  issued_date: string
+  due_date: string
+  paid_date?: string
+  items: {
+    description: string
+    amount: number
+    period: string
+  }[]
+  payment_method?: string
+}
 
-  const isLoading = billingLoading || usageLoading || appsLoading;
+interface PaymentMethod {
+  id: string
+  type: 'card' | 'bank'
+  brand?: string
+  last4: string
+  expiry?: string
+  is_default: boolean
+  name: string
+}
 
-  // Calculate savings vs competitors
-  const calculateSavings = () => {
-    // Elaris competitors charge ~$110 for 5 users
-    // We charge $50 for 10 users
-    const competitorMonthly = installedApps?.length ? installedApps.length * 110 : 0;
-    const ourMonthly = billingSummary?.total_monthly || 0;
-    return Math.max(0, competitorMonthly - ourMonthly);
-  };
+export default function Billing() {
+  const { currentTenant } = useTenantStore()
+  const [activeTab, setActiveTab] = useState('overview')
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+  // Mock data
+  const mockSubscriptions: Subscription[] = [
+    {
+      id: '1',
+      app_name: 'Elaris ERP',
+      app_id: 'elaris-erp',
+      plan_name: 'Pro',
+      status: 'active',
+      amount: 5900, // $59.00
+      billing_cycle: 'monthly',
+      current_period_start: '2024-01-15T00:00:00Z',
+      current_period_end: '2024-02-15T00:00:00Z',
+      users_limit: 50,
+      users_used: 12,
+      features: ['Up to 50 users', 'Advanced inventory', 'Financial reports', 'Priority support', 'API access'],
+      next_billing_date: '2024-02-15T00:00:00Z',
+      auto_renew: true
+    },
+    {
+      id: '2',
+      app_name: 'ForvaraMail',
+      app_id: 'forvara-mail',
+      plan_name: 'Team',
+      status: 'trial',
+      amount: 800, // $8.00
+      billing_cycle: 'monthly',
+      current_period_start: '2024-01-12T00:00:00Z',
+      current_period_end: '2024-02-11T00:00:00Z',
+      trial_end: '2024-02-11T00:00:00Z',
+      users_limit: 25,
+      users_used: 8,
+      features: ['Unlimited messages', 'File sharing', 'Voice calls', 'Basic integrations'],
+      next_billing_date: '2024-02-11T00:00:00Z',
+      auto_renew: false
+    },
+    {
+      id: '3',
+      app_name: 'ForvaraStorage',
+      app_id: 'forvara-storage',
+      plan_name: 'Extended',
+      status: 'active',
+      amount: 1500, // $15.00
+      billing_cycle: 'monthly',
+      current_period_start: '2024-01-01T00:00:00Z',
+      current_period_end: '2024-02-01T00:00:00Z',
+      users_limit: 0, // Storage doesn't have user limits
+      users_used: 0,
+      features: ['Additional 50GB storage', 'Priority sync', 'Advanced sharing'],
+      next_billing_date: '2024-02-01T00:00:00Z',
+      auto_renew: true
+    }
+  ]
+
+  const mockInvoices: Invoice[] = [
+    {
+      id: '1',
+      number: 'INV-2024-001',
+      amount: 7400, // $74.00
+      status: 'paid',
+      issued_date: '2024-01-15T00:00:00Z',
+      due_date: '2024-01-15T00:00:00Z',
+      paid_date: '2024-01-15T08:30:00Z',
+      items: [
+        { description: 'Elaris ERP - Pro Plan', amount: 5900, period: 'Jan 15 - Feb 15, 2024' },
+        { description: 'ForvaraStorage - Extended', amount: 1500, period: 'Jan 15 - Feb 15, 2024' }
+      ],
+      payment_method: 'Visa •••• 4242'
+    },
+    {
+      id: '2',
+      number: 'INV-2024-002',
+      amount: 7400,
+      status: 'pending',
+      issued_date: '2024-02-15T00:00:00Z',
+      due_date: '2024-02-15T00:00:00Z',
+      items: [
+        { description: 'Elaris ERP - Pro Plan', amount: 5900, period: 'Feb 15 - Mar 15, 2024' },
+        { description: 'ForvaraStorage - Extended', amount: 1500, period: 'Feb 15 - Mar 15, 2024' }
+      ]
+    },
+    {
+      id: '3',
+      number: 'INV-2023-045',
+      amount: 5900,
+      status: 'paid',
+      issued_date: '2023-12-15T00:00:00Z',
+      due_date: '2023-12-15T00:00:00Z',
+      paid_date: '2023-12-15T10:22:00Z',
+      items: [
+        { description: 'Elaris ERP - Pro Plan', amount: 5900, period: 'Dec 15 - Jan 15, 2024' }
+      ],
+      payment_method: 'Visa •••• 4242'
+    }
+  ]
+
+  const mockPaymentMethods: PaymentMethod[] = [
+    {
+      id: '1',
+      type: 'card',
+      brand: 'Visa',
+      last4: '4242',
+      expiry: '12/26',
+      is_default: true,
+      name: 'Business Visa'
+    },
+    {
+      id: '2',
+      type: 'card',
+      brand: 'Mastercard',
+      last4: '8888',
+      expiry: '08/25',
+      is_default: false,
+      name: 'Backup Card'
+    }
+  ]
+
+  const formatPrice = (cents: number) => {
+    return (cents / 100).toLocaleString('en-US', {
       style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
-
-  const getUsagePercentage = (current: number, limit: number) => {
-    return Math.round((current / limit) * 100);
-  };
-
-  // Format date
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  // Get available addons (apps not yet installed)
-  const availableAddons = availableApps?.filter(app => 
-    !installedApps?.some(installed => installed.app.id === app.id)
-  ) || [];
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-text/60">Loading billing information...</p>
-        </div>
-      </div>
-    );
+      currency: 'USD'
+    })
   }
 
-  if (!currentTenant) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-          <p className="text-text/60">Please select a company to view billing</p>
-        </div>
-      </div>
-    );
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800'
+      case 'trial': return 'bg-blue-100 text-blue-800'
+      case 'cancelled': return 'bg-red-100 text-red-800'
+      case 'past_due': return 'bg-yellow-100 text-yellow-800'
+      case 'paid': return 'bg-green-100 text-green-800'
+      case 'pending': return 'bg-yellow-100 text-yellow-800'
+      case 'failed': return 'bg-red-100 text-red-800'
+      case 'refunded': return 'bg-gray-100 text-gray-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
   }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active': return Check
+      case 'trial': return Clock
+      case 'cancelled': return X
+      case 'past_due': return AlertCircle
+      case 'paid': return Check
+      case 'pending': return Clock
+      case 'failed': return X
+      default: return AlertCircle
+    }
+  }
+
+  const totalMonthlySpend = mockSubscriptions
+    .filter(sub => sub.status === 'active' && sub.billing_cycle === 'monthly')
+    .reduce((sum, sub) => sum + sub.amount, 0)
+
+  const nextBillingAmount = mockSubscriptions
+    .filter(sub => sub.status === 'active' || (sub.status === 'trial' && sub.auto_renew))
+    .reduce((sum, sub) => sum + sub.amount, 0)
+
+  const trialSubscriptions = mockSubscriptions.filter(sub => sub.status === 'trial')
 
   return (
-    <div className="flex-1 bg-background">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="bg-surface border-b border-white/10">
-        <div className="px-8 py-6">
-          <h1 className="text-3xl font-bold mb-2">Billing & Usage</h1>
-          <p className="text-text/70">Manage your subscriptions and track usage across all apps</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Billing & Subscriptions</h1>
+          <p className="text-gray-600">Manage your subscriptions, invoices, and payment methods</p>
         </div>
         
-        {/* Tabs */}
-        <div className="px-8 flex gap-6">
-          <button
-            onClick={() => setSelectedTab('overview')}
-            className={`pb-4 px-2 border-b-2 transition-colors ${
-              selectedTab === 'overview' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-text/70 hover:text-text'
-            }`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setSelectedTab('subscriptions')}
-            className={`pb-4 px-2 border-b-2 transition-colors ${
-              selectedTab === 'subscriptions' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-text/70 hover:text-text'
-            }`}
-          >
-            Subscriptions
-          </button>
-          <button
-            onClick={() => setSelectedTab('invoices')}
-            className={`pb-4 px-2 border-b-2 transition-colors ${
-              selectedTab === 'invoices' 
-                ? 'border-primary text-primary' 
-                : 'border-transparent text-text/70 hover:text-text'
-            }`}
-          >
-            Invoices
-          </button>
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
+          <Button size="sm">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Payment Method
+          </Button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-8">
-        {selectedTab === 'overview' && (
-          <div className="space-y-6">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Monthly Total */}
-              <div className="bg-surface rounded-xl p-6 border border-white/10">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 bg-primary/20 rounded-lg">
-                    <CreditCard className="w-6 h-6 text-primary" />
-                  </div>
-                  <span className="text-sm text-accent bg-accent/20 px-2 py-1 rounded-full">
-                    Active
-                  </span>
-                </div>
-                <h3 className="text-3xl font-bold mb-1">
-                  {formatCurrency(billingSummary?.total_monthly || 0)}
-                </h3>
-                <p className="text-text/60 text-sm">Monthly total</p>
-                {calculateSavings() > 0 && (
-                  <div className="mt-4 flex items-center text-sm text-green-400">
-                    <TrendingUp className="w-4 h-4 mr-1" />
-                    Saving {formatCurrency(calculateSavings())}/mo vs competitors
-                  </div>
-                )}
+      {/* Billing Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Monthly Spend</p>
+                <p className="text-2xl font-bold text-gray-900">{formatPrice(totalMonthlySpend)}</p>
               </div>
-
-              {/* Next Billing */}
-              <div className="bg-surface rounded-xl p-6 border border-white/10">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 bg-secondary/20 rounded-lg">
-                    <Calendar className="w-6 h-6 text-secondary" />
-                  </div>
-                </div>
-                <h3 className="text-xl font-semibold mb-1">
-                  {formatDate(billingSummary?.next_billing_date || null)}
-                </h3>
-                <p className="text-text/60 text-sm">Next billing date</p>
-                {billingSummary?.payment_method && (
-                  <div className="mt-4">
-                    <p className="text-sm text-text/70">
-                      {billingSummary.payment_method.brand} •••• {billingSummary.payment_method.last4}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Active Apps */}
-              <div className="bg-surface rounded-xl p-6 border border-white/10">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 bg-accent/20 rounded-lg">
-                    <Package className="w-6 h-6 text-accent" />
-                  </div>
-                </div>
-                <h3 className="text-3xl font-bold mb-1">
-                  {billingSummary?.subscriptions.length || 0}
-                </h3>
-                <p className="text-text/60 text-sm">Active applications</p>
-                <button 
-                  onClick={() => window.location.href = '/apps'}
-                  className="mt-4 text-sm text-primary hover:text-primary/80 flex items-center gap-1"
-                >
-                  Discover more apps
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <DollarSign className="w-5 h-5 text-blue-600" />
               </div>
             </div>
+            <p className="text-xs text-gray-500 mt-2">
+              +12% from last month
+            </p>
+          </CardContent>
+        </Card>
 
-            {/* Usage Overview */}
-            {usageStats && (
-              <div className="bg-surface rounded-xl p-6 border border-white/10">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-accent" />
-                  Resource Usage
-                </h3>
-                <div className="space-y-4">
-                  {/* Users */}
-                  {usageStats.users && (
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-text/60 flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          Users
-                        </span>
-                        <span className="text-text/80">
-                          {usageStats.users.current}/{usageStats.users.limit}
-                        </span>
-                      </div>
-                      <div className="h-2 bg-background rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary transition-all duration-300"
-                          style={{ width: `${getUsagePercentage(usageStats.users.current, usageStats.users.limit)}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Storage */}
-                  {usageStats.storage && (
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-text/60 flex items-center gap-1">
-                          <HardDrive className="w-4 h-4" />
-                          Storage
-                        </span>
-                        <span className="text-text/80">
-                          {usageStats.storage.current_gb}/{usageStats.storage.limit_gb} GB
-                        </span>
-                      </div>
-                      <div className="h-2 bg-background rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-accent transition-all duration-300"
-                          style={{ width: `${getUsagePercentage(usageStats.storage.current_gb, usageStats.storage.limit_gb)}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Apps</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {mockSubscriptions.filter(s => s.status === 'active').length}
+                </p>
               </div>
-            )}
-
-            {/* Available Add-ons */}
-            {availableAddons.length > 0 && (
-              <div className="bg-surface rounded-xl p-6 border border-white/10">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Available Apps</h3>
-                  <span className="text-sm text-text/60">Expand your capabilities</span>
-                </div>
-                <div className="grid gap-4">
-                  {availableAddons.slice(0, 3).map(app => (
-                    <div key={app.id} className="flex items-center justify-between p-4 bg-background rounded-lg">
-                      <div className="flex-1">
-                        <h4 className="font-medium">{app.displayName}</h4>
-                        <p className="text-sm text-text/60 mt-1">{app.description}</p>
-                      </div>
-                      <div className="text-right ml-4">
-                        <p className="font-semibold">{formatCurrency(app.pricing.monthly)}/mo</p>
-                        <button 
-                          onClick={() => window.location.href = `/apps/${app.id}`}
-                          className="mt-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors"
-                        >
-                          View
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Package className="w-5 h-5 text-green-600" />
               </div>
-            )}
-          </div>
-        )}
-
-        {selectedTab === 'subscriptions' && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-6">
-              <p className="text-text/70">Manage your active subscriptions and add-ons</p>
-              <button 
-                onClick={() => window.location.href = '/apps'}
-                className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium flex items-center gap-2 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Add New App
-              </button>
             </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {trialSubscriptions.length} trials active
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Next Billing</p>
+                <p className="text-2xl font-bold text-gray-900">{formatPrice(nextBillingAmount)}</p>
+              </div>
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Calendar className="w-5 h-5 text-purple-600" />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Feb 15, 2024
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Users</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {mockSubscriptions.reduce((sum, sub) => sum + sub.users_used, 0)}
+                </p>
+              </div>
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Users className="w-5 h-5 text-orange-600" />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              of {mockSubscriptions.reduce((sum, sub) => sum + sub.users_limit, 0)} licensed
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Trials Alert */}
+      {trialSubscriptions.length > 0 && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-start space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Sparkles className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-medium text-blue-900">Active Trials</h3>
+                <p className="text-sm text-blue-700 mt-1">
+                  You have {trialSubscriptions.length} trial(s) ending soon. Convert to paid plans to continue using these features.
+                </p>
+                <div className="flex items-center space-x-4 mt-3">
+                  {trialSubscriptions.map(sub => {
+                    const daysLeft = Math.ceil((new Date(sub.trial_end!).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                    return (
+                      <div key={sub.id} className="flex items-center space-x-2">
+                        <Badge variant="outline" className="bg-white">
+                          {sub.app_name}
+                        </Badge>
+                        <span className="text-sm text-blue-700">{daysLeft} days left</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                Upgrade Trials
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Main Content Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Subscriptions</TabsTrigger>
+          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+          <TabsTrigger value="payment-methods">Payment Methods</TabsTrigger>
+          <TabsTrigger value="usage">Usage</TabsTrigger>
+        </TabsList>
+
+        {/* Subscriptions Tab */}
+        <TabsContent value="overview" className="space-y-4">
+          {mockSubscriptions.map((subscription) => {
+            const StatusIcon = getStatusIcon(subscription.status)
+            const usagePercentage = subscription.users_limit > 0 
+              ? (subscription.users_used / subscription.users_limit) * 100 
+              : 0
             
-            {billingSummary?.subscriptions && billingSummary.subscriptions.length > 0 ? (
-              billingSummary.subscriptions.map(sub => (
-                <div key={sub.id} className="bg-surface rounded-xl p-6 border border-white/10">
+            return (
+              <Card key={subscription.id}>
+                <CardContent className="p-6">
                   <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-xl font-semibold mb-1">{sub.app_name}</h3>
-                      <p className="text-text/60 mb-4">{sub.plan_name} Plan</p>
-                      
-                      <div className="space-y-2 mb-4">
-                        {sub.features && Object.entries(sub.features).map(([key, value]) => (
-                          <div key={key} className="flex items-center gap-2 text-sm">
-                            <Check className="w-4 h-4 text-green-400" />
-                            <span className="text-text/80">
-                              {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: {
-                                typeof value === 'number' ? value : 
-                                Array.isArray(value) ? value.join(', ') : 
-                                String(value)
-                              }
-                            </span>
-                          </div>
-                        ))}
+                    <div className="flex items-start space-x-4">
+                      <div className="p-3 bg-blue-100 rounded-lg">
+                        <Package className="w-6 h-6 text-blue-600" />
                       </div>
                       
-                      {sub.addons && sub.addons.length > 0 && (
-                        <div className="mb-4">
-                          <p className="text-sm font-medium mb-2">Active Add-ons:</p>
-                          <div className="flex gap-2">
-                            {sub.addons.map(addon => (
-                              <span key={addon} className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm">
-                                {addon}
-                              </span>
-                            ))}
-                          </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <h3 className="text-lg font-semibold">{subscription.app_name}</h3>
+                          <Badge className={getStatusColor(subscription.status)}>
+                            <StatusIcon className="w-3 h-3 mr-1" />
+                            {subscription.status}
+                          </Badge>
+                          {subscription.status === 'trial' && (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                              <Crown className="w-3 h-3 mr-1" />
+                              Trial
+                            </Badge>
+                          )}
                         </div>
+                        
+                        <p className="text-gray-600 mb-3">{subscription.plan_name} Plan</p>
+                        
+                        {/* Features */}
+                        <div className="space-y-2 mb-4">
+                          {subscription.features.slice(0, 3).map((feature, index) => (
+                            <div key={index} className="flex items-center space-x-2 text-sm text-gray-600">
+                              <Check className="w-4 h-4 text-green-500" />
+                              <span>{feature}</span>
+                            </div>
+                          ))}
+                          {subscription.features.length > 3 && (
+                            <p className="text-sm text-gray-500">+{subscription.features.length - 3} more features</p>
+                          )}
+                        </div>
+
+                        {/* Usage */}
+                        {subscription.users_limit > 0 && (
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Users</span>
+                              <span className="font-medium">
+                                {subscription.users_used} / {subscription.users_limit}
+                              </span>
+                            </div>
+                            <Progress value={usagePercentage} className="h-2" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="text-right space-y-2">
+                      <div className="text-2xl font-bold">
+                        {formatPrice(subscription.amount)}
+                        <span className="text-sm font-normal text-gray-500">
+                          /{subscription.billing_cycle === 'monthly' ? 'mo' : 'yr'}
+                        </span>
+                      </div>
+                      
+                      {subscription.status === 'trial' && subscription.trial_end && (
+                        <p className="text-sm text-blue-600">
+                          Trial ends {new Date(subscription.trial_end).toLocaleDateString()}
+                        </p>
+                      )}
+                      
+                      {subscription.status === 'active' && (
+                        <p className="text-sm text-gray-500">
+                          Next billing {new Date(subscription.next_billing_date).toLocaleDateString()}
+                        </p>
                       )}
 
-                      <div className="flex items-center gap-2 text-sm text-text/60">
-                        <Calendar className="w-4 h-4" />
-                        <span>
-                          {sub.status === 'trial' 
-                            ? `Trial ends ${formatDate(sub.current_period_end)}`
-                            : `Renews ${formatDate(sub.current_period_end)}`
-                          }
-                        </span>
+                      <div className="flex space-x-2">
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4 mr-2" />
+                          Details
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Manage
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </TabsContent>
+
+        {/* Invoices Tab */}
+        <TabsContent value="invoices" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Invoice History</CardTitle>
+              <CardDescription>
+                View and download your billing history
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Invoice</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mockInvoices.map((invoice) => {
+                    const StatusIcon = getStatusIcon(invoice.status)
+                    return (
+                      <TableRow key={invoice.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{invoice.number}</div>
+                            <div className="text-sm text-gray-500">
+                              {invoice.items.length} item(s)
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">
+                              {new Date(invoice.issued_date).toLocaleDateString()}
+                            </div>
+                            {invoice.paid_date && (
+                              <div className="text-sm text-gray-500">
+                                Paid {new Date(invoice.paid_date).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {formatPrice(invoice.amount)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(invoice.status)}>
+                            <StatusIcon className="w-3 h-3 mr-1" />
+                            {invoice.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button variant="outline" size="sm">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              <Download className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Payment Methods Tab */}
+        <TabsContent value="payment-methods" className="space-y-4">
+          <div className="grid gap-4">
+            {mockPaymentMethods.map((method) => (
+              <Card key={method.id} className={method.is_default ? 'ring-2 ring-blue-500' : ''}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="p-2 bg-gray-100 rounded-lg">
+                        <CreditCard className="w-6 h-6 text-gray-600" />
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-medium">{method.name}</h3>
+                          {method.is_default && (
+                            <Badge className="bg-blue-100 text-blue-800">
+                              <Star className="w-3 h-3 mr-1" />
+                              Default
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          {method.brand} •••• {method.last4}
+                          {method.expiry && ` • Expires ${method.expiry}`}
+                        </p>
                       </div>
                     </div>
                     
-                    <div className="text-right">
-                      <p className="text-2xl font-bold mb-2">{formatCurrency(sub.price_monthly)}</p>
-                      <p className="text-sm text-text/60 mb-4">per month</p>
-                      <button 
-                        onClick={() => window.location.href = `/apps/${sub.app_name.toLowerCase().replace(/\s+/g, '-')}`}
-                        className="text-sm text-primary hover:text-primary/80"
-                      >
-                        Manage →
-                      </button>
+                    <div className="flex space-x-2">
+                      {!method.is_default && (
+                        <Button variant="outline" size="sm">
+                          Set Default
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm">
+                        Edit
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                        Remove
+                      </Button>
                     </div>
                   </div>
-                </div>
-              ))
-            ) : (
-              <div className="bg-surface rounded-xl p-12 border border-white/10 text-center">
-                <Package className="w-16 h-16 text-text/20 mx-auto mb-4" />
-                <p className="text-text/60 mb-4">No active subscriptions</p>
-                <button 
-                  onClick={() => window.location.href = '/apps'}
-                  className="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium"
-                >
-                  Browse Apps
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+                </CardContent>
+              </Card>
+            ))}
 
-        {selectedTab === 'invoices' && (
-          <div className="space-y-4">
-            <p className="text-text/70 mb-6">Download your billing history and invoices</p>
-            
-            <div className="bg-surface rounded-xl border border-white/10 overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left p-4 text-sm font-medium text-text/60">Date</th>
-                    <th className="text-left p-4 text-sm font-medium text-text/60">Amount</th>
-                    <th className="text-left p-4 text-sm font-medium text-text/60">Status</th>
-                    <th className="text-right p-4 text-sm font-medium text-text/60">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* TODO: Fetch real invoices from API */}
-                  <tr>
-                    <td colSpan={4} className="p-8 text-center text-text/60">
-                      <Download className="w-12 h-12 text-text/20 mx-auto mb-4" />
-                      <p>No invoices available yet</p>
-                      <p className="text-sm mt-2">Invoices will appear here after your first billing cycle</p>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <Card className="border-dashed">
+              <CardContent className="p-6 text-center">
+                <CreditCard className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                <h3 className="font-medium text-gray-900 mb-2">Add Payment Method</h3>
+                <p className="text-gray-600 mb-4">Add a backup payment method for your subscriptions</p>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Card or Bank Account
+                </Button>
+              </CardContent>
+            </Card>
           </div>
-        )}
-      </div>
+        </TabsContent>
+
+        {/* Usage Tab */}
+        <TabsContent value="usage" className="space-y-4">
+          <div className="grid gap-4">
+            {mockSubscriptions.map((subscription) => (
+              <Card key={subscription.id}>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Package className="w-5 h-5" />
+                    <span>{subscription.app_name}</span>
+                    <Badge variant="outline">{subscription.plan_name}</Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    Current billing period: {new Date(subscription.current_period_start).toLocaleDateString()} - {new Date(subscription.current_period_end).toLocaleDateString()}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {subscription.users_limit > 0 ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">User Licenses</span>
+                        <span className="text-sm text-gray-600">
+                          {subscription.users_used} / {subscription.users_limit} used
+                        </span>
+                      </div>
+                      <Progress 
+                        value={(subscription.users_used / subscription.users_limit) * 100} 
+                        className="h-3"
+                      />
+                      <div className="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                          <div className="text-2xl font-bold text-green-600">{subscription.users_used}</div>
+                          <div className="text-xs text-gray-500">Active Users</div>
+                        </div>
+                        <div>
+                          <div className="text-2xl font-bold text-blue-600">
+                            {subscription.users_limit - subscription.users_used}
+                          </div>
+                          <div className="text-xs text-gray-500">Available</div>
+                        </div>
+                        <div>
+                          <div className="text-2xl font-bold text-gray-600">{subscription.users_limit}</div>
+                          <div className="text-xs text-gray-500">Total Licensed</div>
+                        </div>
+                      </div>
+                      
+                      {subscription.users_used / subscription.users_limit > 0.8 && (
+                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <AlertCircle className="w-4 h-4 text-yellow-600" />
+                            <span className="text-sm text-yellow-800">
+                              You're using {Math.round((subscription.users_used / subscription.users_limit) * 100)}% of your licenses
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Shield className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-600">This subscription doesn't have user limits</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
-  );
-};
-
-export default BillingView;
+  )
+}

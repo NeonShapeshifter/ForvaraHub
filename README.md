@@ -131,7 +131,7 @@ This project is currently in early development. Contribution guidelines will be 
 
 ## 📄 License
 
-Proprietary - © 2024 ForvaraSoft. All rights reserved.
+Proprietary - © 2025 ForvaraSoft. All rights reserved.
 
 ## 🔗 Related Projects
 

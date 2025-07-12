@@ -1,5 +1,27 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Add these to your existing .gitignore
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # Environment variables
 .env
@@ -17,20 +39,12 @@
 .DS_Store
 Thumbs.db
 
-# Logs
-logs/
-*.log
-
 # Testing
 coverage/
 .nyc_output/
 
 # Build
-dist/
 build/
-
-# Dependencies
-node_modules/
 
 # Misc
 *.pem
@@ -42,3 +56,16 @@ private/
 secrets/
 *.key
 *.cert
+
+# Documentación interna/privada (solo para desarrollo)
+CLAUDE.md
+INTEGRATION_ROADMAP.md
+
+# Archivos de deployment (pueden contener info sensible)
+Dockerfile
+nginx.conf
+
+# Data mock (puede contener info de testing)
+src/lib/mockData.ts
+
+# Mantener solo README público

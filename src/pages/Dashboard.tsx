@@ -1,294 +1,418 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/hooks/useAuth'
+import { useNotificationStore } from '@/stores/notificationStore'
+import { useAppsStore } from '@/stores/appsStore'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import apiClient from '@/services/api'
+import { formatBytes } from '@/lib/utils'
 import { 
-  Package, 
-  Mail, 
-  BarChart3, 
   Users, 
-  Activity,
-  TrendingUp,
-  Clock,
-  ArrowRight,
-  Zap,
-  AlertCircle,
-  CheckCircle,
-  Calendar,
-  FileText,
-  DollarSign,
-  Sparkles
-} from 'lucide-react';
+  Package, 
+  HardDrive, 
+  Activity, 
+  ChevronRight,
+  Bell,
+  Plus,
+  Settings,
+  Search,
+  UserPlus,
+  Upload,
+  FolderPlus,
+  CreditCard,
+  FileText
+} from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
-const Dashboard = () => {
-  // Mock data
-  const stats = {
-    activeUsers: 7,
-    totalInvoices: 1247,
-    monthlyRevenue: 45280,
-    storageUsed: 1.2
-  };
-
-  const recentActivity = [
-    {
-      id: 1,
-      type: 'invoice',
-      action: 'New invoice created',
-      details: 'INV-2025-0142',
-      timestamp: '2 minutes ago',
-      icon: FileText,
-      color: 'text-green-400'
-    },
-    {
-      id: 2,
-      type: 'user',
-      action: 'New team member joined',
-      details: 'maria@company.com',
-      timestamp: '1 hour ago',
-      icon: Users,
-      color: 'text-blue-400'
-    },
-    {
-      id: 3,
-      type: 'system',
-      action: 'Backup completed',
-      details: 'All data secured',
-      timestamp: '3 hours ago',
-      icon: CheckCircle,
-      color: 'text-accent'
-    },
-    {
-      id: 4,
-      type: 'alert',
-      action: 'Storage usage high',
-      details: '80% of quota used',
-      timestamp: '5 hours ago',
-      icon: AlertCircle,
-      color: 'text-yellow-400'
+interface DashboardData {
+  stats: {
+    total_users: number
+    active_apps: number
+    storage_used: number
+    storage_limit: number
+  }
+  recent_activities: Array<{
+    id: string
+    type: string
+    description: string
+    created_at: string
+    user: {
+      full_name: string
+      avatar_url?: string
     }
-  ];
+  }>
+  quick_actions: Array<{
+    id: string
+    title: string
+    description: string
+    icon: string
+    action: string
+    url?: string
+  }>
+}
 
-  const quickActions = [
-    { label: 'Create Invoice', icon: FileText, color: 'bg-green-500/20 text-green-400' },
-    { label: 'Add User', icon: Users, color: 'bg-blue-500/20 text-blue-400' },
-    { label: 'View Reports', icon: BarChart3, color: 'bg-purple-500/20 text-purple-400' },
-    { label: 'Send Mail', icon: Mail, color: 'bg-accent/20 text-accent' }
-  ];
+export default function Dashboard() {
+  // TEMP: Using mock data for development
+  // const { currentTenant, user } = useAuth()
+  const user = { full_name: 'Alex Rodriguez', email: 'alex@forvara.com' }
+  const currentTenant = { name: 'Forvara Technologies' }
+  const navigate = useNavigate()
+  
+  // Store connections
+  const { getUnreadNotifications, getRecentNotifications } = useNotificationStore()
+  const { getInstalledApps, apps } = useAppsStore()
+  
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  
+  // Get connected data
+  const unreadNotifications = getUnreadNotifications()
+  const recentNotifications = getRecentNotifications(3)
+  const installedApps = getInstalledApps()
 
-  const apps = [
+  // Action handlers
+  const handleQuickAction = (action: any) => {
+    switch (action.action) {
+      case 'invite_user':
+        navigate('/team', { state: { openInviteModal: true } })
+        break
+      case 'browse_apps':
+        navigate('/apps')
+        break
+      case 'upload_files':
+        handleFileUpload()
+        break
+      case 'view_analytics':
+        navigate('/analytics')
+        break
+      default:
+        if (action.url) {
+          navigate(action.url)
+        }
+    }
+  }
+
+  const handleFileUpload = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = true
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files
+      if (files) {
+        console.log('Uploading files from dashboard:', Array.from(files).map(f => f.name))
+        // TODO: Actual upload logic
+        navigate('/files')
+      }
+    }
+    input.click()
+  }
+
+  const handleGlobalSearch = () => {
+    // TODO: Open global search modal
+    console.log('Opening global search...')
+  }
+
+  const addNewOptions = [
     {
-      id: 'elaris',
-      name: 'Elaris ERP',
-      description: 'Business management',
-      status: 'active',
-      lastAccessed: '5 min ago',
-      users: 7,
+      icon: UserPlus,
+      label: 'Invite Team Member',
+      action: () => navigate('/team', { state: { openInviteModal: true } })
+    },
+    {
       icon: Package,
-      primaryStat: '142 invoices this month',
-      trend: '+12%'
+      label: 'Install New App',
+      action: () => navigate('/apps')
     },
     {
-      id: 'mail',
-      name: 'Forvara Mail',
-      description: 'Team communication',
-      status: 'active',
-      lastAccessed: '2 hours ago',
-      messages: 384,
-      icon: Mail,
-      primaryStat: '12 unread messages',
-      trend: null
+      icon: Upload,
+      label: 'Upload Files',
+      action: handleFileUpload
     },
     {
-      id: 'analytics',
-      name: 'Analytics',
-      description: 'Business intelligence',
-      status: 'coming_soon',
-      icon: BarChart3,
-      primaryStat: 'Coming in Q3 2025',
-      trend: null
+      icon: FolderPlus,
+      label: 'Create Folder',
+      action: () => navigate('/files', { state: { createFolder: true } })
+    },
+    {
+      icon: CreditCard,
+      label: 'Add Payment Method',
+      action: () => navigate('/billing', { state: { addPaymentMethod: true } })
+    },
+    {
+      icon: FileText,
+      label: 'Create Document',
+      action: () => console.log('Create document - integrate with apps')
     }
-  ];
+  ]
+
+  useEffect(() => {
+    // TEMP: Using mock data instead of API call
+    const loadMockData = () => {
+      setTimeout(() => {
+        setDashboardData({
+          stats: {
+            total_users: 12,
+            active_apps: 3,
+            storage_used: 2147483648,
+            storage_limit: 5368709120,
+          },
+          recent_activities: [
+            {
+              id: '1',
+              type: 'app_install',
+              description: 'Installed Elaris ERP application',
+              created_at: '2024-01-15T08:30:00Z',
+              user: { full_name: 'Alex Rodriguez', avatar_url: null }
+            },
+            {
+              id: '2',
+              type: 'user_invite',
+              description: 'Invited new team member María García',
+              created_at: '2024-01-15T07:45:00Z',
+              user: { full_name: 'Alex Rodriguez', avatar_url: null }
+            },
+            {
+              id: '3',
+              type: 'file_upload',
+              description: 'Uploaded 5 files to shared storage',
+              created_at: '2024-01-14T16:20:00Z',
+              user: { full_name: 'Carlos Mendoza', avatar_url: null }
+            }
+          ],
+          quick_actions: [
+            {
+              id: '1',
+              title: 'Invite Team Member',
+              description: 'Add new people to your workspace',
+              icon: 'user-plus',
+              action: 'invite_user',
+              url: '/team/invite'
+            },
+            {
+              id: '2',
+              title: 'Install New App',
+              description: 'Browse and install apps from marketplace',
+              icon: 'package',
+              action: 'browse_apps',
+              url: '/apps'
+            },
+            {
+              id: '3',
+              title: 'Upload Files',
+              description: 'Add files to shared storage',
+              icon: 'upload',
+              action: 'upload_files',
+              url: '/files'
+            }
+          ]
+        })
+        setIsLoading(false)
+      }, 500) // Simulate loading
+    }
+
+    loadMockData()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  const stats = dashboardData?.stats
 
   return (
-    <div className="p-8">
-      {/* Welcome Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Welcome back! 👋</h1>
-        <p className="text-text/70">Here's what's happening across your business ecosystem</p>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-surface rounded-xl p-6 border border-white/10">
-          <div className="flex items-center justify-between mb-4">
-            <Users className="w-8 h-8 text-primary/60" />
-            <span className="text-xs text-green-400 bg-green-400/20 px-2 py-1 rounded-full">
-              +2 this week
-            </span>
-          </div>
-          <p className="text-2xl font-bold">{stats.activeUsers}/10</p>
-          <p className="text-sm text-text/60 mt-1">Active users</p>
-        </div>
-
-        <div className="bg-surface rounded-xl p-6 border border-white/10">
-          <div className="flex items-center justify-between mb-4">
-            <FileText className="w-8 h-8 text-accent/60" />
-            <TrendingUp className="w-4 h-4 text-green-400" />
-          </div>
-          <p className="text-2xl font-bold">{stats.totalInvoices.toLocaleString()}</p>
-          <p className="text-sm text-text/60 mt-1">Total invoices</p>
-        </div>
-
-        <div className="bg-surface rounded-xl p-6 border border-white/10">
-          <div className="flex items-center justify-between mb-4">
-            <DollarSign className="w-8 h-8 text-green-400/60" />
-            <span className="text-xs text-text/60">This month</span>
-          </div>
-          <p className="text-2xl font-bold">${(stats.monthlyRevenue / 1000).toFixed(1)}k</p>
-          <p className="text-sm text-text/60 mt-1">Revenue tracked</p>
-        </div>
-
-        <div className="bg-surface rounded-xl p-6 border border-white/10">
-          <div className="flex items-center justify-between mb-4">
-            <Activity className="w-8 h-8 text-secondary/60" />
-            <Zap className="w-4 h-4 text-yellow-400" />
-          </div>
-          <p className="text-2xl font-bold">99.9%</p>
-          <p className="text-sm text-text/60 mt-1">Uptime</p>
-        </div>
-      </div>
-
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Apps Section - 2 cols */}
-        <div className="lg:col-span-2">
-          <div className="bg-surface rounded-xl border border-white/10 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Your Apps</h2>
-              <button className="text-sm text-primary hover:text-primary/80 flex items-center gap-1">
-                View all
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {apps.map(app => (
-                <div 
-                  key={app.id} 
-                  className={`p-4 rounded-lg border transition-all cursor-pointer
-                    ${app.status === 'active' 
-                      ? 'bg-background border-white/10 hover:border-primary/50' 
-                      : 'bg-background/50 border-white/5 opacity-60'
-                    }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-lg ${
-                      app.status === 'active' ? 'bg-primary/20' : 'bg-white/5'
-                    }`}>
-                      <app.icon className={`w-6 h-6 ${
-                        app.status === 'active' ? 'text-primary' : 'text-text/40'
-                      }`} />
-                    </div>
-                    
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold flex items-center gap-2">
-                            {app.name}
-                            {app.status === 'coming_soon' && (
-                              <span className="text-xs bg-secondary/20 text-secondary px-2 py-0.5 rounded-full">
-                                Coming Soon
-                              </span>
-                            )}
-                          </h3>
-                          <p className="text-sm text-text/60 mt-1">{app.description}</p>
-                        </div>
-                        {app.lastAccessed && (
-                          <span className="text-xs text-text/50 flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {app.lastAccessed}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="mt-3 flex items-center justify-between">
-                        <p className="text-sm font-medium text-text/80">
-                          {app.primaryStat}
-                        </p>
-                        {app.trend && (
-                          <span className="text-xs text-green-400 flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3" />
-                            {app.trend}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Activity Feed - 1 col */}
-        <div className="lg:col-span-1">
-          <div className="bg-surface rounded-xl border border-white/10 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Recent Activity</h2>
-              <button className="p-1.5 hover:bg-white/5 rounded-lg transition-colors">
-                <Activity className="w-4 h-4 text-text/60" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {recentActivity.map(activity => (
-                <div key={activity.id} className="flex items-start gap-3">
-                  <div className={`p-2 rounded-lg bg-white/5`}>
-                    <activity.icon className={`w-4 h-4 ${activity.color}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{activity.action}</p>
-                    <p className="text-xs text-text/60 mt-0.5">{activity.details}</p>
-                    <p className="text-xs text-text/40 mt-1">{activity.timestamp}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button className="w-full mt-4 text-sm text-primary hover:text-primary/80 font-medium">
-              View all activity →
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-surface rounded-xl border border-white/10 p-6">
-        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {quickActions.map((action, idx) => (
-            <button
-              key={idx}
-              className="p-4 rounded-lg bg-background hover:bg-white/5 border border-white/10 transition-all group"
-            >
-              <div className={`w-10 h-10 rounded-lg ${action.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-                <action.icon className="w-5 h-5" />
-              </div>
-              <p className="text-sm font-medium">{action.label}</p>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Pro Tip */}
-      <div className="mt-6 bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-start gap-3">
-        <Sparkles className="w-5 h-5 text-primary mt-0.5" />
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-primary">Pro tip</p>
-          <p className="text-sm text-text/80 mt-1">
-            You can press <kbd className="px-2 py-0.5 bg-white/10 rounded text-xs">Cmd+K</kbd> anywhere to quickly search and navigate
+          <h1 className="text-2xl font-bold text-gray-900">
+            Good morning, {user?.full_name?.split(' ')[0] || 'User'}
+          </h1>
+          <p className="text-gray-600">
+            Here's what's happening with {currentTenant?.name || 'your company'} today
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleGlobalSearch}>
+            <Search className="h-4 w-4 mr-2" />
+            Search
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => console.log('Open notifications panel')}>
+            <Bell className="h-4 w-4 mr-2" />
+            Notifications
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                New
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {addNewOptions.map((option, index) => (
+                <DropdownMenuItem key={index} onClick={option.action}>
+                  <option.icon className="w-4 h-4 mr-2" />
+                  {option.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Team Members</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.total_users || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              +2 from last month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Apps</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.active_apps || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats?.active_apps === 1 ? 'app' : 'apps'} installed
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Storage Used</CardTitle>
+            <HardDrive className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatBytes(stats?.storage_used || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              of {formatBytes(stats?.storage_limit || 5368709120)} used
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">This Month</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {dashboardData?.recent_activities?.length || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              recent activities
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>
+              Common tasks and shortcuts for your team
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {dashboardData?.quick_actions?.length ? (
+              dashboardData.quick_actions.map((action) => (
+                <div
+                  key={action.id}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => handleQuickAction(action)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Settings className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{action.title}</p>
+                      <p className="text-sm text-gray-600">{action.description}</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-gray-400" />
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No quick actions available
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>
+              Latest actions and updates in your workspace
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {dashboardData?.recent_activities?.length ? (
+                dashboardData.recent_activities.map((activity) => (
+                  <div key={activity.id} className="flex items-start gap-3">
+                    <div className="p-1 bg-primary/10 rounded-full">
+                      <Activity className="h-3 w-3 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900">{activity.description}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {activity.user.full_name} · {new Date(activity.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No recent activity
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
-  );
-};
-
-export default Dashboard;
+  )
+}

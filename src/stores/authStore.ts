@@ -1,144 +1,152 @@
-import { create } from 'zustand';
-import { forvaraService } from '../services/forvara';
-import { ForvaraUser, Tenant } from '../types/forvara';
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import apiClient from '@/services/api'
 
-interface AuthState {
-  // Estado
-  user: ForvaraUser | null;
-  currentTenant: Tenant | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-
-  // Acciones
-  login: (identifier: string, password: string) => Promise<boolean>;
-  logout: () => Promise<void>;
-  selectTenant: (tenantId: string) => Promise<boolean>;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-  checkAuth: () => void;
+interface User {
+  id: string
+  email?: string
+  phone?: string
+  full_name: string
+  avatar_url?: string
+  created_at: string
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  // Estado inicial
-  user: null,
-  currentTenant: null,
-  isAuthenticated: false,
-  isLoading: false,
-  error: null,
-
-  // Login
-  login: async (identifier: string, password: string) => {
-    set({ isLoading: true, error: null });
-    
-    try {
-      const response = await forvaraService.login(identifier, password);
-      
-      if (response.success && response.user) {
-        set({
-          user: response.user,
-          isAuthenticated: true,
-          isLoading: false
-        });
-
-        // Si solo tiene un tenant, seleccionarlo automáticamente
-        if (response.user.tenants.length === 1) {
-          await get().selectTenant(response.user.tenants[0].id);
-        }
-
-        return true;
-      } else {
-        set({
-          error: response.error || 'Error al iniciar sesión',
-          isLoading: false
-        });
-        return false;
-      }
-    } catch (error) {
-      set({
-        error: 'Error de conexión',
-        isLoading: false
-      });
-      return false;
-    }
-  },
-
-  // Logout
-  logout: async () => {
-    set({ isLoading: true });
-    
-    try {
-      await forvaraService.logout();
-    } finally {
-      set({
-        user: null,
-        currentTenant: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null
-      });
-    }
-  },
-
-  // Seleccionar tenant
-  selectTenant: async (tenantId: string) => {
-    const { user } = get();
-    if (!user) return false;
-
-    set({ isLoading: true, error: null });
-
-    try {
-      const success = await forvaraService.selectTenant(tenantId);
-      
-      if (success) {
-        const tenant = user.tenants.find(t => t.id === tenantId);
-        if (tenant) {
-          set({
-            currentTenant: {
-              id: tenant.id,
-              nombre: tenant.nombre,
-              ruc: tenant.ruc,
-              rol: tenant.rol
-            },
-            isLoading: false
-          });
-          return true;
-        }
-      }
-      
-      set({ isLoading: false });
-      return false;
-    } catch (error) {
-      set({
-        error: 'Error al seleccionar empresa',
-        isLoading: false
-      });
-      return false;
-    }
-  },
-
-  // Utilidades
-  setError: (error: string | null) => set({ error }),
-  clearError: () => set({ error: null }),
+interface AuthState {
+  user: User | null
+  token: string | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  companies: any[]
   
-  // Verificar autenticación al cargar
-  checkAuth: () => {
-    const user = forvaraService.getCurrentUser();
-    const tenant = forvaraService.getCurrentTenant();
-    const isAuthenticated = forvaraService.isAuthenticated();
+  // Actions
+  login: (identifier: string, password: string) => Promise<void>
+  register: (data: {
+    email?: string
+    phone?: string
+    password: string
+    full_name: string
+    company_name?: string
+  }) => Promise<void>
+  logout: () => Promise<void>
+  checkAuth: () => Promise<void>
+  setUser: (user: User | null) => void
+  setToken: (token: string | null) => void
+  setCompanies: (companies: any[]) => void
+}
 
-    if (user && isAuthenticated) {
-      const currentTenant = user.tenants.find(t => t.id === tenant) || null;
-      set({
-        user,
-        currentTenant: currentTenant ? {
-          id: currentTenant.id,
-          nombre: currentTenant.nombre,
-          ruc: currentTenant.ruc,
-          rol: currentTenant.rol
-        } : null,
-        isAuthenticated: true
-      });
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: true,
+      companies: [],
+
+      login: async (identifier, password) => {
+        try {
+          set({ isLoading: true })
+          const response = await apiClient.login(identifier, password)
+          
+          if (response.data) {
+            const { user, token, companies } = response.data
+            apiClient.setAuth(token)
+            
+            set({
+              user,
+              token,
+              companies,
+              isAuthenticated: true,
+              isLoading: false
+            })
+          }
+        } catch (error) {
+          set({ isLoading: false })
+          throw error
+        }
+      },
+
+      register: async (data) => {
+        try {
+          set({ isLoading: true })
+          const response = await apiClient.register(data)
+          
+          if (response.data) {
+            const { user, token, company } = response.data
+            apiClient.setAuth(token, company?.id)
+            
+            set({
+              user,
+              token,
+              companies: company ? [company] : [],
+              isAuthenticated: true,
+              isLoading: false
+            })
+          }
+        } catch (error) {
+          set({ isLoading: false })
+          throw error
+        }
+      },
+
+      logout: async () => {
+        try {
+          await apiClient.logout()
+        } catch (error) {
+          console.error('Logout error:', error)
+        } finally {
+          apiClient.setAuth(null, null)
+          set({
+            user: null,
+            token: null,
+            companies: [],
+            isAuthenticated: false
+          })
+        }
+      },
+
+      checkAuth: async () => {
+        const { token } = apiClient.getStoredAuth()
+        
+        if (!token) {
+          set({ isAuthenticated: false, isLoading: false })
+          return
+        }
+
+        try {
+          set({ isLoading: true })
+          const response = await apiClient.getProfile()
+          
+          if (response.data) {
+            set({
+              user: response.data,
+              token,
+              isAuthenticated: true,
+              isLoading: false
+            })
+          }
+        } catch (error) {
+          console.error('Auth check error:', error)
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isLoading: false
+          })
+        }
+      },
+
+      setUser: (user) => set({ user }),
+      setToken: (token) => set({ token }),
+      setCompanies: (companies) => set({ companies })
+    }),
+    {
+      name: 'forvara-auth',
+      partialize: (state) => ({
+        token: state.token,
+        user: state.user,
+        companies: state.companies
+      })
     }
-  }
-}));
+  )
+)

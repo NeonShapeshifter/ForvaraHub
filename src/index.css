@@ -1,47 +1,59 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  /* Dark theme (default) */
-  --primary: #4B0082;
-  --secondary: #6A4C93;
-  --accent: #CBAACB;
-  --background: #0D0D0D;
-  --surface: #1C1C1C;
-  --text: #F8F8FF;
-  --text-secondary: #B0B0B0;
-  --border: rgba(106, 76, 147, 0.2);
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+  }
 }
 
-[data-theme="light"] {
-  /* Light theme */
-  --primary: #0B1B2A;
-  --secondary: #274C77;
-  --accent: #89C2D9;
-  --background: #121212;
-  --surface: #1E1E1E;
-  --text: #E0E0E0;
-  --text-secondary: #A0A0A0;
-  --border: rgba(39, 76, 119, 0.2);
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
-
-body {
-  margin: 0;
-  background-color: var(--background);
-  color: var(--text);
-  font-family: 'Inter', system-ui, sans-serif;
-  overflow: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-/* Custom utility classes for our theme */
-.bg-background { background-color: var(--background); }
-.bg-surface { background-color: var(--surface); }
-.bg-primary { background-color: var(--primary); }
-.bg-secondary { background-color: var(--secondary); }
-.text-text { color: var(--text); }
-.text-accent { color: var(--accent); }
-.border-secondary { border-color: var(--border); }

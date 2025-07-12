@@ -1,258 +1,190 @@
-import React, { useState } from 'react';
-import { Shield, Mail, Phone, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
+import React, { useState } from 'react'
+import { Link, Navigate } from 'react-router-dom'
+import { useAuth } from '@/hooks/useAuth'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { AlertCircle, Mail, Phone, Lock } from 'lucide-react'
 
-const LoginPage = ({ onLogin, onSignUp }: { onLogin: (credentials: any) => Promise<void>; onSignUp?: (credentials: any) => Promise<void> }) => {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+export default function Login() {
+  const { login, isAuthenticated, isLoading } = useAuth()
+  const [identifier, setIdentifier] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const [formData, setFormData] = useState({
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-    fullName: ''
-  });
+  // Redirect if already authenticated
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+    e.preventDefault()
+    setError('')
+    setIsSubmitting(true)
 
-    if (isSignUp) {
-      if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
-        return;
-      }
-      if (!formData.fullName.trim()) {
-        setError('Please enter your full name');
-        return;
-      }
-    }
-
-    setLoading(true);
     try {
-      const credentials = {
-        [loginMethod]: formData[loginMethod],
-        password: formData.password,
-        ...(isSignUp && { fullName: formData.fullName })
-      };
-
-      if (isSignUp && onSignUp) {
-        await onSignUp(credentials);
-      } else {
-        await onLogin(credentials);
-      }
+      await login(identifier, password)
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      setError(err.message || 'Login failed')
     } finally {
-      setLoading(false);
+      setIsSubmitting(false)
     }
-  };
-    } catch (err: any) {
-      setError(err.message || 'Authentication failed');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  const isEmail = identifier.includes('@')
+  const isPhone = /^\+?[\d\s-()]+$/.test(identifier)
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
-            <Shield className="w-8 h-8 text-primary" />
-          </div>
-          <h1 className="text-3xl font-bold">Forvara</h1>
-        </div>
-
-        {/* Login Card */}
-        <div className="bg-surface rounded-2xl p-8 border border-white/10">
-          <h2 className="text-2xl font-semibold mb-2">
-            {isSignUp ? 'Create your account' : 'Welcome back'}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+            Welcome to ForvaraHub
           </h2>
-          <p className="text-text/60 mb-6">
-            {isSignUp 
-              ? 'Start your journey with fair pricing and powerful tools'
-              : 'Sign in to access your business ecosystem'
-            }
+          <p className="mt-2 text-sm text-gray-600">
+            Sign in to your account to access your business dashboard
           </p>
-
-          {/* Login Method Toggle */}
-          <div className="flex gap-2 mb-6">
-            <button
-              type="button"
-              onClick={() => setLoginMethod('email')}
-              className={`flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-all ${
-                loginMethod === 'email' 
-                  ? 'bg-primary text-white' 
-                  : 'bg-white/5 text-text/70 hover:bg-white/10'
-              }`}
-            >
-              <Mail className="w-4 h-4" />
-              Email
-            </button>
-            <button
-              type="button"
-              onClick={() => setLoginMethod('phone')}
-              className={`flex-1 py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-all ${
-                loginMethod === 'phone' 
-                  ? 'bg-primary text-white' 
-                  : 'bg-white/5 text-text/70 hover:bg-white/10'
-              }`}
-            >
-              <Phone className="w-4 h-4" />
-              Phone
-            </button>
-          </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
-              <div>
-                <label className="block text-sm font-medium mb-2">Full Name</label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-background rounded-lg border border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  placeholder="John Doe"
-                  required
-                />
-              </div>
-            )}
-
-            {loginMethod === 'email' ? (
-              <div>
-                <label className="block text-sm font-medium mb-2">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-background rounded-lg border border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  placeholder="you@company.com"
-                  required
-                />
-              </div>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium mb-2">Phone Number</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-background rounded-lg border border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  placeholder="+1234567890"
-                  required
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-background rounded-lg border border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary pr-12"
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text/50 hover:text-text/70"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            {isSignUp && (
-              <div>
-                <label className="block text-sm font-medium mb-2">Confirm Password</label>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-background rounded-lg border border-white/10 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  {isSignUp ? 'Creating account...' : 'Signing in...'}
-                </>
-              ) : (
-                <>
-                  {isSignUp ? 'Create Account' : 'Sign In'}
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-text/60">
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setError('');
-                }}
-                className="text-primary hover:text-primary/80 font-medium"
-              >
-                {isSignUp ? 'Sign in' : 'Sign up'}
-              </button>
-            </p>
-          </div>
-
-          {!isSignUp && (
-            <div className="mt-4 text-center">
-              <button type="button" className="text-sm text-text/60 hover:text-text/80">
-                Forgot your password?
-              </button>
-            </div>
-          )}
         </div>
 
-        {/* Footer */}
-        <div className="mt-8 text-center text-sm text-text/50">
-          <p>🇵🇦 Built in Panama with ❤️ for fair business software</p>
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign In</CardTitle>
+            <CardDescription>
+              Enter your email or phone number and password to access your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-4 flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  <span className="text-sm text-red-700">{error}</span>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label htmlFor="identifier" className="block text-sm font-medium text-gray-700">
+                  Email or Phone
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    {isEmail ? (
+                      <Mail className="h-5 w-5 text-gray-400" />
+                    ) : isPhone ? (
+                      <Phone className="h-5 w-5 text-gray-400" />
+                    ) : (
+                      <Mail className="h-5 w-5 text-gray-400" />
+                    )}
+                  </div>
+                  <Input
+                    id="identifier"
+                    type="text"
+                    autoComplete="username"
+                    required
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder="Enter your email or phone"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  />
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                    Remember me
+                  </label>
+                </div>
+
+                <div className="text-sm">
+                  <Link
+                    to="/forgot-password"
+                    className="font-medium text-primary hover:text-primary/80"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isSubmitting || !identifier || !password}
+                className="w-full"
+              >
+                {isSubmitting ? 'Signing in...' : 'Sign In'}
+              </Button>
+            </form>
+
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">New to ForvaraHub?</span>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <Link to="/register">
+                  <Button variant="outline" className="w-full">
+                    Create an Account
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="text-center">
+          <p className="text-xs text-gray-500">
+            By signing in, you agree to our{' '}
+            <Link to="/terms" className="text-primary hover:text-primary/80">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" className="text-primary hover:text-primary/80">
+              Privacy Policy
+            </Link>
+          </p>
         </div>
       </div>
     </div>
-  );
-};
-
-export default LoginPage;
+  )
+}
