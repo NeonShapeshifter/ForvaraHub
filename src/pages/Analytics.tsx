@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuthStore } from '@/stores/authStore'
 import { api } from '@/services/api'
@@ -140,7 +140,7 @@ export default function Analytics() {
             Analytics Empresarial
           </h1>
           <p className="text-muted-foreground mt-1">
-            Insights y métricas de tu empresa en {currentCompany?.name}
+            Insights y métricas de tu empresa en {currentCompany?.razon_social}
           </p>
         </div>
         

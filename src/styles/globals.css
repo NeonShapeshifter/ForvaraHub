@@ -1,9 +1,9 @@
+/* Phone input component styles */
+@import './phone-input.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Phone input component styles */
-@import './phone-input.css';
 
 @layer base {
   :root {

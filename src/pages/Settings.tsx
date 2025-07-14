@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -47,7 +47,7 @@ export default function Settings() {
 
   useEffect(() => {
     if (currentCompany) {
-      setCompanyName(currentCompany.name || '')
+      setCompanyName(currentCompany.razon_social || '')
       setCompanyDescription(currentCompany.description || '')
       setCompanyLogoUrl(currentCompany.logo_url || '')
     }
@@ -55,7 +55,7 @@ export default function Settings() {
 
   useEffect(() => {
     if (user) {
-      setUserName(user.name || '')
+      setUserName(`${user.first_name} ${user.last_name}` || '')
       setUserEmail(user.email || '')
       setUserPhone(user.phone || '')
     }

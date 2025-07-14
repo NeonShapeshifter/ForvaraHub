@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -362,11 +362,11 @@ export default function Users() {
               <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center text-white font-semibold">
-                    {member.user.name?.charAt(0) || member.user.email?.charAt(0) || '?'}
+                    {member.user.first_name?.charAt(0) || member.user.email?.charAt(0) || '?'}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium">{member.user.name || 'Sin nombre'}</h3>
+                      <h3 className="font-medium">{member.user.first_name && member.user.last_name ? `${member.user.first_name} ${member.user.last_name}` : member.user.email || 'Sin nombre'}</h3>
                       {getRoleBadge(member.role)}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -439,7 +439,7 @@ export default function Users() {
                         {getRoleBadge(invitation.role)}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Invitado por {invitation.inviter.name} • Expira {new Date(invitation.expires_at).toLocaleDateString()}
+                        Invitado por {invitation.inviter.first_name} {invitation.inviter.last_name} • Expira {new Date(invitation.expires_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

@@ -245,10 +245,10 @@ export default function Companies() {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-600 flex items-center justify-center text-white font-semibold text-lg">
-                    {company.name.charAt(0)}
+                    {company.razon_social.charAt(0)}
                   </div>
                   <div>
-                    <CardTitle className="text-lg">{company.name}</CardTitle>
+                    <CardTitle className="text-lg">{company.razon_social}</CardTitle>
                     <div className="flex items-center gap-2 mt-1">
                       {getRoleBadge(company.user_role)}
                     </div>
