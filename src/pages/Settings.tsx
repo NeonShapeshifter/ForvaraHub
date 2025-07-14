@@ -5,13 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuthStore } from '@/stores/authStore'
 import { api } from '@/services/api'
 import { 
-  Settings as SettingsIcon, 
-  Building2, 
   User, 
   Key, 
   Bell, 
   Save,
-  Upload,
   Trash2,
   Eye,
   EyeOff

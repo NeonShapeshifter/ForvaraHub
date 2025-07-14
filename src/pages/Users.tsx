@@ -17,7 +17,6 @@ import {
   Shield, 
   Eye, 
   User,
-  MoreVertical,
   Trash2,
   Edit,
   Clock

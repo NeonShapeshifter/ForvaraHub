@@ -3,13 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuthStore } from '@/stores/authStore'
 import { api } from '@/services/api'
 import { 
-  BarChart3, 
-  TrendingUp, 
   Users, 
   Package, 
   DollarSign,
   Activity,
-  Clock,
   Target,
   ArrowUp,
   ArrowDown,

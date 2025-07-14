@@ -5,8 +5,6 @@ import { Badge } from '@/components/ui/badge'
 import { useAuthStore } from '@/stores/authStore'
 import { api } from '@/services/api'
 import { 
-  CreditCard, 
-  DollarSign, 
   Calendar, 
   Download, 
   ExternalLink,
