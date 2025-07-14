@@ -195,7 +195,7 @@ export default function Register() {
                         }`}
                       >
                         <Mail className="w-4 h-4" />
-                        📧 Email
+                         Email
                       </button>
                       <button
                         type="button"
@@ -207,7 +207,7 @@ export default function Register() {
                         }`}
                       >
                         <Phone className="w-4 h-4" />
-                        📱 Teléfono
+                         Teléfono
                       </button>
                     </div>
                   </div>
@@ -230,7 +230,7 @@ export default function Register() {
                       </>
                     ) : (
                       <PhoneInputField
-                        label="📱 Tu Teléfono *"
+                        label=" Tu Teléfono *"
                         value={phone}
                         onChange={(value) => setPhone(value || '')}
                         error={phoneValidation.error || undefined}

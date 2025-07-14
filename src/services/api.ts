@@ -4,12 +4,19 @@ import { ApiResponse } from '@/types';
 // API base configuration
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
+console.log('🌐 API Configuration:', {
+  API_URL,
+  environment: import.meta.env.VITE_ENV || 'development',
+  mode: import.meta.env.MODE
+});
+
 // Create axios instance with defaults
 export const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Enable credentials for CORS
 });
 
 // Request interceptor to add auth token

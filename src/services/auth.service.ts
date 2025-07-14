@@ -11,20 +11,37 @@ import {
 export const authService = {
   // Login with email or phone
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await apiCall<AuthResponse>('post', '/auth/login', credentials);
-    
-    // Store auth data
-    if (response.token) {
-      localStorage.setItem('auth_token', response.token);
-      localStorage.setItem('user_data', JSON.stringify(response.user));
+    try {
+      console.log('🔐 Attempting login with:', { 
+        hasEmail: !!credentials.email, 
+        hasPhone: !!credentials.phone,
+        apiUrl: api.defaults.baseURL
+      });
       
-      // Set first company as current if available
-      if (response.companies?.length > 0) {
-        localStorage.setItem('current_company', response.companies[0].id);
+      const response = await apiCall<AuthResponse>('post', '/auth/login', credentials);
+      
+      console.log('✅ Login successful:', { 
+        hasToken: !!response.token, 
+        userId: response.user?.id,
+        companiesCount: response.companies?.length || 0
+      });
+      
+      // Store auth data
+      if (response.token) {
+        localStorage.setItem('auth_token', response.token);
+        localStorage.setItem('user_data', JSON.stringify(response.user));
+        
+        // Set first company as current if available
+        if (response.companies?.length > 0) {
+          localStorage.setItem('current_company', response.companies[0].id);
+        }
       }
+      
+      return response;
+    } catch (error) {
+      console.error('❌ Login failed:', error);
+      throw error;
     }
-    
-    return response;
   },
 
   // Register new user
