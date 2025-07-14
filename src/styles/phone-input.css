@@ -1,0 +1,199 @@
+/* Custom styles for react-phone-number-input to match Stripe's design */
+
+/* Container */
+.phone-input-container {
+  position: relative;
+  width: 100%;
+}
+
+/* Country selector dropdown */
+.PhoneInputCountrySelect {
+  position: absolute !important;
+  left: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 10 !important;
+  
+  border: none !important;
+  background: transparent !important;
+  padding: 4px 6px !important;
+  margin: 0 !important;
+  
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  
+  font-size: 14px !important;
+  line-height: 1 !important;
+  
+  cursor: pointer !important;
+  outline: none !important;
+}
+
+.PhoneInputCountrySelect:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.PhoneInputCountrySelect:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.5 !important;
+}
+
+/* Country flag */
+.PhoneInputCountryIcon {
+  width: 20px !important;
+  height: 15px !important;
+  border-radius: 2px !important;
+  overflow: hidden !important;
+  display: block !important;
+  background-size: cover !important;
+  background-position: center !important;
+  flex-shrink: 0 !important;
+}
+
+.PhoneInputCountryIcon--border {
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Dropdown arrow */
+.PhoneInputCountrySelectArrow {
+  width: 12px !important;
+  height: 12px !important;
+  color: #6b7280 !important;
+  opacity: 0.8 !important;
+  margin-left: 2px !important;
+  flex-shrink: 0 !important;
+  transition: opacity 0.15s ease !important;
+}
+
+.PhoneInputCountrySelect:hover .PhoneInputCountrySelectArrow {
+  opacity: 1 !important;
+}
+
+/* Number input field */
+.PhoneInputInput {
+  padding-left: 60px !important; /* Space for flag + code */
+  font-variant-numeric: tabular-nums !important;
+  letter-spacing: 0.025em !important;
+}
+
+.PhoneInputInput::placeholder {
+  color: #9ca3af !important;
+  font-weight: normal !important;
+}
+
+.PhoneInputInput:focus {
+  padding-left: 60px !important; /* Maintain padding on focus */
+}
+
+/* Dark mode support */
+.dark .PhoneInputCountrySelectArrow {
+  color: #9ca3af !important;
+}
+
+.dark .PhoneInputInput::placeholder {
+  color: #6b7280 !important;
+}
+
+.dark .PhoneInputCountryIcon--border {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Error state */
+.phone-input-container.error .PhoneInputInput {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 1px #ef4444 !important;
+}
+
+.phone-input-container.error .PhoneInputInput:focus {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Success state for valid numbers */
+.phone-input-container.valid .PhoneInputInput {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 1px #10b981 !important;
+}
+
+/* Disabled state */
+.phone-input-container.disabled .PhoneInputInput {
+  background-color: #f9fafb !important;
+  color: #6b7280 !important;
+  cursor: not-allowed !important;
+}
+
+.dark .phone-input-container.disabled .PhoneInputInput {
+  background-color: #1f2937 !important;
+  color: #9ca3af !important;
+}
+
+/* Hover effects */
+.PhoneInputCountrySelect:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  border-radius: 4px !important;
+}
+
+.dark .PhoneInputCountrySelect:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Focus styles for accessibility */
+.PhoneInputCountrySelect:focus-visible {
+  outline: 2px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px !important;
+}
+
+/* Loading state animation */
+.phone-input-container.loading .PhoneInputCountryIcon {
+  animation: phone-loading 1s ease-in-out infinite alternate !important;
+}
+
+@keyframes phone-loading {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .PhoneInputInput {
+    font-size: 16px !important; /* Prevent zoom on iOS */
+  }
+  
+  .PhoneInputCountrySelect {
+    left: 6px !important;
+  }
+  
+  .PhoneInputInput {
+    padding-left: 56px !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .PhoneInputCountryIcon--border {
+    border-width: 2px !important;
+    border-color: #000 !important;
+  }
+  
+  .PhoneInputCountrySelectArrow {
+    color: #000 !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .phone-input-container.loading .PhoneInputCountryIcon {
+    animation: none !important;
+  }
+  
+  .PhoneInputCountrySelectArrow,
+  .PhoneInputCountrySelect {
+    transition: none !important;
+  }
+}
