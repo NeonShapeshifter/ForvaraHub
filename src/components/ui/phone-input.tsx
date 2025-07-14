@@ -4,13 +4,17 @@ import 'react-phone-number-input/style.css'
 import { cn } from '@/lib/utils'
 import { Label } from './label'
 
-// LATAM countries prioritized (Panama first)
-const LATAM_COUNTRIES: Country[] = [
+// LATAM countries + Sweden prioritized (Panama first)
+const SUPPORTED_COUNTRIES: Country[] = [
   'PA', // Panama (default)
   'MX', // Mexico
   'CO', // Colombia
   'CR', // Costa Rica
   'GT', // Guatemala
+  'HN', // Honduras
+  'NI', // Nicaragua
+  'SV', // El Salvador
+  'BZ', // Belize
   'BR', // Brazil
   'AR', // Argentina
   'CL', // Chile
@@ -20,12 +24,9 @@ const LATAM_COUNTRIES: Country[] = [
   'BO', // Bolivia
   'PY', // Paraguay
   'VE', // Venezuela
-  'HN', // Honduras
-  'NI', // Nicaragua
-  'SV', // El Salvador
-  'BZ', // Belize
-  'SR', // Suriname
   'GY', // Guyana
+  'SR', // Suriname
+  'SE', // Sweden
   'US', // United States (for LATAM diaspora)
   'CA', // Canada (for LATAM diaspora)
   'ES', // Spain (for business connections)
@@ -86,10 +87,12 @@ export function PhoneInputField({
           onChange={onChange}
           onBlur={onBlur}
           defaultCountry="PA"
-          countries={LATAM_COUNTRIES}
+          limitMaxLength={true}
+          smartCaret={true}
+          countries={SUPPORTED_COUNTRIES}
           countryCallingCodeEditable={false}
           international={true}
-          placeholder={placeholder}
+          placeholder="Ingresa tu número de teléfono"
           disabled={disabled}
           className={cn(
             // Container styles
@@ -106,23 +109,26 @@ export function PhoneInputField({
           numberInputProps={{
             className: cn(
               // Input field styles matching your design system
-              "flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-sm",
-              "ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium",
-              "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2",
-              "focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-              "pl-16", // Space for country selector
-              error && "border-red-500 focus-visible:ring-red-500",
-              disabled && "bg-gray-50 text-gray-500 cursor-not-allowed"
+              "flex h-12 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-base",
+              "ring-offset-background placeholder:text-muted-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/20",
+              "focus-visible:border-blue-500 transition-all duration-200",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+              "pl-20", // Space for country selector
+              error && "border-red-500 focus-visible:ring-red-500/20 focus-visible:border-red-500",
+              disabled && "bg-muted/50 text-muted-foreground cursor-not-allowed"
             ),
-            placeholder: placeholder,
+            placeholder: "Ingresa tu número de teléfono",
             disabled: disabled,
+            autoComplete: "tel",
           }}
           countrySelectProps={{
             className: cn(
               // Country selector styles
               "absolute left-3 top-1/2 transform -translate-y-1/2 z-10",
-              "flex items-center space-x-1 text-sm",
-              "border-0 bg-transparent focus:outline-none focus:ring-0",
+              "flex items-center space-x-2 text-sm font-medium",
+              "border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/20",
+              "hover:bg-muted/50 rounded px-1 py-1 transition-colors",
               disabled && "cursor-not-allowed opacity-50"
             ),
           }}
@@ -139,10 +145,10 @@ export function PhoneInputField({
         </p>
       )}
 
-      {/* Help text for LATAM users */}
+      {/* Format hint */}
       {!error && !disabled && (
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          🌎 Selecciona tu país y ingresa tu número. Formato automático para LATAM.
+        <p className="text-xs text-muted-foreground">
+          Selecciona tu país e ingresa tu número. Soporte completo para LATAM y otros países.
         </p>
       )}
     </div>

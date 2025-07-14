@@ -73,7 +73,7 @@ export default function Login() {
             <LogoAuto variant="full" size="xl" className="mx-auto drop-shadow-lg" />
           </div>
           <p className="text-muted-foreground text-lg">
-            🚀 Centro de Administración Enterprise
+            Centro de Administración Enterprise
           </p>
           <div className="flex items-center justify-center gap-4 mt-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
@@ -95,7 +95,7 @@ export default function Login() {
         <Card className="border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl ring-1 ring-white/10">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-semibold text-foreground">
-              ¡Bienvenido de vuelta! 👋
+              Bienvenido de vuelta
             </CardTitle>
             <CardDescription className="text-base">
               Accede a tu panel de administración empresarial
@@ -106,7 +106,7 @@ export default function Login() {
             {/* Auth Method Toggle */}
             <div className="relative">
               <p className="text-sm font-medium mb-3 text-center text-muted-foreground">
-                💡 Elige tu método de acceso preferido
+                Elige tu método de acceso preferido
               </p>
               <div className="flex rounded-xl border-2 border-muted/20 p-1 bg-muted/5">
                 <button
@@ -119,7 +119,7 @@ export default function Login() {
                   }`}
                 >
                   <Mail className="w-4 h-4" />
-                  📧 Email
+                  Email
                 </button>
                 <button
                   type="button"
@@ -131,7 +131,7 @@ export default function Login() {
                   }`}
                 >
                   <Phone className="w-4 h-4" />
-                  📱 Teléfono
+                  Teléfono
                 </button>
               </div>
             </div>
@@ -142,29 +142,30 @@ export default function Login() {
                 {authMethod === 'email' ? (
                   <>
                     <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                      <Mail className="w-4 h-4" /> Tu Email Empresarial
+                      <Mail className="w-4 h-4" /> Email Empresarial
                     </label>
                     <Input
                       type="email"
-                      placeholder="✉️ tu@empresa.com"
+                      placeholder="tu@empresa.com"
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
                       required
+                      autoComplete="email"
                       className="h-12 text-base border-2 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
                     />
                   </>
                 ) : (
                   <PhoneInputField
-                    label="📱 Tu Teléfono"
+                    label="Teléfono"
                     value={identifier}
                     onChange={(value) => setIdentifier(value || '')}
                     error={phoneValidation.error || undefined}
                     placeholder="Ingresa tu número de teléfono"
                     required
                     className={`transition-all duration-300 ${
-                      phoneValidation.isValid && identifier ? 'valid' : ''
+                      phoneValidation.isValid && identifier ? 'border-green-500' : ''
                     } ${
-                      phoneValidation.error ? 'error' : ''
+                      phoneValidation.error ? 'border-red-500' : ''
                     }`}
                     labelClassName="text-sm font-medium text-foreground flex items-center gap-2"
                   />
@@ -174,15 +175,16 @@ export default function Login() {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground flex items-center gap-2">
                   <Shield className="w-4 h-4" />
-                  Tu Contraseña Segura
+                  Contraseña
                 </label>
                 <div className="relative">
                   <Input
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="🔒 ••••••••"
+                    placeholder="Ingresa tu contraseña"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    autoComplete="current-password"
                     className="h-12 text-base pr-12 border-2 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
                   />
                   <button
@@ -220,7 +222,7 @@ export default function Login() {
                 ) : (
                   <div className="flex items-center gap-2">
                     <Zap className="w-4 h-4" />
-                    ¡Acceder Ahora! 🚀
+                    Acceder
                   </div>
                 )}
               </Button>
@@ -240,7 +242,7 @@ export default function Login() {
                   }}
                   className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors"
                 >
-                  ¿Olvidaste tu contraseña? 🔑
+                  ¿Olvidaste tu contraseña?
                 </button>
               </div>
             </form>
@@ -248,7 +250,7 @@ export default function Login() {
             {/* Register Link */}
             <div className="text-center pt-6 border-t border-muted/20">
               <p className="text-sm text-muted-foreground mb-3">
-                ¿Primera vez en Forvara? 🌟
+                ¿Primera vez en Forvara?
               </p>
               <Button
                 type="button"
@@ -256,7 +258,7 @@ export default function Login() {
                 onClick={() => navigate('/register')}
                 className="text-sm font-medium border-2 hover:bg-blue-50 hover:border-blue-200 transition-all"
               >
-                🚀 Crear cuenta empresarial gratis
+                Crear cuenta empresarial gratis
               </Button>
             </div>
           </CardContent>
@@ -266,10 +268,10 @@ export default function Login() {
         <div className="text-center mt-8 text-sm text-muted-foreground">
           <p className="flex items-center justify-center gap-2">
             <span>© 2025 Forvara.</span>
-            <span className="font-medium text-blue-600">💪 Hecho para PyMEs de LATAM 🌎</span>
+            <span className="font-medium text-blue-600">Hecho para PyMEs de LATAM</span>
           </p>
           <p className="mt-2 text-xs opacity-75">
-            🇵🇦 Desde Panamá para toda Latinoamérica
+            Desde Panamá para toda Latinoamérica
           </p>
         </div>
       </div>

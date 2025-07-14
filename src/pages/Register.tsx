@@ -267,11 +267,12 @@ export default function Register() {
                     <div className="relative">
                       <Input
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="🔒 Mínimo 8 caracteres"
+                        placeholder="Mínimo 8 caracteres"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="h-11 pr-10"
+                        autoComplete="new-password"
+                        className="h-11 pr-10 border-2 focus:border-purple-500 focus:ring-purple-500/20 transition-all"
                       />
                       <button
                         type="button"
@@ -283,7 +284,7 @@ export default function Register() {
                     </div>
                     {password && (
                       <div className={`text-xs ${isPasswordValid ? 'text-green-600' : 'text-red-600'}`}>
-                        {isPasswordValid ? '✅ Contraseña válida' : '❌ Mínimo 8 caracteres'}
+                        {isPasswordValid ? 'Contraseña válida' : 'Mínimo 8 caracteres'}
                       </div>
                     )}
                   </div>
@@ -296,11 +297,12 @@ export default function Register() {
                     <div className="relative">
                       <Input
                         type={showConfirmPassword ? 'text' : 'password'}
-                        placeholder="🔒 Confirma tu contraseña"
+                        placeholder="Confirma tu contraseña"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
-                        className="h-11 pr-10"
+                        autoComplete="new-password"
+                        className="h-11 pr-10 border-2 focus:border-purple-500 focus:ring-purple-500/20 transition-all"
                       />
                       <button
                         type="button"
@@ -312,7 +314,7 @@ export default function Register() {
                     </div>
                     {confirmPassword && (
                       <div className={`text-xs ${doPasswordsMatch ? 'text-green-600' : 'text-red-600'}`}>
-                        {doPasswordsMatch ? '✅ Las contraseñas coinciden' : '❌ Las contraseñas no coinciden'}
+                        {doPasswordsMatch ? 'Las contraseñas coinciden' : 'Las contraseñas no coinciden'}
                       </div>
                     )}
                   </div>
