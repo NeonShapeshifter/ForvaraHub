@@ -74,7 +74,6 @@ export default function Settings() {
       })
       
       // Update local state if needed
-      console.log('Company updated:', response.data)
     } catch (error: any) {
       alert(error.response?.data?.error?.message || 'Failed to update company')
     } finally {

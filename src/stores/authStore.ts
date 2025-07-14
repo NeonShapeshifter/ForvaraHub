@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User, Company } from '@/types';
+import { User, Company, RegisterRequest } from '@/types';
 import { authService } from '@/services/auth.service';
 
 interface AuthState {
@@ -15,7 +15,7 @@ interface AuthState {
   // Actions
   login: (email: string, password: string) => Promise<void>;
   loginWithPhone: (phone: string, password: string) => Promise<void>;
-  register: (data: any) => Promise<void>;
+  register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   setCurrentCompany: (company: Company) => void;
   updateUser: (user: User) => void;
@@ -70,7 +70,7 @@ export const useAuthStore = create<AuthState>(
       },
       
       // Register
-      register: async (data: any) => {
+      register: async (data: RegisterRequest) => {
         set({ isLoading: true, error: null });
         try {
           const response = await authService.register(data);
