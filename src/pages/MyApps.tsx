@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Settings, ExternalLink, Trash2, BarChart3, Users, Calendar, DollarSign, Package, Crown, Clock, CheckCircle, AlertTriangle, Zap, Building2, Calculator, HardDrive, MoreHorizontal } from 'lucide-react'
+import { Settings, ExternalLink, Trash2, BarChart3, Users, Calendar, DollarSign, Package, Crown, Clock, CheckCircle, AlertTriangle, Zap, Building2, Calculator, HardDrive, MoreHorizontal, Sparkles } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { appsService } from '@/services/apps.service'
 
@@ -42,6 +42,14 @@ export default function MyApps() {
     try {
       setLoading(true)
       
+      // Check if user has a company selected
+      if (!currentCompany) {
+        console.warn('No company selected, cannot load installed apps')
+        setApps([])
+        setLoading(false)
+        return
+      }
+      
       const installedApps = await appsService.getInstalledApps()
       
       // Convert service data to UI format
@@ -63,30 +71,34 @@ export default function MyApps() {
       
     } catch (error) {
       console.error('Error loading installed apps:', error)
-      // Fallback to demo data
-      setApps([
-        {
-          id: 'demo-app',
-          name: 'demo-app',
-          display_name: 'Demo App',
-          description: 'Aplicación de demostración',
-          icon: <Building2 className="w-8 h-8 text-blue-600" />,
-          category: 'Demo',
-          status: 'active',
-          subscription: {
-            plan: 'Free',
-            price: 0,
-            billing_cycle: 'free'
-          },
-          usage: {
-            last_accessed: new Date().toISOString(),
-            monthly_active_users: 1,
-            storage_used_gb: 0,
-            api_calls: 0
-          },
-          installed_date: new Date().toISOString()
-        }
-      ])
+      // Only show fallback if we have a company
+      if (currentCompany) {
+        setApps([
+          {
+            id: 'demo-app',
+            name: 'demo-app',
+            display_name: 'Demo App',
+            description: 'Aplicación de demostración',
+            icon: <Building2 className="w-8 h-8 text-blue-600" />,
+            category: 'Demo',
+            status: 'active',
+            subscription: {
+              plan: 'Free',
+              price: 0,
+              billing_cycle: 'free'
+            },
+            usage: {
+              last_accessed: new Date().toISOString(),
+              monthly_active_users: 1,
+              storage_used_gb: 0,
+              api_calls: 0
+            },
+            installed_date: new Date().toISOString()
+          }
+        ])
+      } else {
+        setApps([])
+      }
       setLoading(false)
     }
   }
@@ -437,19 +449,39 @@ export default function MyApps() {
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
             <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              No hay aplicaciones
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
-              No tienes aplicaciones {filter !== 'all' ? filter === 'trial' ? 'en prueba' : filter : 'instaladas'} en este momento
-            </p>
-            <button
-              onClick={() => window.location.href = '/marketplace'}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium"
-            >
-              <Sparkles className="w-4 h-4" />
-              Explorar marketplace
-            </button>
+            {!currentCompany ? (
+              <>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Empresa requerida
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">
+                  Necesitas crear o seleccionar una empresa para acceder a las aplicaciones
+                </p>
+                <button
+                  onClick={() => window.location.href = '/settings'}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium"
+                >
+                  <Building2 className="w-4 h-4" />
+                  Crear empresa
+                </button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  No hay aplicaciones
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">
+                  No tienes aplicaciones {filter !== 'all' ? filter === 'trial' ? 'en prueba' : filter : 'instaladas'} en este momento
+                </p>
+                <button
+                  onClick={() => window.location.href = '/marketplace'}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Explorar marketplace
+                </button>
+              </>
+            )}
           </div>
         )}
       </div>

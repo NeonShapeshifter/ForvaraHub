@@ -41,6 +41,10 @@ api.interceptors.request.use(
     const currentCompany = localStorage.getItem('current_company');
     if (currentCompany) {
       config.headers['X-Tenant-ID'] = currentCompany;
+    } else {
+      // If no company is selected, some endpoints may still work
+      // but tenant-specific endpoints will fail appropriately
+      console.warn('No tenant ID available for request to:', config.url);
     }
     
     return config;

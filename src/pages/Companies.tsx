@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Building2, Plus, Users, Calendar, Package, ExternalLink, Crown, Settings, X, ChevronRight, HardDrive } from 'lucide-react'
 
-// TODO: Importar desde los archivos reales del proyecto
-// import { useAuthStore } from '../stores/authStore'
-// import { api } from '../services/api'
-// import { toast } from '../hooks/use-toast'
+import { useAuthStore } from '@/stores/authStore'
+import { companyService } from '@/services/company.service'
 
 interface Company {
   id: string
@@ -130,8 +128,7 @@ const CreateCompanyModal = ({ isOpen, onClose, onCreate }: {
 }
 
 export default function Companies() {
-  // TODO: Obtener desde el store real
-  // const { setCurrentCompany } = useAuthStore()
+  const { setCurrentCompany } = useAuthStore()
   
   const [companies, setCompanies] = useState<Company[]>([])
   const [loading, setLoading] = useState(true)
@@ -145,68 +142,30 @@ export default function Companies() {
     try {
       setLoading(true)
       
-      // TODO: Conectar con el servicio real
-      // const response = await api.get('/tenants/companies')
-      // setCompanies(response.data.data || [])
-      
-      // Datos temporales
-      setTimeout(() => {
-        setCompanies([
-          {
-            id: '1',
-            razon_social: 'Forvara S.A.',
-            slug: 'forvara-sa',
-            description: 'Empresa de desarrollo de software',
-            storage_used_bytes: 1.2 * 1024 * 1024 * 1024,
-            status: 'active',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            user_role: 'owner',
-            joined_at: new Date().toISOString(),
-            ruc: '123456789'
-          }
-        ])
-        setLoading(false)
-      }, 1000)
+      const userCompanies = await companyService.getUserCompanies()
+      setCompanies(userCompanies)
+      setLoading(false)
       
     } catch (error) {
       console.error('Failed to load companies:', error)
+      setCompanies([])
       setLoading(false)
     }
   }
 
   const createCompany = async (data: any) => {
     try {
-      // TODO: Conectar con el servicio real
-      // const response = await api.post('/tenants/companies', data)
-      // setCompanies([response.data.data, ...companies])
-      
-      console.log('Creating company:', data)
-      const newCompany: Company = {
-        id: Date.now().toString(),
-        razon_social: data.razon_social,
-        slug: data.razon_social.toLowerCase().replace(/\s+/g, '-'),
-        description: data.description,
-        ruc: data.ruc,
-        storage_used_bytes: 0,
-        status: 'active',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user_role: 'owner',
-        joined_at: new Date().toISOString()
-      }
-      
+      const newCompany = await companyService.createCompany(data)
       setCompanies([newCompany, ...companies])
       setCreateModalOpen(false)
     } catch (error) {
       console.error('Failed to create company:', error)
+      // TODO: Show error message to user
     }
   }
 
   const switchCompany = (company: Company) => {
-    // TODO: Conectar con el store real
-    // setCurrentCompany(company)
-    
+    setCurrentCompany(company)
     console.log('Switching to company:', company)
     window.location.href = '/dashboard'
   }
