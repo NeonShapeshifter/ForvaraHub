@@ -3,33 +3,11 @@ import PhoneInput, { Country } from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
 import { cn } from '@/lib/utils'
 import { Label } from './label'
+import { AlertCircle, CheckCircle2 } from 'lucide-react'
 
 // LATAM countries + Sweden prioritized (Panama first)
 const SUPPORTED_COUNTRIES: Country[] = [
-  'PA', // Panama (default)
-  'MX', // Mexico
-  'CO', // Colombia
-  'CR', // Costa Rica
-  'GT', // Guatemala
-  'HN', // Honduras
-  'NI', // Nicaragua
-  'SV', // El Salvador
-  'BZ', // Belize
-  'BR', // Brazil
-  'AR', // Argentina
-  'CL', // Chile
-  'PE', // Peru
-  'UY', // Uruguay
-  'EC', // Ecuador
-  'BO', // Bolivia
-  'PY', // Paraguay
-  'VE', // Venezuela
-  'GY', // Guyana
-  'SR', // Suriname
-  'SE', // Sweden
-  'US', // United States (for LATAM diaspora)
-  'CA', // Canada (for LATAM diaspora)
-  'ES', // Spain (for business connections)
+  'PA', 'MX', 'CO', 'CR', 'GT', 'HN', 'NI', 'SV', 'BZ', 'BR', 'AR', 'CL', 'PE', 'UY', 'EC', 'BO', 'PY', 'VE', 'GY', 'SR', 'SE', 'US', 'CA', 'ES',
 ]
 
 interface PhoneInputProps {
@@ -63,6 +41,8 @@ export function PhoneInputField({
   ...props
 }: PhoneInputProps) {
   const inputId = id || name
+  const hasValue = value && value.length > 0
+  const isValid = hasValue && !error
 
   return (
     <div className="space-y-2">
@@ -92,15 +72,13 @@ export function PhoneInputField({
           countries={SUPPORTED_COUNTRIES}
           countryCallingCodeEditable={false}
           international={true}
-          placeholder="Ingresa tu número de teléfono"
+          placeholder={placeholder}
           disabled={disabled}
           className={cn(
-            // Container styles
-            "phone-input-container",
+            "phone-input-container relative",
             className
           )}
           style={{
-            // Custom CSS variables for consistent theming
             '--PhoneInputCountryFlag-aspectRatio': '1.5',
             '--PhoneInputCountryFlag-height': '1em',
             '--PhoneInputCountrySelectArrow-color': '#6b7280',
@@ -108,46 +86,76 @@ export function PhoneInputField({
           } as React.CSSProperties}
           numberInputProps={{
             className: cn(
-              // Input field styles matching your design system
-              "flex h-12 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-base",
-              "ring-offset-background placeholder:text-muted-foreground",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/20",
-              "focus-visible:border-blue-500 transition-all duration-200",
+              // Base styles - matching other inputs exactly
+              "flex h-12 w-full rounded-lg border-2 bg-background px-3 py-2 text-base",
+              "ring-offset-background placeholder:text-muted-foreground/60",
+              "transition-all duration-200 ease-in-out",
               "disabled:cursor-not-allowed disabled:opacity-50",
               "pl-20", // Space for country selector
-              error && "border-red-500 focus-visible:ring-red-500/20 focus-visible:border-red-500",
-              disabled && "bg-muted/50 text-muted-foreground cursor-not-allowed"
+              
+              // Normal state
+              "border-gray-200 dark:border-gray-700",
+              "focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500",
+              
+              // Valid state (subtle green)
+              isValid && "border-emerald-300 dark:border-emerald-600 bg-emerald-50/30 dark:bg-emerald-900/10",
+              isValid && "focus:border-emerald-500 focus:ring-emerald-500/20",
+              
+              // Error state (softer red)
+              error && "border-red-300 dark:border-red-600 bg-red-50/30 dark:bg-red-900/10",
+              error && "focus:border-red-400 focus:ring-red-500/20",
+              
+              // Disabled state
+              disabled && "bg-muted/50 text-muted-foreground cursor-not-allowed border-muted"
             ),
-            placeholder: "Ingresa tu número de teléfono",
+            placeholder: placeholder,
             disabled: disabled,
             autoComplete: "tel",
           }}
           countrySelectProps={{
             className: cn(
-              // Country selector styles
+              // Country selector - integrated design
               "absolute left-3 top-1/2 transform -translate-y-1/2 z-10",
               "flex items-center space-x-2 text-sm font-medium",
               "border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/20",
-              "hover:bg-muted/50 rounded px-1 py-1 transition-colors",
+              "hover:bg-muted/30 rounded-md px-1.5 py-1 transition-colors duration-200",
               disabled && "cursor-not-allowed opacity-50"
             ),
           }}
           {...props}
         />
+
+        {/* Status icon */}
+        {hasValue && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
+            {isValid ? (
+              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+            ) : error ? (
+              <AlertCircle className="w-5 h-5 text-red-400" />
+            ) : null}
+          </div>
+        )}
       </div>
 
+      {/* Error message - much more subtle */}
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-          <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-          {error}
-        </p>
+        <div className="flex items-start gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-900/10 border border-red-200/50 dark:border-red-800/30 rounded-md p-2.5">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 opacity-80" />
+          <span className="leading-relaxed">{error}</span>
+        </div>
       )}
 
-      {/* Format hint */}
-      {!error && !disabled && (
-        <p className="text-xs text-muted-foreground">
+      {/* Success message when valid */}
+      {isValid && (
+        <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+          <CheckCircle2 className="w-4 h-4" />
+          <span>Número válido</span>
+        </div>
+      )}
+
+      {/* Helpful hint when empty */}
+      {!hasValue && !error && !disabled && (
+        <p className="text-xs text-muted-foreground/80 leading-relaxed">
           Selecciona tu país e ingresa tu número. Soporte completo para LATAM y otros países.
         </p>
       )}
@@ -155,5 +163,4 @@ export function PhoneInputField({
   )
 }
 
-// Export default for easier imports
 export default PhoneInputField

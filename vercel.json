@@ -2,8 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/((?!api|_next|static|.*\\..*).*)",
+      "destination": "/"
     }
   ],
   "headers": [
@@ -43,11 +43,10 @@
     }
   ],
   "functions": {
-    "api/**/*.js": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
-  "framework": "vite",
-  "regions": ["iad1"]
+  "api/**/*.js": {
+    "memory": 1024,
+    "maxDuration": 30
+  }
+},
+"framework": "vite"
 }

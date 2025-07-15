@@ -1,13 +1,23 @@
 import axios, { AxiosError } from 'axios';
 import { ApiResponse } from '@/types';
 
-// API base configuration
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+// Environment detection
+const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'production';
+const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
+
+// API base configuration with smart environment detection
+const API_URL = import.meta.env.VITE_API_URL || 
+  (isProduction ? 'https://api.forvara.dev/api' : 'http://localhost:4000/api');
+
+const environment = import.meta.env.VITE_ENV || 
+  (isProduction ? 'production' : 'development');
 
 console.log('🌐 API Configuration:', {
   API_URL,
-  environment: import.meta.env.VITE_ENV || 'development',
-  mode: import.meta.env.MODE
+  environment,
+  mode: import.meta.env.MODE,
+  isProduction,
+  isDevelopment
 });
 
 // Create axios instance with defaults

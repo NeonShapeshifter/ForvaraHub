@@ -20,7 +20,7 @@ const LATAM_PHONE_SPECS: Record<string, CountryPhoneSpec> = {
     name: 'Panamá',
     flag: '🇵🇦',
     callingCode: '+507',
-    mobilePattern: /^[6][0-9]{7}$/,
+    mobilePattern: /^[6-9][0-9]{7}$/, // Cambiado para permitir móviles que empiezan con 6 a 9
     landlinePattern: /^[2-5][0-9]{6,7}$/,
     digitCount: 8,
     format: 'XXXX-XXXX',
@@ -41,8 +41,8 @@ const LATAM_PHONE_SPECS: Record<string, CountryPhoneSpec> = {
     name: 'México',
     flag: '🇲🇽',
     callingCode: '+52',
-    mobilePattern: /^1[0-9]{10}$/,
-    digitCount: 11,
+    mobilePattern: /^1?[0-9]{10}$/, // Permite opcional '1' al inicio para móviles
+    digitCount: 11, // 1 + 10 dígitos o solo 10 dígitos (sin 1)
     format: '1 XXX XXX XXXX',
     example: '1 555 123 4567'
   },
@@ -71,7 +71,8 @@ const LATAM_PHONE_SPECS: Record<string, CountryPhoneSpec> = {
     name: 'Brasil',
     flag: '🇧🇷',
     callingCode: '+55',
-    mobilePattern: /^[0-9]{2}9[0-9]{8}$/,
+    // Regex que valida: 2 dígitos código área + 9 + 8 dígitos
+    mobilePattern: /^[1-9]{2}9[0-9]{8}$/,
     digitCount: 11,
     format: 'XX 9XXXX-XXXX',
     example: '11 91234-5678'
@@ -191,7 +192,7 @@ const LATAM_PHONE_SPECS: Record<string, CountryPhoneSpec> = {
     name: 'Venezuela',
     flag: '🇻🇪',
     callingCode: '+58',
-    mobilePattern: /^4[0-9]{9}$/,
+    mobilePattern: /^4[0-9]{9}$/, // Solo móviles con 4 inicial (puedes agregar 2 si quieres)
     digitCount: 10,
     format: '4XX XXX XXXX',
     example: '412 345 6789'
@@ -227,6 +228,7 @@ const LATAM_PHONE_SPECS: Record<string, CountryPhoneSpec> = {
     example: '70 123 45 67'
   }
 }
+
 
 interface UsePhoneValidationProps {
   value?: string

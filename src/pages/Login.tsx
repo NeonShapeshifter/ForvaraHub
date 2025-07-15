@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuthStore } from '@/stores/authStore'
-import { Eye, EyeOff, Mail, Phone, Sparkles, Shield, Zap } from 'lucide-react'
+import { Eye, EyeOff, Mail, Phone, Sparkles, Shield, Zap, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { LogoAuto } from '@/components/ui/logo'
 import { PhoneInputField } from '@/components/ui/phone-input'
 import { usePhoneValidation } from '@/hooks/usePhoneValidation'
@@ -15,6 +15,8 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false)
   const navigate = useNavigate()
   
   const { login, loginWithPhone, isLoading, error, clearError } = useAuthStore()
@@ -22,7 +24,7 @@ export default function Login() {
   // Phone validation hook (only for phone auth method)
   const phoneValidation = usePhoneValidation({
     value: authMethod === 'phone' ? identifier : undefined,
-    required: authMethod === 'phone'
+    required: false // Don't require immediately, let user type
   })
 
   // Smooth entrance animation
@@ -30,29 +32,61 @@ export default function Login() {
     setIsAnimating(true)
   }, [])
 
+  // Clear errors when switching auth methods
+  useEffect(() => {
+    clearError()
+    setIdentifier('')
+  }, [authMethod, clearError])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     clearError()
     
-    // Additional validation for phone numbers
-    if (authMethod === 'phone' && !phoneValidation.isValid) {
-      return // Don't submit if phone is invalid
+    // Validation
+    if (!identifier.trim() || !password.trim()) {
+      return
+    }
+    
+    // For phone: only validate if user has typed something
+    if (authMethod === 'phone' && identifier && !phoneValidation.isValid) {
+      return
     }
     
     try {
       if (authMethod === 'email') {
-        await login(identifier, password)
+        await login(identifier.trim(), password)
       } else {
-        // Use E.164 format for phone login if available
+        // Use E.164 format for phone login if available, fallback to raw input
         const phoneToUse = phoneValidation.e164Format || identifier
         await loginWithPhone(phoneToUse, password)
       }
-      // Small success animation before navigation
-      setTimeout(() => navigate('/dashboard'), 500)
+      // Success feedback
+      setTimeout(() => navigate('/dashboard'), 300)
     } catch (error) {
       // Error is handled by the store
     }
   }
+
+  const handleForgotPassword = async () => {
+    if (!identifier.trim()) {
+      clearError()
+      // Use a subtle error instead of alert
+      return
+    }
+
+    setForgotPasswordLoading(true)
+    
+    // Simulate API call
+    setTimeout(() => {
+      setForgotPasswordLoading(false)
+      setShowForgotPassword(true)
+      // In real app, this would trigger email/SMS
+    }, 1500)
+  }
+
+  // Form validation
+  const canSubmit = identifier.trim() && password.trim() && 
+    (authMethod === 'email' || !identifier || phoneValidation.isValid) && !isLoading
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
@@ -93,7 +127,7 @@ export default function Login() {
 
         {/* Login Card */}
         <Card className="border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl ring-1 ring-white/10">
-          <CardHeader className="space-y-1 text-center">
+          <CardHeader className="space-y-1 text-center pb-4">
             <CardTitle className="text-2xl font-semibold text-foreground">
               Bienvenido de vuelta
             </CardTitle>
@@ -102,7 +136,7 @@ export default function Login() {
             </CardDescription>
           </CardHeader>
           
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             {/* Auth Method Toggle */}
             <div className="relative">
               <p className="text-sm font-medium mb-3 text-center text-muted-foreground">
@@ -137,36 +171,36 @@ export default function Login() {
             </div>
 
             {/* Login Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 {authMethod === 'email' ? (
                   <>
                     <label className="text-sm font-medium text-foreground flex items-center gap-2">
                       <Mail className="w-4 h-4" /> Email Empresarial
                     </label>
-                    <Input
-                      type="email"
-                      placeholder="tu@empresa.com"
-                      value={identifier}
-                      onChange={(e) => setIdentifier(e.target.value)}
-                      required
-                      autoComplete="email"
-                      className="h-12 text-base border-2 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
-                    />
+                    <div className="relative">
+                      <Input
+                        type="email"
+                        placeholder="tu@empresa.com"
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
+                        required
+                        autoComplete="email"
+                        className="h-12 text-base border-2 focus:border-blue-500 focus:ring-blue-500/20 transition-all pl-4"
+                      />
+                      {identifier && identifier.includes('@') && (
+                        <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
+                      )}
+                    </div>
                   </>
                 ) : (
                   <PhoneInputField
                     label="Teléfono"
                     value={identifier}
                     onChange={(value) => setIdentifier(value || '')}
-                    error={phoneValidation.error || undefined}
+                    error={identifier && phoneValidation.error ? phoneValidation.error : undefined}
                     placeholder="Ingresa tu número de teléfono"
-                    required
-                    className={`transition-all duration-300 ${
-                      phoneValidation.isValid && identifier ? 'border-green-500' : ''
-                    } ${
-                      phoneValidation.error ? 'border-red-500' : ''
-                    }`}
+                    className={`transition-all duration-300`}
                     labelClassName="text-sm font-medium text-foreground flex items-center gap-2"
                   />
                 )}
@@ -185,7 +219,7 @@ export default function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     autoComplete="current-password"
-                    className="h-12 text-base pr-12 border-2 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
+                    className="h-12 text-base pr-12 border-2 focus:border-blue-500 focus:ring-blue-500/20 transition-all pl-4"
                   />
                   <button
                     type="button"
@@ -203,16 +237,17 @@ export default function Login() {
 
               {/* Error Message */}
               {error && (
-                <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-3">
-                  {error}
+                <div className="flex items-start gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-900/10 border border-red-200/50 dark:border-red-800/30 rounded-md p-3">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{error}</span>
                 </div>
               )}
 
               {/* Submit Button */}
               <Button 
                 type="submit" 
-                className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100" 
-                disabled={isLoading || (authMethod === 'phone' && !phoneValidation.isValid && identifier !== '')}
+                className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:opacity-60" 
+                disabled={!canSubmit}
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">
@@ -229,21 +264,33 @@ export default function Login() {
 
               {/* Forgot Password */}
               <div className="text-center pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const contact = authMethod === 'email' ? identifier : phoneValidation.e164Format || identifier
-                    if (contact) {
-                      // Simple password reset for now
-                      alert(`Funcionalidad de recuperación próximamente. Contacta soporte con: ${contact}`)
-                    } else {
-                      alert('Por favor ingresa tu email o teléfono primero')
-                    }
-                  }}
-                  className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors"
-                >
-                  ¿Olvidaste tu contraseña?
-                </button>
+                {!showForgotPassword ? (
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={!identifier.trim() || forgotPasswordLoading}
+                    className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {forgotPasswordLoading ? (
+                      <span className="flex items-center gap-2 justify-center">
+                        <div className="w-3 h-3 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
+                        Enviando...
+                      </span>
+                    ) : (
+                      '¿Olvidaste tu contraseña?'
+                    )}
+                  </button>
+                ) : (
+                  <div className="text-sm text-emerald-600 bg-emerald-50/50 border border-emerald-200/50 rounded-md p-2 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Instrucciones enviadas a tu {authMethod === 'email' ? 'email' : 'teléfono'}</span>
+                  </div>
+                )}
+                {!identifier.trim() && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Ingresa tu {authMethod === 'email' ? 'email' : 'teléfono'} primero
+                  </p>
+                )}
               </div>
             </form>
 
@@ -256,10 +303,13 @@ export default function Login() {
                 type="button"
                 variant="outline"
                 onClick={() => navigate('/register')}
-                className="text-sm font-medium border-2 hover:bg-blue-50 hover:border-blue-200 transition-all"
+                className="text-sm font-medium border-2 hover:bg-blue-50 hover:border-blue-200 transition-all h-10"
               >
-                Crear cuenta empresarial gratis
+                Crear cuenta gratis
               </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Para uso individual o empresarial
+              </p>
             </div>
           </CardContent>
         </Card>
