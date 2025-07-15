@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
   "rewrites": [
     {
       "source": "/((?!api|_next|static|.*\\..*).*)",
@@ -24,7 +25,7 @@
       ]
     },
     {
-      "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2))",
+      "source": "/:file(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
@@ -43,10 +44,9 @@
     }
   ],
   "functions": {
-  "api/**/*.js": {
-    "memory": 1024,
-    "maxDuration": 30
+    "api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
   }
-},
-"framework": "vite"
 }
