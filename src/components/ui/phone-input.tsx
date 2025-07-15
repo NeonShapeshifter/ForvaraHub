@@ -145,7 +145,7 @@ export function PhoneInputField({
         </div>
       )}
 
-      {/* Success message when valid */}
+      {/* Success feedback - ONLY when valid, more subtle */}
       {isValid && (
         <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
           <CheckCircle2 className="w-4 h-4" />

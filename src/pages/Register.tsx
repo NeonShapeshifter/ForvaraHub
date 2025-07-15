@@ -281,11 +281,11 @@ export default function Register() {
                     )}
                   </div>
 
-                  {/* Show country info for phone */}
+                  {/* Show subtle country info for phone - ONLY when valid */}
                   {contactMethod === 'phone' && phoneValidation.isValid && (
-                    <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded-lg">
-                      <CheckCircle className="w-4 h-4" />
-                      {getCountryInfo(phoneValidation.countryCode).flag} {getCountryInfo(phoneValidation.countryCode).name} - {phoneValidation.formattedNumber}
+                    <div className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <span>{getCountryInfo(phoneValidation.countryCode).flag}</span>
+                      <span>{getCountryInfo(phoneValidation.countryCode).name}</span>
                     </div>
                   )}
                 </>
