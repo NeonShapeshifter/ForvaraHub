@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User, Company, RegisterRequest } from '@/types';
+import { User, Company, RegisterRequest, CreateCompanyRequest } from '@/types';
 import { authService } from '@/services/auth.service';
+import { companyService } from '@/services/company.service';
 
 interface AuthState {
   // State
@@ -16,6 +17,8 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   loginWithPhone: (phone: string, password: string) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
+  createCompany: (data: CreateCompanyRequest) => Promise<Company>;
+  refreshCompanies: () => Promise<void>;
   logout: () => Promise<void>;
   setCurrentCompany: (company: Company) => void;
   updateUser: (user: User) => void;
@@ -108,6 +111,46 @@ export const useAuthStore = create<AuthState>(
       updateUser: (user: User) => {
         set({ user });
         localStorage.setItem('user_data', JSON.stringify(user));
+      },
+      
+      // Create company
+      createCompany: async (data: CreateCompanyRequest) => {
+        set({ isLoading: true, error: null });
+        try {
+          const company = await authService.createCompany(data);
+          const state = get();
+          const updatedCompanies = [...state.companies, company];
+          set({
+            companies: updatedCompanies,
+            currentCompany: company,
+            isLoading: false,
+          });
+          return company;
+        } catch (error: any) {
+          set({ error: error.message, isLoading: false });
+          throw error;
+        }
+      },
+      
+      // Refresh companies
+      refreshCompanies: async () => {
+        try {
+          const companies = await companyService.getUserCompanies();
+          const state = get();
+          let currentCompany = state.currentCompany;
+          
+          // Update current company if it exists in the new list
+          if (currentCompany) {
+            const updatedCurrentCompany = companies.find(c => c.id === currentCompany.id);
+            if (updatedCurrentCompany) {
+              currentCompany = updatedCurrentCompany;
+            }
+          }
+          
+          set({ companies, currentCompany });
+        } catch (error: any) {
+          console.warn('Failed to refresh companies:', error);
+        }
       },
       
       // Clear error

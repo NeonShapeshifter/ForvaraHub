@@ -1,493 +1,571 @@
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { AppInstallModal } from '@/components/marketplace/AppInstallModal'
-import { appsService, type App as APIApp } from '@/services/apps.service'
-import { 
-  Search, 
-  Star, 
-  Download, 
-  DollarSign, 
-  Users, 
-  Zap,
-  Building,
-  Calculator,
-  MessageSquare,
-  BarChart3,
-  Package,
-  FileText,
-  Shield,
-  Sparkles
-} from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Search, Star, Download, DollarSign, Building2, Calculator, MessageSquare, BarChart3, Package, FileText, Sparkles, Filter, X, CheckCircle, Clock, ArrowRight } from 'lucide-react'
+import { appsService, App as AppType } from '@/services/apps.service'
 
 interface App {
   id: string
   name: string
+  display_name?: string
   description: string
-  longDescription: string
+  short_description?: string
   icon: React.ReactNode
   category: string
+  base_price_monthly?: number
   price: string
   priceType: 'free' | 'monthly' | 'one-time'
-  rating: number
-  downloads: string
-  features: string[]
-  status: 'available' | 'installed' | 'coming-soon'
+  is_free?: boolean
+  rating?: number
+  downloads?: string
+  features?: string[]
+  status?: 'available' | 'installed' | 'coming-soon'
   featured?: boolean
 }
 
-const mockApps: App[] = [
-  {
-    id: 'elaris-erp',
-    name: 'Elaris ERP',
-    description: 'Sistema ERP completo para PyMEs con contabilidad, inventario y facturación',
-    longDescription: 'La solución ERP más completa para pequeñas y medianas empresas de LATAM. Incluye contabilidad, gestión de inventario, facturación electrónica y reportes financieros.',
-    icon: <Building className="w-8 h-8 text-blue-600" />,
-    category: 'ERP',
-    price: '$29',
-    priceType: 'monthly',
-    rating: 4.8,
-    downloads: '1.2K',
-    features: ['Contabilidad completa', 'Inventario en tiempo real', 'Facturación electrónica', 'Reportes avanzados'],
-    status: 'available',
-    featured: true
-  },
-  {
-    id: 'forvara-analytics',
-    name: 'Forvara Analytics',
-    description: 'Inteligencia empresarial y análisis de datos para tomar mejores decisiones',
-    longDescription: 'Plataforma de business intelligence que convierte tus datos en insights accionables. Dashboards interactivos, predicciones y alertas inteligentes.',
-    icon: <BarChart3 className="w-8 h-8 text-purple-600" />,
-    category: 'Analytics',
-    price: '$19',
-    priceType: 'monthly',
-    rating: 4.6,
-    downloads: '856',
-    features: ['Dashboards interactivos', 'Predicciones IA', 'Alertas automáticas', 'Exportar reportes'],
-    status: 'coming-soon',
-    featured: true
-  },
-  {
-    id: 'forvara-mail',
-    name: 'Forvara Mail',
-    description: 'Comunicación empresarial estilo Discord para equipos remotos',
-    longDescription: 'Plataforma de comunicación moderna que combina chat en tiempo real, videoconferencias y gestión de proyectos en una sola aplicación.',
-    icon: <MessageSquare className="w-8 h-8 text-green-600" />,
-    category: 'Comunicación',
-    price: '$12',
-    priceType: 'monthly',
-    rating: 4.9,
-    downloads: '2.1K',
-    features: ['Chat en tiempo real', 'Videoconferencias', 'Canales por proyecto', 'Integración con ERP'],
-    status: 'coming-soon',
-    featured: true
-  },
-  {
-    id: 'inventory-plus',
-    name: 'Inventory Plus',
-    description: 'Gestión avanzada de inventario con códigos QR y alertas automáticas',
-    longDescription: 'Sistema de inventario inteligente con escaneo QR, alertas de stock bajo y sincronización en tiempo real entre múltiples ubicaciones.',
-    icon: <Package className="w-8 h-8 text-orange-600" />,
-    category: 'Inventario',
-    price: '$15',
-    priceType: 'monthly',
-    rating: 4.7,
-    downloads: '423',
-    features: ['Códigos QR', 'Alertas de stock', 'Multi-ubicación', 'Reportes de rotación'],
-    status: 'available'
-  },
-  {
-    id: 'factura-pro',
-    name: 'Factura Pro',
-    description: 'Facturación electrónica para todos los países de LATAM',
-    longDescription: 'Solución completa de facturación electrónica que cumple con las regulaciones de todos los países latinoamericanos.',
-    icon: <FileText className="w-8 h-8 text-red-600" />,
-    category: 'Facturación',
-    price: '$8',
-    priceType: 'monthly',
-    rating: 4.5,
-    downloads: '1.8K',
-    features: ['Multi-país LATAM', 'Firma electrónica', 'Envío automático', 'Integración tributaria'],
-    status: 'available'
-  },
-  {
-    id: 'calc-latam',
-    name: 'Calc LATAM',
-    description: 'Calculadora fiscal y tributaria especializada en legislación latinoamericana',
-    longDescription: 'Herramienta especializada para cálculos fiscales y tributarios adaptada a las leyes de cada país de LATAM.',
-    icon: <Calculator className="w-8 h-8 text-cyan-600" />,
-    category: 'Finanzas',
-    price: 'Gratis',
-    priceType: 'free',
-    rating: 4.3,
-    downloads: '3.2K',
-    features: ['Cálculo de impuestos', 'Multi-país', 'Actualizaciones legales', 'Exportar cálculos'],
-    status: 'available'
-  }
-]
+// Modal de instalación
+const AppInstallModal = ({ app, isOpen, onClose, onInstall }: {
+  app: App | null
+  isOpen: boolean
+  onClose: () => void
+  onInstall: (appId: string) => void
+}) => {
+  const [installing, setInstalling] = useState(false)
+  const [planSelected, setPlanSelected] = useState<'monthly' | 'yearly'>('monthly')
 
-const categories = ['Todos', 'ERP', 'Analytics', 'Comunicación', 'Inventario', 'Facturación', 'Finanzas']
+  if (!isOpen || !app) return null
+
+  const handleInstall = async () => {
+    setInstalling(true)
+    await onInstall(app.id)
+    setInstalling(false)
+    onClose()
+  }
+
+  const getPriceDisplay = () => {
+    if (app.is_free) return 'Gratis'
+    const price = app.base_price_monthly
+    if (planSelected === 'yearly') {
+      return `$${(price * 10).toFixed(0)}/año`
+    }
+    return `$${price}/mes`
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-2xl border border-gray-200 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-center gap-4">
+            {app.icon}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                {app.display_name}
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {app.category}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Description */}
+          <div>
+            <h3 className="font-medium text-gray-900 dark:text-white mb-2">Descripción</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {app.description}
+            </p>
+          </div>
+
+          {/* Features */}
+          <div>
+            <h3 className="font-medium text-gray-900 dark:text-white mb-3">Características principales</h3>
+            <div className="space-y-2">
+              {app.features.map((feature, index) => (
+                <div key={index} className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Pricing */}
+          {!app.is_free && (
+            <div>
+              <h3 className="font-medium text-gray-900 dark:text-white mb-3">Plan de facturación</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setPlanSelected('monthly')}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    planSelected === 'monthly'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <p className="font-medium text-gray-900 dark:text-white">Mensual</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">${app.base_price_monthly}/mes</p>
+                </button>
+                <button
+                  onClick={() => setPlanSelected('yearly')}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    planSelected === 'yearly'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <p className="font-medium text-gray-900 dark:text-white">Anual</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    ${(app.base_price_monthly * 10).toFixed(0)}/año
+                  </p>
+                  <p className="text-xs text-green-600 dark:text-green-400">Ahorra 2 meses</p>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Trial info */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <div>
+                <p className="font-medium text-blue-900 dark:text-blue-100">
+                  Prueba gratis de 14 días
+                </p>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                  Prueba todas las funciones sin compromiso. No se requiere tarjeta de crédito.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleInstall}
+              disabled={installing || app.status === 'coming-soon'}
+              className="flex-1 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {installing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 dark:border-black/30 border-t-white dark:border-t-black rounded-full animate-spin" />
+                  Instalando...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  Instalar ahora - {getPriceDisplay()}
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function Marketplace() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('Todos')
   const [selectedApp, setSelectedApp] = useState<App | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [installedApps, setInstalledApps] = useState<string[]>(['calc-latam']) // Pre-installed free app
-  const [availableApps, setAvailableApps] = useState<App[]>(mockApps)
+  const [installedApps, setInstalledApps] = useState<string[]>([])
+  const [availableApps, setAvailableApps] = useState<App[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Load available apps from backend
-  useEffect(() => {
-    const loadApps = async () => {
-      try {
-        setLoading(true)
-        const [available, installed] = await Promise.all([
-          appsService.getAvailableApps(),
-          appsService.getInstalledApps()
-        ])
-        
-        if (available.length > 0) {
-          // Use real data from backend
-          setAvailableApps(available.map(app => ({
-            ...app,
-            // Add missing properties with defaults
-            longDescription: app.description,
-            icon: getIconForCategory(app.category),
-            rating: 4.5,
-            downloads: '1.2K',
-            features: ['Feature 1', 'Feature 2', 'Feature 3'],
-            featured: app.category === 'ERP' || app.category === 'Analytics'
-          })))
-        } else {
-          // Fallback to mock data
-          setAvailableApps(mockApps)
-        }
-        
-        // Update installed apps list
-        setInstalledApps(installed.map(app => app.id))
-      } catch (error) {
-        console.error('Error loading apps:', error)
-        // Use mock data as fallback
-        setAvailableApps(mockApps)
-      } finally {
-        setLoading(false)
-      }
-    }
+  const categories = ['Todos', 'ERP', 'Analytics', 'Comunicación', 'Inventario', 'Facturación', 'Finanzas']
 
+  useEffect(() => {
     loadApps()
   }, [])
 
-  const getIconForCategory = (category: string) => {
-    switch (category) {
-      case 'ERP': return <Building className="w-8 h-8 text-blue-600" />
-      case 'Analytics': return <BarChart3 className="w-8 h-8 text-purple-600" />
-      case 'Comunicación': return <MessageSquare className="w-8 h-8 text-green-600" />
-      case 'Inventario': return <Package className="w-8 h-8 text-orange-600" />
-      case 'Facturación': return <FileText className="w-8 h-8 text-red-600" />
-      case 'Finanzas': return <Calculator className="w-8 h-8 text-cyan-600" />
-      default: return <Package className="w-8 h-8 text-gray-600" />
+  const loadApps = async () => {
+    try {
+      setLoading(true)
+      
+      // Load available apps from service
+      const [available, installed] = await Promise.all([
+        appsService.getAvailableApps(),
+        appsService.getInstalledApps()
+      ])
+      
+      // Convert service apps to UI format
+      const convertedApps = available.map(app => ({
+        id: app.id,
+        name: app.name,
+        display_name: app.name,
+        description: app.description,
+        short_description: app.description,
+        icon: getAppIcon(app.category),
+        category: app.category,
+        base_price_monthly: app.priceType === 'free' ? 0 : parseInt(app.price.replace('$', '')),
+        price: app.price,
+        priceType: app.priceType,
+        is_free: app.priceType === 'free',
+        rating: app.rating || 4.5,
+        downloads: app.downloads || '0',
+        features: app.features || ['Funciones básicas'],
+        status: app.status || 'available',
+        featured: app.featured || false
+      }))
+      
+      setAvailableApps(convertedApps)
+      setInstalledApps(installed.map(app => app.id))
+      setLoading(false)
+      
+    } catch (error) {
+      console.error('Error loading apps:', error)
+      setLoading(false)
     }
   }
 
-  const filteredApps = appsWithStatus.filter(app => {
-    const matchesSearch = app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         app.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === 'Todos' || app.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
-
-  const featuredApps = appsWithStatus.filter(app => app.featured)
-
-  const getStatusBadge = (status: App['status']) => {
-    switch (status) {
-      case 'installed':
-        return <Badge variant="default" className="bg-green-500">Instalado</Badge>
-      case 'coming-soon':
-        return <Badge variant="secondary">Próximamente</Badge>
+  const getAppIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'crm & ventas':
+      case 'crm':
+        return <Building2 className="w-8 h-8 text-blue-600" />
+      case 'contabilidad':
+        return <Calculator className="w-8 h-8 text-green-600" />
+      case 'inventario':
+        return <Package className="w-8 h-8 text-purple-600" />
+      case 'analytics':
+        return <BarChart3 className="w-8 h-8 text-orange-600" />
       default:
-        return null
+        return <Building2 className="w-8 h-8 text-gray-600" />
     }
-  }
-
-  const getPriceDisplay = (app: App) => {
-    if (app.priceType === 'free') return 'Gratis'
-    if (app.priceType === 'monthly') return `${app.price}/mes`
-    return app.price
-  }
-
-  const handleAppClick = (app: App) => {
-    setSelectedApp(app)
-    setIsModalOpen(true)
   }
 
   const handleAppInstall = async (appId: string) => {
     try {
       await appsService.installApp(appId)
+      console.log('Installing app:', appId)
       setInstalledApps(prev => [...prev, appId])
-      
-      // Update the app status in availableApps
-      setAvailableApps(prev => prev.map(app => 
-        app.id === appId ? { ...app, status: 'installed' as const } : app
-      ))
     } catch (error) {
       console.error('Error installing app:', error)
-      // Still update UI for demo purposes
+      // For demo purposes, still add to UI on error
       setInstalledApps(prev => [...prev, appId])
-      setAvailableApps(prev => prev.map(app => 
-        app.id === appId ? { ...app, status: 'installed' as const } : app
-      ))
     }
   }
 
-  // Update app statuses based on installed apps
-  const appsWithStatus = availableApps.map(app => ({
-    ...app,
-    status: installedApps.includes(app.id) ? 'installed' as const : app.status
-  }))
+  const filteredApps = availableApps.filter(app => {
+    const matchesSearch = app.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         app.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = selectedCategory === 'Todos' || app.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
+
+  const featuredApps = availableApps.filter(app => app.featured)
+
+  const getStatusBadge = (app: App) => {
+    if (installedApps.includes(app.id)) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700 dark:bg-green-900/10 dark:text-green-400 border border-green-200 dark:border-green-800">
+          <CheckCircle className="w-3 h-3" />
+          Instalado
+        </span>
+      )
+    }
+    if (app.status === 'coming-soon') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-gray-50 text-gray-700 dark:bg-gray-900/10 dark:text-gray-400 border border-gray-200 dark:border-gray-800">
+          <Clock className="w-3 h-3" />
+          Próximamente
+        </span>
+      )
+    }
+    return null
+  }
+
+  const getPriceDisplay = (app: App) => {
+    if (app.is_free) return 'Gratis'
+    return `$${app.base_price_monthly}/mes`
+  }
 
   if (loading) {
     return (
-      <div className="space-y-8">
-        <div className="text-center py-12">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Cargando marketplace...</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-black dark:border-gray-700 dark:border-t-white mx-auto mb-4"></div>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Cargando marketplace...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Sparkles className="w-8 h-8 text-purple-600" />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Sparkles className="w-8 h-8 text-purple-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Marketplace de Apps
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+            Descubre aplicaciones empresariales diseñadas para PyMEs de LATAM
+          </p>
         </div>
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-          🏪 Marketplace de Apps
-        </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Descubre, instala y gestiona aplicaciones empresariales diseñadas específicamente para PyMEs de LATAM
-        </p>
-      </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            placeholder="🔍 Buscar aplicaciones..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-12"
-          />
-        </div>
-        <div className="flex gap-2 overflow-x-auto">
-          {categories.map((category) => (
-            <Button
-              key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
-              onClick={() => setSelectedCategory(category)}
-              className="whitespace-nowrap"
-            >
-              {category}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Featured Apps */}
-      {selectedCategory === 'Todos' && searchTerm === '' && (
-        <div>
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Star className="w-6 h-6 text-yellow-500" />
-            Apps Destacadas
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredApps.map((app) => (
-              <Card 
-                key={app.id} 
-                className="hover:shadow-lg transition-all duration-300 cursor-pointer border-2 border-purple-100 dark:border-purple-900"
-                onClick={() => handleAppClick(app)}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      {app.icon}
-                      <div>
-                        <CardTitle className="text-lg">{app.name}</CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline">{app.category}</Badge>
-                          {getStatusBadge(app.status)}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-lg text-purple-600">{getPriceDisplay(app)}</div>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        {app.rating}
-                      </div>
-                    </div>
-                  </div>
-                  <CardDescription className="mt-2">
-                    {app.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                    <div className="flex items-center gap-1">
-                      <Download className="w-4 h-4" />
-                      {app.downloads} instalaciones
-                    </div>
-                  </div>
-                  <Button 
-                    className="w-full" 
-                    disabled={app.status === 'coming-soon'}
-                    variant={app.status === 'installed' ? 'outline' : 'default'}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      if (app.status !== 'installed' && app.status !== 'coming-soon') {
-                        handleAppClick(app)
-                      }
-                    }}
-                  >
-                    {app.status === 'installed' ? '✅ Instalado' : 
-                     app.status === 'coming-soon' ? '🚧 Próximamente' : 
-                     '🚀 Instalar Ahora'}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+        {/* Search and Filters */}
+        <div className="mb-8 space-y-4">
+          <div className="relative max-w-xl mx-auto">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Buscar aplicaciones..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+            />
+          </div>
+          
+          <div className="flex justify-center">
+            <div className="inline-flex bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-4 py-1.5 rounded-md transition-all text-sm font-medium ${
+                    selectedCategory === category
+                      ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      )}
 
-      {/* All Apps Grid */}
-      <div>
-        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <Package className="w-6 h-6" />
-          {selectedCategory === 'Todos' ? 'Todas las Apps' : `Apps de ${selectedCategory}`}
-          <span className="text-sm font-normal text-muted-foreground">
-            ({filteredApps.length} resultados)
-          </span>
-        </h2>
-        
-        {filteredApps.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No se encontraron aplicaciones</h3>
-              <p className="text-muted-foreground">
-                Intenta con otros términos de búsqueda o selecciona una categoría diferente
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredApps.map((app) => (
-              <Card 
-                key={app.id} 
-                className="hover:shadow-lg transition-all duration-300 cursor-pointer"
-                onClick={() => handleAppClick(app)}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      {app.icon}
-                      <div>
-                        <CardTitle className="text-lg">{app.name}</CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline">{app.category}</Badge>
-                          {getStatusBadge(app.status)}
+        {/* Featured Apps */}
+        {selectedCategory === 'Todos' && searchTerm === '' && featuredApps.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+              <Star className="w-5 h-5 text-yellow-500" />
+              Apps destacadas
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredApps.map((app) => (
+                <div 
+                  key={app.id} 
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border-2 border-purple-100 dark:border-purple-900 hover:shadow-md transition-all cursor-pointer"
+                  onClick={() => {
+                    setSelectedApp(app)
+                    setIsModalOpen(true)
+                  }}
+                >
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        {app.icon}
+                        <div>
+                          <h3 className="font-semibold text-gray-900 dark:text-white">
+                            {app.display_name}
+                          </h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                            {app.category}
+                          </p>
                         </div>
                       </div>
+                      {getStatusBadge(app)}
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-lg">{getPriceDisplay(app)}</div>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        {app.rating}
-                      </div>
-                    </div>
-                  </div>
-                  <CardDescription className="mt-2">
-                    {app.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      {app.short_description}
+                    </p>
+                    
+                    <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-1">
-                        <Download className="w-4 h-4" />
-                        {app.downloads} instalaciones
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {app.rating}
+                        </span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          ({app.downloads})
+                        </span>
+                      </div>
+                      <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {getPriceDisplay(app)}
                       </div>
                     </div>
                     
-                    <div className="space-y-1">
-                      <div className="text-sm font-medium">Características:</div>
-                      <div className="text-xs text-muted-foreground">
-                        {app.features.slice(0, 2).join(' • ')}
-                        {app.features.length > 2 && ' • ...'}
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      className="w-full" 
-                      disabled={app.status === 'coming-soon'}
-                      variant={app.status === 'installed' ? 'outline' : 'default'}
+                    <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        if (app.status !== 'installed' && app.status !== 'coming-soon') {
-                          handleAppClick(app)
+                        if (!installedApps.includes(app.id) && app.status !== 'coming-soon') {
+                          setSelectedApp(app)
+                          setIsModalOpen(true)
                         }
                       }}
+                      disabled={installedApps.includes(app.id) || app.status === 'coming-soon'}
+                      className={`w-full px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                        installedApps.includes(app.id)
+                          ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-default'
+                          : app.status === 'coming-soon'
+                          ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                          : 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-100'
+                      }`}
                     >
-                      {app.status === 'installed' ? '✅ Instalado' : 
-                       app.status === 'coming-soon' ? '🚧 Próximamente' : 
-                       '🚀 Instalar Ahora'}
-                    </Button>
+                      {installedApps.includes(app.id) 
+                        ? 'Instalado' 
+                        : app.status === 'coming-soon' 
+                        ? 'Próximamente' 
+                        : 'Instalar'}
+                    </button>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Stats Footer */}
-      <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 border-purple-200 dark:border-purple-800">
-        <CardContent className="py-8">
+        {/* All Apps Grid */}
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+            <Package className="w-5 h-5" />
+            {selectedCategory === 'Todos' ? 'Todas las apps' : `Apps de ${selectedCategory}`}
+            <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+              ({filteredApps.length} resultados)
+            </span>
+          </h2>
+          
+          {filteredApps.length === 0 ? (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+              <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                No se encontraron aplicaciones
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                Intenta con otros términos de búsqueda o categoría
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredApps.map((app) => (
+                <div 
+                  key={app.id} 
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all cursor-pointer"
+                  onClick={() => {
+                    setSelectedApp(app)
+                    setIsModalOpen(true)
+                  }}
+                >
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        {app.icon}
+                        <div>
+                          <h3 className="font-semibold text-gray-900 dark:text-white">
+                            {app.display_name}
+                          </h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                            {app.category}
+                          </p>
+                        </div>
+                      </div>
+                      {getStatusBadge(app)}
+                    </div>
+                    
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      {app.short_description}
+                    </p>
+                    
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {app.rating}
+                        </span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          ({app.downloads})
+                        </span>
+                      </div>
+                      <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {getPriceDisplay(app)}
+                      </div>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Características:</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        {app.features.slice(0, 2).join(' • ')}
+                        {app.features.length > 2 && ' • ...'}
+                      </p>
+                    </div>
+                    
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (!installedApps.includes(app.id) && app.status !== 'coming-soon') {
+                          setSelectedApp(app)
+                          setIsModalOpen(true)
+                        }
+                      }}
+                      disabled={installedApps.includes(app.id) || app.status === 'coming-soon'}
+                      className={`w-full px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                        installedApps.includes(app.id)
+                          ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-default'
+                          : app.status === 'coming-soon'
+                          ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                          : 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-100'
+                      }`}
+                    >
+                      {installedApps.includes(app.id) 
+                        ? 'Instalado' 
+                        : app.status === 'coming-soon' 
+                        ? 'Próximamente' 
+                        : 'Instalar'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Stats Footer */}
+        <div className="mt-12 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-8 border border-purple-200 dark:border-purple-800">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div>
-              <div className="text-3xl font-bold text-purple-600">{availableApps.length}+</div>
-              <div className="text-muted-foreground">Apps Disponibles</div>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">{availableApps.length}+</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Apps disponibles</p>
             </div>
             <div>
-              <div className="text-3xl font-bold text-purple-600">10K+</div>
-              <div className="text-muted-foreground">PyMEs Conectadas</div>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">10K+</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">PyMEs conectadas</p>
             </div>
             <div>
-              <div className="text-3xl font-bold text-purple-600">18</div>
-              <div className="text-muted-foreground">Países LATAM</div>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">18</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Países LATAM</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Install Modal */}
-      <AppInstallModal 
-        app={selectedApp}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false)
-          setSelectedApp(null)
-        }}
-        onInstall={handleAppInstall}
-      />
+        {/* Install Modal */}
+        <AppInstallModal 
+          app={selectedApp}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false)
+            setSelectedApp(null)
+          }}
+          onInstall={handleAppInstall}
+        />
+      </div>
     </div>
   )
 }

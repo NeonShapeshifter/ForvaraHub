@@ -4,8 +4,14 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Building, ChevronDown, LogOut, Settings, User } from 'lucide-react'
 import { LogoAuto } from '@/components/ui/logo'
+import { MobileMenuButton } from '@/components/navigation'
 
-export function Header() {
+interface HeaderProps {
+  sidebarOpen: boolean
+  setSidebarOpen: (open: boolean) => void
+}
+
+export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
   const { user, currentCompany, logout } = useAuthStore()
   
   const userInitials = user ? `${user.first_name[0]}${user.last_name[0]}` : 'U'
@@ -15,6 +21,12 @@ export function Header() {
       <div className="flex items-center justify-between px-6 py-3">
         {/* Logo */}
         <div className="flex items-center space-x-4">
+          {/* Mobile menu button */}
+          <MobileMenuButton
+            isOpen={sidebarOpen}
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          />
+          
           <div className="flex items-center space-x-3">
             <LogoAuto variant="icon" size="sm" className="hover:scale-110 transition-transform" />
             <LogoAuto variant="full" size="sm" className="hidden sm:block" />

@@ -1,4 +1,3 @@
-import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 import { 
@@ -10,110 +9,121 @@ import {
   CreditCard,
   Store,
   Package,
-  Crown
+  Crown,
+  X
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { NavSection } from '@/components/navigation'
 
-const navigation = [
+const mainNavigation = [
   {
-    name: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard,
+    label: 'Dashboard',
   },
   {
-    name: '🏪 Marketplace',
     href: '/marketplace',
     icon: Store,
-    highlight: true,
+    label: '🏪 Marketplace',
+    isHighlighted: true,
   },
   {
-    name: '🎮 Mis Apps',
     href: '/my-apps',
     icon: Package,
+    label: '🎮 Mis Apps',
   },
   {
-    name: 'Usuarios',
     href: '/users',
     icon: Users,
+    label: 'Usuarios',
   },
   {
-    name: 'Empresas',
     href: '/companies',
     icon: Building,
+    label: 'Empresas',
   },
   {
-    name: 'Analytics',
     href: '/analytics',
     icon: BarChart3,
+    label: 'Analytics',
   },
   {
-    name: 'Facturación',
     href: '/billing',
     icon: CreditCard,
+    label: 'Facturación',
   },
   {
-    name: 'Configuración',
     href: '/settings',
     icon: Settings,
+    label: 'Configuración',
   },
 ]
 
-export function Sidebar() {
+const adminNavigation = [
+  {
+    href: '/admin',
+    icon: Crown,
+    label: 'Admin Dashboard',
+    isAdmin: true,
+  },
+]
+
+interface SidebarProps {
+  sidebarOpen: boolean
+  setSidebarOpen: (open: boolean) => void
+}
+
+export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
   const { user } = useAuthStore()
   
   // Check if user is admin
   const isAdmin = user?.email === 'ale@forvara.com' || user?.email === 'admin@forvara.com'
   
   return (
-    <aside className="w-64 bg-card border-r min-h-[calc(100vh-65px)]">
-      <nav className="p-4 space-y-2">
-        {navigation.map((item) => {
-          const Icon = item.icon
-          return (
-            <NavLink
-              key={item.name}
-              to={item.href}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative',
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-                  (item as any).highlight && 'ring-2 ring-purple-200 dark:ring-purple-800 bg-purple-50 dark:bg-purple-950/50'
-                )
-              }
-            >
-              <Icon className="w-5 h-5" />
-              <span>{item.name}</span>
-            </NavLink>
-          )
-        })}
+    <>
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <aside className={cn(
+        "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card border-r min-h-[calc(100vh-65px)] transition-transform duration-300 ease-in-out",
+        sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      )}>
+      <nav className="p-4 space-y-4">
+        {/* Mobile close button */}
+        <div className="flex lg:hidden justify-end mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+        
+        {/* Main Navigation */}
+        <NavSection 
+          items={mainNavigation} 
+          onItemClick={() => setSidebarOpen(false)} 
+        />
         
         {/* Admin Section */}
         {isAdmin && (
-          <>
-            <div className="border-t pt-4 mt-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">
-                👑 Admin Zone
-              </p>
-              <NavLink
-                to="/admin"
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative',
-                    'ring-2 ring-yellow-200 dark:ring-yellow-800 bg-yellow-50 dark:bg-yellow-950/50',
-                    isActive
-                      ? 'bg-yellow-600 text-white ring-yellow-400'
-                      : 'text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/50'
-                  )
-                }
-              >
-                <Crown className="w-5 h-5" />
-                <span>Admin Dashboard</span>
-              </NavLink>
-            </div>
-          </>
+          <div className="border-t pt-4">
+            <NavSection 
+              title="👑 Admin Zone"
+              items={adminNavigation} 
+              onItemClick={() => setSidebarOpen(false)} 
+            />
+          </div>
         )}
       </nav>
     </aside>
+    </>
   )
 }

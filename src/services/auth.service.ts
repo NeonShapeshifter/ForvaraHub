@@ -7,6 +7,7 @@ import {
   CreateCompanyRequest,
   Company 
 } from '@/types';
+import { companyService } from './company.service';
 
 export const authService = {
   // Login with email or phone
@@ -18,26 +19,62 @@ export const authService = {
         apiUrl: api.defaults.baseURL
       });
       
-      const response = await apiCall<AuthResponse>('post', '/auth/login', credentials);
+      const response = await apiCall<any>('post', '/auth/login', credentials);
+      
+      // Handle backend response structure
+      let authResponse: AuthResponse;
+      
+      if (response.token && response.user) {
+        // Direct auth response
+        authResponse = {
+          token: response.token,
+          user: response.user,
+          companies: response.companies || [],
+          session_id: response.session_id,
+          message: response.message
+        };
+      } else if (response.access_token || response.jwt_token) {
+        // Alternative token field names
+        authResponse = {
+          token: response.access_token || response.jwt_token,
+          user: response.user || response.profile,
+          companies: response.companies || [],
+          session_id: response.session_id,
+          message: response.message
+        };
+      } else {
+        throw new Error('Invalid login response format');
+      }
       
       console.log('✅ Login successful:', { 
-        hasToken: !!response.token, 
-        userId: response.user?.id,
-        companiesCount: response.companies?.length || 0
+        hasToken: !!authResponse.token, 
+        userId: authResponse.user?.id,
+        companiesCount: authResponse.companies?.length || 0
       });
       
       // Store auth data
-      if (response.token) {
-        localStorage.setItem('auth_token', response.token);
-        localStorage.setItem('user_data', JSON.stringify(response.user));
+      if (authResponse.token) {
+        localStorage.setItem('auth_token', authResponse.token);
+        localStorage.setItem('user_data', JSON.stringify(authResponse.user));
+        
+        // Try to fetch user companies if not provided
+        if (!authResponse.companies || authResponse.companies.length === 0) {
+          try {
+            const companies = await companyService.getUserCompanies();
+            authResponse.companies = companies;
+          } catch (error) {
+            console.warn('Could not fetch user companies:', error);
+            authResponse.companies = [];
+          }
+        }
         
         // Set first company as current if available
-        if (response.companies?.length > 0) {
-          localStorage.setItem('current_company', response.companies[0].id);
+        if (authResponse.companies?.length > 0) {
+          localStorage.setItem('current_company', authResponse.companies[0].id);
         }
       }
       
-      return response;
+      return authResponse;
     } catch (error) {
       console.error('❌ Login failed:', error);
       throw error;
@@ -64,7 +101,7 @@ export const authService = {
 
   // Create new company
   async createCompany(data: CreateCompanyRequest): Promise<Company> {
-    const company = await apiCall<Company>('post', '/auth/create-company', data);
+    const company = await companyService.createCompany(data);
     
     // Set as current company
     localStorage.setItem('current_company', company.id);

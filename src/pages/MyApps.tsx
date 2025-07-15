@@ -1,166 +1,121 @@
 import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { 
-  Settings, 
-  ExternalLink, 
-  Trash2, 
-  BarChart3,
-  Users,
-  Calendar,
-  DollarSign,
-  Package,
-  Play,
-  Pause,
-  RotateCcw,
-  Shield,
-  Zap,
-  Building,
-  Calculator,
-  MessageSquare,
-  FileText,
-  Crown,
-  Clock,
-  CheckCircle,
-  AlertTriangle
-} from 'lucide-react'
+import { Settings, ExternalLink, Trash2, BarChart3, Users, Calendar, DollarSign, Package, Crown, Clock, CheckCircle, AlertTriangle, Zap, Building2, Calculator, HardDrive, MoreHorizontal } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
-import { appsService, type InstalledApp as APIInstalledApp } from '@/services/apps.service'
+import { appsService } from '@/services/apps.service'
 
 interface InstalledApp {
   id: string
   name: string
+  display_name: string
   description: string
   icon: React.ReactNode
   category: string
   status: 'active' | 'trial' | 'suspended' | 'pending'
   subscription: {
     plan: string
-    price: string
-    billingCycle: 'monthly' | 'yearly' | 'free'
-    nextBilling?: string
-    trialEnds?: string
+    price: number
+    billing_cycle: 'monthly' | 'yearly' | 'free'
+    next_billing?: string
+    trial_ends?: string
   }
   usage: {
-    lastAccessed: string
-    monthlyActiveUsers: number
-    storageUsed: string
-    apiCalls: number
+    last_accessed: string
+    monthly_active_users: number
+    storage_used_gb: number
+    api_calls: number
   }
-  permissions: string[]
-  installedDate: string
+  installed_date: string
 }
-
-// Mock data - would come from backend
-const mockInstalledApps: InstalledApp[] = [
-  {
-    id: 'elaris-erp',
-    name: 'Elaris ERP',
-    description: 'Sistema ERP completo para PyMEs',
-    icon: <Building className="w-8 h-8 text-blue-600" />,
-    category: 'ERP',
-    status: 'trial',
-    subscription: {
-      plan: 'Professional',
-      price: '$29',
-      billingCycle: 'monthly',
-      trialEnds: '2025-01-27'
-    },
-    usage: {
-      lastAccessed: '2025-01-13',
-      monthlyActiveUsers: 8,
-      storageUsed: '2.3 GB',
-      apiCalls: 1247
-    },
-    permissions: ['Administración completa', 'Gestión de usuarios', 'Reportes financieros'],
-    installedDate: '2025-01-13'
-  },
-  {
-    id: 'calc-latam',
-    name: 'Calc LATAM',
-    description: 'Calculadora fiscal para LATAM',
-    icon: <Calculator className="w-8 h-8 text-cyan-600" />,
-    category: 'Finanzas',
-    status: 'active',
-    subscription: {
-      plan: 'Free',
-      price: 'Gratis',
-      billingCycle: 'free'
-    },
-    usage: {
-      lastAccessed: '2025-01-12',
-      monthlyActiveUsers: 3,
-      storageUsed: '45 MB',
-      apiCalls: 156
-    },
-    permissions: ['Cálculos básicos', 'Exportar resultados'],
-    installedDate: '2025-01-10'
-  },
-  {
-    id: 'inventory-plus',
-    name: 'Inventory Plus',
-    description: 'Gestión avanzada de inventario',
-    icon: <Package className="w-8 h-8 text-orange-600" />,
-    category: 'Inventario',
-    status: 'active',
-    subscription: {
-      plan: 'Standard',
-      price: '$15',
-      billingCycle: 'monthly',
-      nextBilling: '2025-02-10'
-    },
-    usage: {
-      lastAccessed: '2025-01-13',
-      monthlyActiveUsers: 5,
-      storageUsed: '890 MB',
-      apiCalls: 892
-    },
-    permissions: ['Gestión de inventario', 'Códigos QR', 'Alertas de stock'],
-    installedDate: '2025-01-10'
-  }
-]
 
 export default function MyApps() {
   const { currentCompany } = useAuthStore()
-  const [apps, setApps] = useState<InstalledApp[]>(mockInstalledApps)
+  
+  const [apps, setApps] = useState<InstalledApp[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'trial' | 'suspended'>('all')
 
-  // Load installed apps from backend
   useEffect(() => {
-    const loadInstalledApps = async () => {
-      try {
-        setLoading(true)
-        const installedApps = await appsService.getInstalledApps()
-        
-        if (installedApps.length > 0) {
-          // Use real data from backend
-          setApps(installedApps)
-        } else {
-          // Fallback to mock data for demo
-          setApps(mockInstalledApps)
-        }
-      } catch (error) {
-        console.error('Error loading installed apps:', error)
-        // Use mock data as fallback
-        setApps(mockInstalledApps)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     loadInstalledApps()
   }, [])
+
+  const loadInstalledApps = async () => {
+    try {
+      setLoading(true)
+      
+      const installedApps = await appsService.getInstalledApps()
+      
+      // Convert service data to UI format
+      const convertedApps = installedApps.map(app => ({
+        id: app.id,
+        name: app.name,
+        display_name: app.name,
+        description: app.description,
+        icon: getAppIcon(app.category),
+        category: app.category,
+        status: app.status,
+        subscription: app.subscription,
+        usage: app.usage,
+        installed_date: app.installedDate
+      }))
+      
+      setApps(convertedApps)
+      setLoading(false)
+      
+    } catch (error) {
+      console.error('Error loading installed apps:', error)
+      // Fallback to demo data
+      setApps([
+        {
+          id: 'demo-app',
+          name: 'demo-app',
+          display_name: 'Demo App',
+          description: 'Aplicación de demostración',
+          icon: <Building2 className="w-8 h-8 text-blue-600" />,
+          category: 'Demo',
+          status: 'active',
+          subscription: {
+            plan: 'Free',
+            price: 0,
+            billing_cycle: 'free'
+          },
+          usage: {
+            last_accessed: new Date().toISOString(),
+            monthly_active_users: 1,
+            storage_used_gb: 0,
+            api_calls: 0
+          },
+          installed_date: new Date().toISOString()
+        }
+      ])
+      setLoading(false)
+    }
+  }
+
+  const getAppIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'erp':
+        return <Building2 className="w-8 h-8 text-blue-600" />
+      case 'finanzas':
+      case 'contabilidad':
+        return <Calculator className="w-8 h-8 text-green-600" />
+      case 'inventario':
+        return <Package className="w-8 h-8 text-purple-600" />
+      default:
+        return <Building2 className="w-8 h-8 text-gray-600" />
+    }
+  }
 
   const handleLaunchApp = async (appId: string) => {
     try {
       const result = await appsService.launchApp(appId)
-      // Open app in new tab
-      window.open(result.url, '_blank')
+      if (result.url) {
+        window.open(result.url, '_blank')
+      }
+      console.log('Launching app:', appId)
     } catch (error) {
       console.error('Error launching app:', error)
-      // TODO: Show error toast
+      // For demo purposes, show a message
+      alert('App lanzada (demo mode)')
     }
   }
 
@@ -171,41 +126,27 @@ export default function MyApps() {
 
     try {
       await appsService.uninstallApp(appId)
-      // Remove app from local state
       setApps(prev => prev.filter(app => app.id !== appId))
-      // TODO: Show success toast
     } catch (error) {
       console.error('Error uninstalling app:', error)
-      // TODO: Show error toast
+      // For demo, still remove from UI
+      setApps(prev => prev.filter(app => app.id !== appId))
     }
   }
 
   const filteredApps = apps.filter(app => filter === 'all' || app.status === filter)
 
-  const getStatusBadge = (status: InstalledApp['status']) => {
+  const getStatusIndicator = (status: InstalledApp['status']) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-500 text-white"><CheckCircle className="w-3 h-3 mr-1" />Activo</Badge>
+        return <div className="w-2 h-2 bg-green-500 rounded-full" />
       case 'trial':
-        return <Badge className="bg-blue-500 text-white"><Clock className="w-3 h-3 mr-1" />Prueba</Badge>
+        return <div className="w-2 h-2 bg-blue-500 rounded-full" />
       case 'suspended':
-        return <Badge variant="destructive"><AlertTriangle className="w-3 h-3 mr-1" />Suspendido</Badge>
+        return <div className="w-2 h-2 bg-red-500 rounded-full" />
       case 'pending':
-        return <Badge variant="secondary"><RotateCcw className="w-3 h-3 mr-1" />Pendiente</Badge>
+        return <div className="w-2 h-2 bg-yellow-500 rounded-full" />
     }
-  }
-
-  const getTotalMonthlyCost = () => {
-    return apps
-      .filter(app => app.subscription.billingCycle === 'monthly')
-      .reduce((total, app) => {
-        const price = parseFloat(app.subscription.price.replace('$', '') || '0')
-        return total + price
-      }, 0)
-  }
-
-  const getTrialApps = () => {
-    return apps.filter(app => app.status === 'trial')
   }
 
   const getDaysUntilTrialExpires = (trialEnds?: string) => {
@@ -217,285 +158,301 @@ export default function MyApps() {
     return Math.max(0, diffDays)
   }
 
+  const getTotalMonthlyCost = () => {
+    return apps
+      .filter(app => app.subscription.billing_cycle === 'monthly' && app.status === 'active')
+      .reduce((total, app) => total + app.subscription.price, 0)
+  }
+
+  const getTrialApps = () => {
+    return apps.filter(app => app.status === 'trial')
+  }
+
   if (loading) {
     return (
-      <div className="space-y-8">
-        <div className="text-center py-12">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Cargando tus aplicaciones...</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-black dark:border-gray-700 dark:border-t-white mx-auto mb-4"></div>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Cargando tus aplicaciones...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          🎮 Mis Aplicaciones
-        </h1>
-        <p className="text-muted-foreground">
-          Gestiona tus apps instaladas y suscripciones de {currentCompany?.razon_social}
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+            Mis Aplicaciones
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+            Gestiona tus apps instaladas y suscripciones de {currentCompany?.razon_social}
+          </p>
+        </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Package className="w-5 h-5 text-blue-600" />
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center gap-3">
+              <Package className="w-5 h-5 text-blue-600 dark:text-blue-500" />
               <div>
-                <div className="text-2xl font-bold">{apps.length}</div>
-                <div className="text-sm text-muted-foreground">Apps Instaladas</div>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{apps.length}</p>
+                <p className="text-sm text-gray-500">Apps instaladas</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-green-600" />
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center gap-3">
+              <DollarSign className="w-5 h-5 text-green-600 dark:text-green-500" />
               <div>
-                <div className="text-2xl font-bold">${getTotalMonthlyCost()}</div>
-                <div className="text-sm text-muted-foreground">Costo Mensual</div>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  ${getTotalMonthlyCost()}
+                </p>
+                <p className="text-sm text-gray-500">Costo mensual</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-blue-600" />
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center gap-3">
+              <Clock className="w-5 h-5 text-blue-600 dark:text-blue-500" />
               <div>
-                <div className="text-2xl font-bold">{getTrialApps().length}</div>
-                <div className="text-sm text-muted-foreground">En Prueba</div>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  {getTrialApps().length}
+                </p>
+                <p className="text-sm text-gray-500">En prueba</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-purple-600" />
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex items-center gap-3">
+              <Users className="w-5 h-5 text-purple-600 dark:text-purple-500" />
               <div>
-                <div className="text-2xl font-bold">
-                  {apps.reduce((total, app) => total + app.usage.monthlyActiveUsers, 0)}
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  {apps.reduce((total, app) => total + app.usage.monthly_active_users, 0)}
+                </p>
+                <p className="text-sm text-gray-500">Usuarios activos</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Trial Alerts */}
+        {getTrialApps().length > 0 && (
+          <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+            <div className="flex items-start gap-4">
+              <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+                  Períodos de prueba activos
+                </h3>
+                <div className="space-y-3">
+                  {getTrialApps().map(app => {
+                    const daysLeft = getDaysUntilTrialExpires(app.subscription.trial_ends)
+                    return (
+                      <div key={app.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          {app.icon}
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {app.display_name}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {daysLeft} días restantes de prueba
+                            </p>
+                          </div>
+                        </div>
+                        <button className="px-3 py-1.5 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium">
+                          Suscribirse ${app.subscription.price}/mes
+                        </button>
+                      </div>
+                    )
+                  })}
                 </div>
-                <div className="text-sm text-muted-foreground">Usuarios Activos</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        )}
 
-      {/* Trial Alerts */}
-      {getTrialApps().length > 0 && (
-        <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
-              <Clock className="w-5 h-5" />
-              Períodos de Prueba Activos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {getTrialApps().map(app => {
-                const daysLeft = getDaysUntilTrialExpires(app.subscription.trialEnds)
-                return (
-                  <div key={app.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-lg">
-                    <div className="flex items-center gap-3">
+        {/* Filters */}
+        <div className="mb-6">
+          <div className="inline-flex bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1">
+            {[
+              { key: 'all' as const, label: 'Todas', count: apps.length },
+              { key: 'active' as const, label: 'Activas', count: apps.filter(a => a.status === 'active').length },
+              { key: 'trial' as const, label: 'En prueba', count: apps.filter(a => a.status === 'trial').length },
+              { key: 'suspended' as const, label: 'Suspendidas', count: apps.filter(a => a.status === 'suspended').length }
+            ].map(filterOption => (
+              <button
+                key={filterOption.key}
+                onClick={() => setFilter(filterOption.key)}
+                className={`px-4 py-1.5 rounded-md transition-all text-sm font-medium ${
+                  filter === filterOption.key
+                    ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+              >
+                {filterOption.label}
+                {filterOption.count > 0 && (
+                  <span className="ml-1.5 text-xs">({filterOption.count})</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Apps List */}
+        {filteredApps.length > 0 ? (
+          <div className="space-y-4">
+            {filteredApps.map((app) => (
+              <div key={app.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start gap-4">
                       {app.icon}
-                      <div>
-                        <div className="font-medium">{app.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {daysLeft} días restantes de prueba
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            {app.display_name}
+                          </h3>
+                          {getStatusIndicator(app.status)}
+                          <span className="text-sm text-gray-500">{app.category}</span>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                          {app.description}
+                        </p>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span>Instalado: {new Date(app.installed_date).toLocaleDateString('es-ES')}</span>
+                          <span>Último acceso: {new Date(app.usage.last_accessed).toLocaleDateString('es-ES')}</span>
                         </div>
                       </div>
                     </div>
-                    <Button size="sm" className="bg-gradient-to-r from-green-600 to-emerald-600">
-                      💳 Suscribirse ${app.subscription.price}/mes
-                    </Button>
+                    <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                      <MoreHorizontal className="w-5 h-5 text-gray-400" />
+                    </button>
                   </div>
-                )
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
-      {/* Filters */}
-      <div className="flex gap-2">
-        {[
-          { key: 'all', label: 'Todas', count: apps.length },
-          { key: 'active', label: 'Activas', count: apps.filter(a => a.status === 'active').length },
-          { key: 'trial', label: 'En Prueba', count: apps.filter(a => a.status === 'trial').length },
-          { key: 'suspended', label: 'Suspendidas', count: apps.filter(a => a.status === 'suspended').length }
-        ].map(filterOption => (
-          <Button
-            key={filterOption.key}
-            variant={filter === filterOption.key ? "default" : "outline"}
-            onClick={() => setFilter(filterOption.key as any)}
-            className="gap-2"
-          >
-            {filterOption.label}
-            <Badge variant="secondary" className="ml-1">
-              {filterOption.count}
-            </Badge>
-          </Button>
-        ))}
-      </div>
-
-      {/* Apps Grid */}
-      <div className="grid gap-6">
-        {filteredApps.map((app) => (
-          <Card key={app.id} className="hover:shadow-lg transition-all duration-300">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    {app.icon}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CardTitle className="text-xl">{app.name}</CardTitle>
-                      {getStatusBadge(app.status)}
-                      <Badge variant="outline">{app.category}</Badge>
-                    </div>
-                    <CardDescription className="text-base mb-3">
-                      {app.description}
-                    </CardDescription>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>Instalado: {new Date(app.installedDate).toLocaleDateString('es-ES')}</span>
-                      <span>Último acceso: {new Date(app.usage.lastAccessed).toLocaleDateString('es-ES')}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Settings className="w-4 h-4" />
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <ExternalLink className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Subscription Info */}
-                <div>
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <Crown className="w-4 h-4 text-yellow-500" />
-                    Suscripción
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Plan:</span>
-                      <span className="font-medium">{app.subscription.plan}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Precio:</span>
-                      <span className="font-medium text-green-600">{app.subscription.price}{app.subscription.billingCycle === 'monthly' ? '/mes' : ''}</span>
-                    </div>
-                    {app.subscription.nextBilling && (
-                      <div className="flex justify-between">
-                        <span>Próximo cobro:</span>
-                        <span>{new Date(app.subscription.nextBilling).toLocaleDateString('es-ES')}</span>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    {/* Subscription Info */}
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                        <Crown className="w-4 h-4" />
+                        Suscripción
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Plan</span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {app.subscription.plan}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Precio</span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {app.subscription.price === 0 ? 'Gratis' : `$${app.subscription.price}/mes`}
+                          </span>
+                        </div>
+                        {app.subscription.trial_ends && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Prueba</span>
+                            <span className="font-medium text-blue-600 dark:text-blue-400">
+                              {getDaysUntilTrialExpires(app.subscription.trial_ends)} días
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {app.subscription.trialEnds && (
-                      <div className="flex justify-between">
-                        <span>Prueba termina:</span>
-                        <span className="text-blue-600 font-medium">
-                          {getDaysUntilTrialExpires(app.subscription.trialEnds)} días
-                        </span>
+                    </div>
+
+                    {/* Usage Stats */}
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                        <BarChart3 className="w-4 h-4" />
+                        Uso
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Usuarios</span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {app.usage.monthly_active_users}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Almacenamiento</span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {app.usage.storage_used_gb < 1 
+                              ? `${(app.usage.storage_used_gb * 1024).toFixed(0)} MB`
+                              : `${app.usage.storage_used_gb.toFixed(1)} GB`
+                            }
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">API calls</span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {app.usage.api_calls.toLocaleString()}
+                          </span>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
 
-                {/* Usage Stats */}
-                <div>
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-purple-500" />
-                    Uso
-                  </h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Usuarios activos:</span>
-                      <span className="font-medium">{app.usage.monthlyActiveUsers}</span>
+                    {/* Actions */}
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                        <Zap className="w-4 h-4" />
+                        Acciones
+                      </h4>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => handleLaunchApp(app.id)}
+                          className="w-full px-3 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          Abrir app
+                        </button>
+                        <button className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium flex items-center justify-center gap-2">
+                          <Settings className="w-4 h-4" />
+                          Configurar
+                        </button>
+                        {app.status === 'active' && app.subscription.price > 0 && (
+                          <button
+                            onClick={() => handleUninstallApp(app.id)}
+                            className="w-full px-3 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Desinstalar
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Almacenamiento:</span>
-                      <span className="font-medium">{app.usage.storageUsed}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>API calls:</span>
-                      <span className="font-medium">{app.usage.apiCalls.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div>
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-orange-500" />
-                    Acciones
-                  </h4>
-                  <div className="space-y-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full justify-start"
-                      onClick={() => handleLaunchApp(app.id)}
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Abrir App
-                    </Button>
-                    <Button variant="outline" size="sm" className="w-full justify-start">
-                      <Settings className="w-4 h-4 mr-2" />
-                      Configurar
-                    </Button>
-                    <Button variant="outline" size="sm" className="w-full justify-start">
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      Ver Reportes
-                    </Button>
-                    {app.status === 'active' && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full justify-start text-red-600 hover:text-red-700"
-                        onClick={() => handleUninstallApp(app.id)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Desinstalar
-                      </Button>
-                    )}
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {filteredApps.length === 0 && (
-        <Card className="text-center py-12">
-          <CardContent>
-            <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No hay aplicaciones</h3>
-            <p className="text-muted-foreground mb-4">
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              No hay aplicaciones
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
               No tienes aplicaciones {filter !== 'all' ? filter === 'trial' ? 'en prueba' : filter : 'instaladas'} en este momento
             </p>
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600">
-              🏪 Explorar Marketplace
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+            <button
+              onClick={() => window.location.href = '/marketplace'}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium"
+            >
+              <Sparkles className="w-4 h-4" />
+              Explorar marketplace
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
