@@ -1,33 +1,41 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, UserPlus, Mail, Phone, Search, MoreVertical, Shield, Users, User, Eye, ChevronRight, AlertCircle, Building2, Check, X } from 'lucide-react'
+import { useAuthStore } from '@/stores/authStore'
 
 // TODO: Importar desde los archivos reales del proyecto
-// import { useAuthStore } from '../stores/authStore'
 // import { tenantService } from '../services/tenant.service'
 // import { toast } from '../hooks/use-toast'
 // import { CompanyMember, User as UserType } from '../types'
 
-// Componente para el estado vacío cuando no hay empresa
-const NoCompanyState = () => {
+// Componente para el estado individual mode
+const IndividualModeState = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
       <div className="text-center max-w-md">
-        <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4">
-          <Building2 className="w-8 h-8 text-gray-400" />
+        <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4">
+          <User className="w-8 h-8 text-blue-600 dark:text-blue-400" />
         </div>
         <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-          No tienes una empresa
+          Modo Individual
         </h3>
         <p className="text-gray-500 dark:text-gray-400 mb-6">
-          Para gestionar usuarios, primero necesitas crear una empresa o ser invitado a una.
+          Estás en modo individual. Para gestionar usuarios del equipo, necesitas crear una empresa.
         </p>
-        <button 
-          onClick={() => window.location.href = '/companies'}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium"
-        >
-          Crear mi primera empresa
-          <ChevronRight className="w-4 h-4" />
-        </button>
+        <div className="space-y-3">
+          <button 
+            onClick={() => window.location.href = '/companies'}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium"
+          >
+            <Building2 className="w-4 h-4" />
+            Crear mi empresa
+          </button>
+          <button 
+            onClick={() => window.location.href = '/dashboard'}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+          >
+            Volver al dashboard
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -173,11 +181,9 @@ const InviteModal = ({ isOpen, onClose, onSubmit }: {
 
 // Componente principal de Usuarios
 export default function Users() {
-  // TODO: Obtener desde el store real
-  // const { currentCompany, userRole } = useAuthStore()
+  const { currentCompany, isIndividualMode } = useAuthStore()
   
-  // Valores temporales para desarrollo
-  const currentCompany = { id: 'temp-company' } // TODO: Reemplazar con store real
+  // TODO: Get user role from company_members table
   const userRole = 'owner' // TODO: Reemplazar con store real
   
   const [loading, setLoading] = useState(true)
@@ -300,9 +306,9 @@ export default function Users() {
     )
   }
 
-  // Si no hay empresa, mostrar estado vacío
-  if (!currentCompany || currentCompany.id === 'no-company') {
-    return <NoCompanyState />
+  // Si está en modo individual, mostrar estado individual
+  if (isIndividualMode()) {
+    return <IndividualModeState />
   }
 
   // Si está cargando

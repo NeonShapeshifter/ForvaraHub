@@ -15,49 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { NavSection } from '@/components/navigation'
 
-const mainNavigation = [
-  {
-    href: '/dashboard',
-    icon: LayoutDashboard,
-    label: 'Dashboard',
-  },
-  {
-    href: '/marketplace',
-    icon: Store,
-    label: '🏪 Marketplace',
-    isHighlighted: true,
-  },
-  {
-    href: '/my-apps',
-    icon: Package,
-    label: '🎮 Mis Apps',
-  },
-  {
-    href: '/users',
-    icon: Users,
-    label: 'Usuarios',
-  },
-  {
-    href: '/companies',
-    icon: Building,
-    label: 'Empresas',
-  },
-  {
-    href: '/analytics',
-    icon: BarChart3,
-    label: 'Analytics',
-  },
-  {
-    href: '/billing',
-    icon: CreditCard,
-    label: 'Facturación',
-  },
-  {
-    href: '/settings',
-    icon: Settings,
-    label: 'Configuración',
-  },
-]
+// Navigation is now generated dynamically based on mode
 
 const adminNavigation = [
   {
@@ -74,10 +32,88 @@ interface SidebarProps {
 }
 
 export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
-  const { user } = useAuthStore()
+  const { user, isIndividualMode } = useAuthStore()
   
   // Check if user is admin
   const isAdmin = user?.email === 'ale@forvara.com' || user?.email === 'admin@forvara.com'
+  
+  // Dynamic navigation based on mode
+  const getNavigation = () => {
+    if (isIndividualMode()) {
+      return [
+        {
+          href: '/dashboard',
+          icon: LayoutDashboard,
+          label: 'Dashboard',
+        },
+        {
+          href: '/marketplace',
+          icon: Store,
+          label: '🏪 Marketplace',
+          isHighlighted: true,
+        },
+        {
+          href: '/my-apps',
+          icon: Package,
+          label: '🎮 Mis Apps',
+        },
+        {
+          href: '/companies',
+          icon: Building,
+          label: 'Crear Empresa',
+        },
+        {
+          href: '/settings',
+          icon: Settings,
+          label: 'Mi Perfil',
+        },
+      ]
+    } else {
+      return [
+        {
+          href: '/dashboard',
+          icon: LayoutDashboard,
+          label: 'Dashboard',
+        },
+        {
+          href: '/marketplace',
+          icon: Store,
+          label: '🏪 Marketplace',
+          isHighlighted: true,
+        },
+        {
+          href: '/my-apps',
+          icon: Package,
+          label: '🎮 Mis Apps',
+        },
+        {
+          href: '/users',
+          icon: Users,
+          label: 'Usuarios',
+        },
+        {
+          href: '/companies',
+          icon: Building,
+          label: 'Empresas',
+        },
+        {
+          href: '/analytics',
+          icon: BarChart3,
+          label: 'Analytics',
+        },
+        {
+          href: '/billing',
+          icon: CreditCard,
+          label: 'Facturación',
+        },
+        {
+          href: '/settings',
+          icon: Settings,
+          label: 'Configuración',
+        },
+      ]
+    }
+  }
   
   return (
     <>
@@ -108,7 +144,7 @@ export function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
         
         {/* Main Navigation */}
         <NavSection 
-          items={mainNavigation} 
+          items={getNavigation()} 
           onItemClick={() => setSidebarOpen(false)} 
         />
         

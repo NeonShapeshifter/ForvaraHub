@@ -14,7 +14,7 @@ const daysUntil = (dateString: string) => {
 }
 
 export default function Dashboard() {
-  const { user, currentCompany, refreshCompanies } = useAuthStore()
+  const { user, currentCompany, refreshCompanies, isIndividualMode } = useAuthStore()
   const navigate = useNavigate()
   
   const [loading, setLoading] = useState(true)
@@ -110,6 +110,21 @@ export default function Dashboard() {
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             Panel de administración de Forvara Hub
           </p>
+          
+          {/* Individual Mode Indicator */}
+          {isIndividualMode() && (
+            <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+              <div className="flex items-center space-x-2">
+                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                  Modo Individual
+                </span>
+              </div>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                Estás usando Forvara sin empresa. Puedes instalar apps personales y crear una empresa cuando quieras.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Trial Warning */}
@@ -142,19 +157,21 @@ export default function Dashboard() {
             <div className="flex items-start justify-between mb-4">
               <Building2 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               <span className={`text-xs font-medium px-2 py-1 rounded-md ${
-                currentCompany?.status === 'trial' 
-                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' 
-                  : 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                isIndividualMode()
+                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                  : currentCompany?.status === 'trial' 
+                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' 
+                    : 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
               }`}>
-                {currentCompany?.status === 'trial' ? 'Prueba' : 'Activo'}
+                {isIndividualMode() ? 'Individual' : currentCompany?.status === 'trial' ? 'Prueba' : 'Activo'}
               </span>
             </div>
             <div>
               <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {currentCompany?.razon_social || 'Sin empresa'}
+                {isIndividualMode() ? 'Modo Individual' : currentCompany?.razon_social || 'Sin empresa'}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                RUC: {currentCompany?.ruc || 'N/A'}
+                {isIndividualMode() ? 'Usuario personal' : `RUC: ${currentCompany?.ruc || 'N/A'}`}
               </p>
             </div>
           </div>
@@ -166,10 +183,10 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                {dashboardData?.stats?.active_users || 1}
+                {isIndividualMode() ? '1' : dashboardData?.stats?.active_users || 1}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                de {currentCompany?.slots_limit || 50} usuarios
+                {isIndividualMode() ? 'solo tú' : `de ${currentCompany?.slots_limit || 50} usuarios`}
               </p>
             </div>
           </div>
@@ -181,15 +198,18 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                {storageUsedPercent.toFixed(0)}%
+                {isIndividualMode() ? '0%' : storageUsedPercent.toFixed(0) + '%'}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {(currentCompany?.storage_used_bytes / (1024 * 1024 * 1024)).toFixed(1)} GB de {currentCompany?.storage_limit_gb || 5} GB
+                {isIndividualMode() 
+                  ? '2 GB gratis para uso personal' 
+                  : `${(currentCompany?.storage_used_bytes / (1024 * 1024 * 1024)).toFixed(1)} GB de ${currentCompany?.storage_limit_gb || 5} GB`
+                }
               </p>
               <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                 <div 
                   className="bg-purple-600 h-1.5 rounded-full transition-all duration-300"
-                  style={{ width: `${storageUsedPercent}%` }}
+                  style={{ width: `${isIndividualMode() ? 0 : storageUsedPercent}%` }}
                 />
               </div>
             </div>
@@ -214,34 +234,158 @@ export default function Dashboard() {
         {/* Quick Actions */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Acciones rápidas
+            {isIndividualMode() ? 'Acciones personales' : 'Acciones del equipo'}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action) => (
-              <button
-                key={action.id}
-                onClick={() => navigate(action.action)}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg group-hover:bg-gray-200 dark:group-hover:bg-gray-600 transition-colors">
-                    {action.icon === 'user-plus' && <Users className="w-5 h-5 text-gray-600 dark:text-gray-400" />}
-                    {action.icon === 'shopping-bag' && <Package className="w-5 h-5 text-gray-600 dark:text-gray-400" />}
-                    {action.icon === 'bar-chart' && <Activity className="w-5 h-5 text-gray-600 dark:text-gray-400" />}
-                    {action.icon === 'settings' && <Building2 className="w-5 h-5 text-gray-600 dark:text-gray-400" />}
+            {/* Individual Mode Actions */}
+            {isIndividualMode() && (
+              <>
+                <button
+                  onClick={() => navigate('/marketplace')}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800/30 transition-colors">
+                      <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+                        Explorar Apps
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Instala apps para uso personal
+                      </p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900 dark:text-white mb-1">
-                      {action.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {action.description}
-                    </p>
+                </button>
+                
+                <button
+                  onClick={() => navigate('/companies')}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800/30 transition-colors">
+                      <Building2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+                        Crear Empresa
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Upgrade a modo empresa
+                      </p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
-                </div>
-              </button>
-            ))}
+                </button>
+                
+                <button
+                  onClick={() => navigate('/settings')}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800/30 transition-colors">
+                      <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+                        Mi Perfil
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Configurar cuenta personal
+                      </p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                  </div>
+                </button>
+              </>
+            )}
+            
+            {/* Company Mode Actions */}
+            {!isIndividualMode() && (
+              <>
+                <button
+                  onClick={() => navigate('/users')}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800/30 transition-colors">
+                      <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+                        Gestionar Equipo
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Invitar y administrar usuarios
+                      </p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => navigate('/marketplace')}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800/30 transition-colors">
+                      <Package className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+                        Apps Empresariales
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Instalar para todo el equipo
+                      </p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => navigate('/analytics')}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800/30 transition-colors">
+                      <Activity className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+                        Analytics
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Métricas del equipo
+                      </p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => navigate('/settings')}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg group-hover:bg-orange-200 dark:group-hover:bg-orange-800/30 transition-colors">
+                      <Building2 className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+                        Configuración
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Ajustes de la empresa
+                      </p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                  </div>
+                </button>
+              </>
+            )}
           </div>
         </div>
 

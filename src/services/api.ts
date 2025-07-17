@@ -39,11 +39,23 @@ api.interceptors.request.use(
     
     // Add tenant context if available
     const currentCompany = localStorage.getItem('current_company');
+    
+    // Some endpoints don't require tenant context (can work in individual mode)
+    const tenantFreeEndpoints = [
+      '/auth', 
+      '/health',
+      '/tenants', // GET /tenants lists all user companies
+      '/apps' // Apps can work in individual mode
+    ];
+    
+    const requiresTenant = !tenantFreeEndpoints.some(endpoint => 
+      config.url?.includes(endpoint)
+    );
+    
     if (currentCompany) {
       config.headers['X-Tenant-ID'] = currentCompany;
-    } else {
-      // If no company is selected, some endpoints may still work
-      // but tenant-specific endpoints will fail appropriately
+    } else if (requiresTenant) {
+      // Only warn for endpoints that typically need tenant context
       console.warn('No tenant ID available for request to:', config.url);
     }
     

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Star, Download, DollarSign, Building2, Calculator, MessageSquare, BarChart3, Package, FileText, Sparkles, Filter, X, CheckCircle, Clock, ArrowRight } from 'lucide-react'
+import { Search, Star, Download, DollarSign, Building2, Calculator, MessageSquare, BarChart3, Package, FileText, Sparkles, Filter, X, CheckCircle, Clock, ArrowRight, User } from 'lucide-react'
 import { appsService, App as AppType } from '@/services/apps.service'
+import { useAuthStore } from '@/stores/authStore'
 
 interface App {
   id: string
@@ -22,11 +23,12 @@ interface App {
 }
 
 // Modal de instalación
-const AppInstallModal = ({ app, isOpen, onClose, onInstall }: {
+const AppInstallModal = ({ app, isOpen, onClose, onInstall, isIndividualMode }: {
   app: App | null
   isOpen: boolean
   onClose: () => void
   onInstall: (appId: string) => void
+  isIndividualMode: boolean
 }) => {
   const [installing, setInstalling] = useState(false)
   const [planSelected, setPlanSelected] = useState<'monthly' | 'yearly'>('monthly')
@@ -164,7 +166,7 @@ const AppInstallModal = ({ app, isOpen, onClose, onInstall }: {
               ) : (
                 <>
                   <Download className="w-4 h-4" />
-                  Instalar ahora - {getPriceDisplay()}
+                  {isIndividualMode ? 'Instalar para mí' : 'Instalar para empresa'} - {getPriceDisplay()}
                 </>
               )}
             </button>
@@ -176,6 +178,7 @@ const AppInstallModal = ({ app, isOpen, onClose, onInstall }: {
 }
 
 export default function Marketplace() {
+  const { isIndividualMode } = useAuthStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('Todos')
   const [selectedApp, setSelectedApp] = useState<App | null>(null)
@@ -309,14 +312,31 @@ export default function Marketplace() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="w-8 h-8 text-purple-600" />
+            {isIndividualMode() ? (
+              <User className="w-8 h-8 text-blue-600" />
+            ) : (
+              <Sparkles className="w-8 h-8 text-purple-600" />
+            )}
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Marketplace de Apps
+            {isIndividualMode() ? 'Apps Personales' : 'Marketplace de Apps'}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
-            Descubre aplicaciones empresariales diseñadas para PyMEs de LATAM
+            {isIndividualMode() 
+              ? 'Descubre aplicaciones para uso personal y optimiza tu productividad'
+              : 'Descubre aplicaciones empresariales diseñadas para PyMEs de LATAM'
+            }
           </p>
+          
+          {/* Mode indicator */}
+          {isIndividualMode() && (
+            <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/20 rounded-full">
+              <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                Modo Individual
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Search and Filters */}
@@ -564,6 +584,7 @@ export default function Marketplace() {
             setSelectedApp(null)
           }}
           onInstall={handleAppInstall}
+          isIndividualMode={isIndividualMode()}
         />
       </div>
     </div>

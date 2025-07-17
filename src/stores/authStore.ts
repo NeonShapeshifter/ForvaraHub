@@ -23,6 +23,7 @@ interface AuthState {
   setCurrentCompany: (company: Company) => void;
   updateUser: (user: User) => void;
   clearError: () => void;
+  isIndividualMode: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>(
@@ -41,6 +42,12 @@ export const useAuthStore = create<AuthState>(
         set({ isLoading: true, error: null });
         try {
           const response = await authService.login({ email, password });
+          
+          // Set the first company as current if available
+          if (response.companies?.[0]) {
+            localStorage.setItem('current_company', response.companies[0].id);
+          }
+          
           set({
             user: response.user,
             token: response.token,
@@ -59,6 +66,12 @@ export const useAuthStore = create<AuthState>(
         set({ isLoading: true, error: null });
         try {
           const response = await authService.login({ phone, password });
+          
+          // Set the first company as current if available
+          if (response.companies?.[0]) {
+            localStorage.setItem('current_company', response.companies[0].id);
+          }
+          
           set({
             user: response.user,
             token: response.token,
@@ -104,6 +117,7 @@ export const useAuthStore = create<AuthState>(
       // Set current company
       setCurrentCompany: (company: Company) => {
         set({ currentCompany: company });
+        // Store company ID for API interceptor to use as tenant header
         localStorage.setItem('current_company', company.id);
       },
       
@@ -120,6 +134,10 @@ export const useAuthStore = create<AuthState>(
           const company = await authService.createCompany(data);
           const state = get();
           const updatedCompanies = [...state.companies, company];
+          
+          // Important: Set the company ID in localStorage for API interceptor
+          localStorage.setItem('current_company', company.id);
+          
           set({
             companies: updatedCompanies,
             currentCompany: company,
@@ -155,6 +173,12 @@ export const useAuthStore = create<AuthState>(
       
       // Clear error
       clearError: () => set({ error: null }),
+      
+      // Check if user is in individual mode (no companies)
+      isIndividualMode: () => {
+        const state = get();
+        return state.user && (!state.companies || state.companies.length === 0);
+      },
     }),
     {
       name: 'auth-storage',

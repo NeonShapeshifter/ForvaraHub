@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Settings, ExternalLink, Trash2, BarChart3, Users, Calendar, DollarSign, Package, Crown, Clock, CheckCircle, AlertTriangle, Zap, Building2, Calculator, HardDrive, MoreHorizontal, Sparkles } from 'lucide-react'
+import { Settings, ExternalLink, Trash2, BarChart3, Users, Calendar, DollarSign, Package, Crown, Clock, CheckCircle, AlertTriangle, Zap, Building2, Calculator, HardDrive, MoreHorizontal, Sparkles, X } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { appsService } from '@/services/apps.service'
+import { EmbeddedUserManagement } from '@/components/EmbeddedUserManagement'
+import { AppDelegationManagement } from '@/components/AppDelegationManagement'
 
 interface InstalledApp {
   id: string
@@ -33,6 +35,8 @@ export default function MyApps() {
   const [apps, setApps] = useState<InstalledApp[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'active' | 'trial' | 'suspended'>('all')
+  const [selectedApp, setSelectedApp] = useState<InstalledApp | null>(null)
+  const [showAppManagement, setShowAppManagement] = useState(false)
 
   useEffect(() => {
     loadInstalledApps()
@@ -144,6 +148,11 @@ export default function MyApps() {
       // For demo, still remove from UI
       setApps(prev => prev.filter(app => app.id !== appId))
     }
+  }
+
+  const handleConfigureApp = (app: InstalledApp) => {
+    setSelectedApp(app)
+    setShowAppManagement(true)
   }
 
   const filteredApps = apps.filter(app => filter === 'all' || app.status === filter)
@@ -426,7 +435,10 @@ export default function MyApps() {
                           <ExternalLink className="w-4 h-4" />
                           Abrir app
                         </button>
-                        <button className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium flex items-center justify-center gap-2">
+                        <button 
+                          onClick={() => handleConfigureApp(app)}
+                          className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                        >
                           <Settings className="w-4 h-4" />
                           Configurar
                         </button>
@@ -485,6 +497,46 @@ export default function MyApps() {
           </div>
         )}
       </div>
+
+      {/* App Management Modal */}
+      {showAppManagement && selectedApp && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-200 dark:border-gray-700">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {selectedApp.icon}
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Configuración de {selectedApp.display_name}
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    Gestiona usuarios y permisos de la aplicación
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAppManagement(false)}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-4 overflow-y-auto max-h-[calc(90vh-120px)] space-y-6">
+              <EmbeddedUserManagement 
+                appId={selectedApp.id} 
+                appName={selectedApp.display_name} 
+              />
+              <AppDelegationManagement 
+                appId={selectedApp.id} 
+                appName={selectedApp.display_name} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
