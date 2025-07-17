@@ -30,7 +30,7 @@ interface InstalledApp {
 }
 
 export default function MyApps() {
-  const { currentCompany } = useAuthStore()
+  const { currentCompany, isIndividualMode } = useAuthStore()
   
   const [apps, setApps] = useState<InstalledApp[]>([])
   const [loading, setLoading] = useState(true)
@@ -46,8 +46,8 @@ export default function MyApps() {
     try {
       setLoading(true)
       
-      // Check if user has a company selected
-      if (!currentCompany) {
+      // Handle both individual and company mode
+      if (!isIndividualMode() && !currentCompany) {
         console.warn('No company selected, cannot load installed apps')
         setApps([])
         setLoading(false)
@@ -461,7 +461,23 @@ export default function MyApps() {
         ) : (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
             <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            {!currentCompany ? (
+            {isIndividualMode() ? (
+              <>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  No hay aplicaciones personales
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">
+                  Aún no has instalado aplicaciones para uso personal
+                </p>
+                <button
+                  onClick={() => window.location.href = '/marketplace'}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Explorar marketplace
+                </button>
+              </>
+            ) : !currentCompany ? (
               <>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                   Empresa requerida

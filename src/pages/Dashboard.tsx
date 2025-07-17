@@ -25,8 +25,8 @@ export default function Dashboard() {
     ? daysUntil(currentCompany.trial_ends_at)
     : 0
     
-  const storageUsedPercent = currentCompany 
-    ? (currentCompany.storage_used_bytes / (currentCompany.storage_limit_gb * 1024 * 1024 * 1024)) * 100
+  const storageUsedPercent = dashboardData?.stats 
+    ? (dashboardData.stats.storage_used_gb / (dashboardData.stats.storage_limit_gb || 5)) * 100
     : 0
 
   useEffect(() => {
@@ -44,41 +44,36 @@ export default function Dashboard() {
       const actions = await dashboardService.getQuickActions()
       setQuickActions(actions)
       
-      // Try to load dashboard stats if company is available
-      if (currentCompany) {
-        try {
-          const stats = await dashboardService.getDashboardStats()
-          setDashboardData({ stats })
-        } catch (error) {
-          console.warn('Could not load dashboard stats:', error)
-          // Fallback to basic data
-          setDashboardData({
-            stats: {
-              active_users: 1,
-              installed_apps: 0,
-              storage_used_gb: currentCompany.storage_used_bytes / (1024 * 1024 * 1024),
-              api_calls_today: 0,
-              total_users: 1,
-              total_companies: 1,
-              active_subscriptions: 0,
-              mrr: 0
-            }
-          })
+      // Load dashboard stats (works for both individual and company modes)
+      try {
+        const stats = await dashboardService.getDashboardStats()
+        setDashboardData({ stats })
+      } catch (error) {
+        console.warn('Could not load dashboard stats:', error)
+        // Fallback to basic data based on mode
+        const fallbackStats = isIndividualMode() ? {
+          active_users: 1,
+          installed_apps: 0,
+          storage_used_gb: 0.5,
+          storage_limit_gb: 2,
+          api_calls_today: 0,
+          total_users: 1,
+          total_companies: 0,
+          active_subscriptions: 0,
+          mrr: 0
+        } : {
+          active_users: 1,
+          installed_apps: 0,
+          storage_used_gb: currentCompany?.storage_used_bytes ? (currentCompany.storage_used_bytes / (1024 * 1024 * 1024)) : 0,
+          storage_limit_gb: currentCompany?.storage_limit_gb || 5,
+          api_calls_today: 0,
+          total_users: 1,
+          total_companies: 1,
+          active_subscriptions: 0,
+          mrr: 0
         }
-      } else {
-        // No company, basic fallback
-        setDashboardData({
-          stats: {
-            active_users: 1,
-            installed_apps: 0,
-            storage_used_gb: 0,
-            api_calls_today: 0,
-            total_users: 1,
-            total_companies: 0,
-            active_subscriptions: 0,
-            mrr: 0
-          }
-        })
+        
+        setDashboardData({ stats: fallbackStats })
       }
       
       setLoading(false)
@@ -203,7 +198,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {isIndividualMode() 
                   ? '2 GB gratis para uso personal' 
-                  : `${(currentCompany?.storage_used_bytes / (1024 * 1024 * 1024)).toFixed(1)} GB de ${currentCompany?.storage_limit_gb || 5} GB`
+                  : `${(dashboardData?.stats?.storage_used_gb || 0).toFixed(1)} GB de ${dashboardData?.stats?.storage_limit_gb || 5} GB`
                 }
               </p>
               <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">

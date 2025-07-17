@@ -2,6 +2,7 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { MainLayout } from '@/components/layout/MainLayout'
+import ToastContainer from '@/components/ui/toast'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import Dashboard from '@/pages/Dashboard'
@@ -72,6 +73,7 @@ function App() {
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    <ToastContainer />
   )
 }
 

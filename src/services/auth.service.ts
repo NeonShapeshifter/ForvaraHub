@@ -99,6 +99,16 @@ export const authService = {
     return apiCall<User>('get', '/auth/me');
   },
 
+  // Update user profile
+  async updateProfile(data: Partial<User>): Promise<User> {
+    const updatedUser = await apiCall<User>('patch', '/auth/me', data);
+    
+    // Update stored user data
+    localStorage.setItem('user_data', JSON.stringify(updatedUser));
+    
+    return updatedUser;
+  },
+
   // Create new company
   async createCompany(data: CreateCompanyRequest): Promise<Company> {
     const company = await companyService.createCompany(data);

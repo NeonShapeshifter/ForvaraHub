@@ -35,17 +35,22 @@ const NoCompanyState = () => {
 }
 
 // Componente de navegación lateral
-const SettingsSidebar = ({ activeSection, onSectionChange }: { 
+const SettingsSidebar = ({ activeSection, onSectionChange, hideCompany = false }: { 
   activeSection: string
   onSectionChange: (section: string) => void 
+  hideCompany?: boolean
 }) => {
-  const sections = [
+  const allSections = [
     { id: 'profile', label: 'Mi Perfil', icon: User },
     { id: 'company', label: 'Empresa', icon: Building2 },
     { id: 'security', label: 'Seguridad', icon: Shield },
     { id: 'notifications', label: 'Notificaciones', icon: Bell },
     { id: 'preferences', label: 'Preferencias', icon: Globe }
   ]
+
+  const sections = hideCompany 
+    ? allSections.filter(section => section.id !== 'company')
+    : allSections
 
   return (
     <nav className="space-y-1">
@@ -530,11 +535,42 @@ const SecuritySection = () => {
 
 // Componente principal de Settings
 export default function Settings() {
-  const { currentCompany, user } = useAuthStore()
+  const { currentCompany, user, isIndividualMode } = useAuthStore()
   
   const [activeSection, setActiveSection] = useState('profile')
 
-  // Si no hay empresa
+  // Individual mode - allow access without company
+  if (isIndividualMode()) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+              Configuración Personal
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">
+              Gestiona tu perfil y preferencias personales
+            </p>
+          </div>
+
+          {/* Individual Mode Settings */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-1 lg:grid-cols-4">
+              <div className="lg:col-span-1 border-r border-gray-200 dark:border-gray-700">
+                <SettingsSidebar activeSection={activeSection} onSectionChange={setActiveSection} hideCompany={true} />
+              </div>
+              <div className="lg:col-span-3">
+                <SettingsContent section={activeSection} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Company mode - check if company exists
   if (!currentCompany) {
     return <NoCompanyState />
   }

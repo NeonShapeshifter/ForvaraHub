@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { ApiResponse } from '@/types';
+import { toast } from '@/hooks/useToast';
 
 // Environment detection
 const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'production';
@@ -70,20 +71,54 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiResponse>) => {
-    if (error.response?.status === 401) {
-      // Clear auth data and redirect to login
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('user_data');
-      localStorage.removeItem('current_company');
-      window.location.href = '/login';
-    }
-    
-    // Extract error message
+    const status = error.response?.status
     const message = error.response?.data?.error?.message || 
                    error.message || 
-                   'An unexpected error occurred';
+                   'An unexpected error occurred'
     
-    return Promise.reject(new Error(message));
+    // Handle different error types
+    switch (status) {
+      case 401:
+        // Unauthorized - clear auth and redirect
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('user_data')
+        localStorage.removeItem('current_company')
+        toast.error('Sesión expirada', 'Por favor inicia sesión nuevamente')
+        setTimeout(() => window.location.href = '/login', 1000)
+        break
+        
+      case 403:
+        // Forbidden
+        toast.error('Acceso denegado', message)
+        break
+        
+      case 404:
+        // Not found
+        console.warn('Resource not found:', error.config?.url)
+        break
+        
+      case 429:
+        // Rate limited
+        toast.warning('Demasiadas solicitudes', 'Por favor espera un momento antes de intentar nuevamente')
+        break
+        
+      case 500:
+      case 502:
+      case 503:
+        // Server errors
+        toast.error('Error del servidor', 'Estamos experimentando problemas técnicos')
+        break
+        
+      default:
+        // Network or other errors
+        if (!error.response) {
+          toast.error('Error de conexión', 'Verifica tu conexión a internet')
+        } else if (status >= 400) {
+          toast.error('Error', message)
+        }
+    }
+    
+    return Promise.reject(new Error(message))
   }
 );
 
