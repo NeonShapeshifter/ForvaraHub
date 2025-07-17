@@ -207,7 +207,10 @@ export default function Analytics() {
     }
   }
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | undefined) => {
+    if (amount === undefined || amount === null || isNaN(amount)) {
+      return '$0'
+    }
     return new Intl.NumberFormat('es-PA', {
       style: 'currency',
       currency: 'USD',
@@ -293,7 +296,7 @@ export default function Analytics() {
           />
           <MetricCard
             title="Almacenamiento"
-            value={`${analytics?.overview.storage_used_gb?.toFixed(1) || 0}`}
+            value={`${analytics?.overview?.storage_used_gb?.toFixed(1) || '0.0'}`}
             suffix=" GB"
             icon={HardDrive}
             color="orange"
@@ -398,7 +401,7 @@ export default function Analytics() {
                     <span className="text-sm text-gray-600 dark:text-gray-400">Usuarios activos (7d)</span>
                   </div>
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {analytics?.overview.active_users_7d || 0} / {analytics?.overview.total_users || 0}
+                    {analytics?.overview?.active_users_7d || 0} / {analytics?.overview?.total_users || 0}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2">
@@ -407,7 +410,7 @@ export default function Analytics() {
                     <span className="text-sm text-gray-600 dark:text-gray-400">Suscripciones activas</span>
                   </div>
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {analytics?.overview.active_subscriptions || 0}
+                    {analytics?.overview?.active_subscriptions || 0}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2">
@@ -416,7 +419,7 @@ export default function Analytics() {
                     <span className="text-sm text-gray-600 dark:text-gray-400">Almacenamiento libre</span>
                   </div>
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {(5 - (analytics?.overview.storage_used_gb || 0)).toFixed(1)} GB
+                    {(5 - (analytics?.overview?.storage_used_gb || 0)).toFixed(1)} GB
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2">
@@ -448,18 +451,18 @@ export default function Analytics() {
                   {analytics?.trends.users_growth > 0 && (
                     <li className="flex items-start gap-2">
                       <span className="text-green-600 dark:text-green-400 mt-0.5">•</span>
-                      <span>Tu empresa ha crecido un {analytics.trends.users_growth}% en usuarios este mes</span>
+                      <span>Tu empresa ha crecido un {analytics?.trends?.users_growth || 0}% en usuarios este mes</span>
                     </li>
                   )}
                   {analytics?.overview.monthly_revenue > 0 && (
                     <li className="flex items-start gap-2">
                       <span className="text-blue-600 dark:text-blue-400 mt-0.5">•</span>
-                      <span>Los ingresos mensuales son {formatCurrency(analytics.overview.monthly_revenue)}</span>
+                      <span>Los ingresos mensuales son {formatCurrency(analytics?.overview?.monthly_revenue)}</span>
                     </li>
                   )}
                   <li className="flex items-start gap-2">
                     <span className="text-purple-600 dark:text-purple-400 mt-0.5">•</span>
-                    <span>Tienes {5 - (analytics?.overview.storage_used_gb || 0)} GB de almacenamiento disponible</span>
+                    <span>Tienes {(5 - (analytics?.overview?.storage_used_gb || 0)).toFixed(1)} GB de almacenamiento disponible</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-orange-600 dark:text-orange-400 mt-0.5">•</span>

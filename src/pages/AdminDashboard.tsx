@@ -203,12 +203,12 @@ export default function AdminDashboard() {
                 <div className="flex items-start justify-between mb-4">
                   <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-500" />
                   <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                    +{data.growth.companies_this_month} este mes
+                    +{data?.growth?.companies_this_month || 0} este mes
                   </span>
                 </div>
                 <div>
                   <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {data.overview.total_companies}
+                    {data?.overview?.total_companies || 0}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Empresas totales
@@ -220,12 +220,12 @@ export default function AdminDashboard() {
                 <div className="flex items-start justify-between mb-4">
                   <Users className="w-5 h-5 text-green-600 dark:text-green-500" />
                   <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                    +{data.growth.users_this_month} este mes
+                    +{data?.growth?.users_this_month || 0} este mes
                   </span>
                 </div>
                 <div>
                   <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {data.overview.total_users}
+                    {data?.overview?.total_users || 0}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Usuarios totales
@@ -237,12 +237,12 @@ export default function AdminDashboard() {
                 <div className="flex items-start justify-between mb-4">
                   <TrendingUp className="w-5 h-5 text-orange-600 dark:text-orange-500" />
                   <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                    {data.overview.trial_companies} en prueba
+                    {data?.overview?.trial_companies || 0} en prueba
                   </span>
                 </div>
                 <div>
                   <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {data.overview.active_companies}
+                    {data?.overview?.active_companies || 0}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Suscripciones activas
@@ -256,13 +256,13 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    ${data.overview.revenue_monthly.toLocaleString()}
+                    ${(data?.overview?.revenue_monthly || 0).toLocaleString()}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Ingresos mensuales
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Total: ${data.overview.revenue_total.toLocaleString()}
+                    Total: ${(data?.overview?.revenue_total || 0).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -282,9 +282,9 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="p-6">
-                  {data.recent_activity.companies.length > 0 ? (
+                  {data?.recent_activity?.companies?.length > 0 ? (
                     <div className="space-y-3">
-                      {data.recent_activity.companies.map((company) => (
+                      {data?.recent_activity?.companies?.map((company) => (
                         <div key={company.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                           <div>
                             <p className="font-medium text-gray-900 dark:text-white">
@@ -328,9 +328,9 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="p-6">
-                  {data.recent_activity.users.length > 0 ? (
+                  {data?.recent_activity?.users?.length > 0 ? (
                     <div className="space-y-3">
-                      {data.recent_activity.users.map((user) => (
+                      {data?.recent_activity?.users?.map((user) => (
                         <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                           <div>
                             <p className="font-medium text-gray-900 dark:text-white">

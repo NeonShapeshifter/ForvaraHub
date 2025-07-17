@@ -105,14 +105,41 @@ const ProfileSection = () => {
   const handleSave = async () => {
     setLoading(true)
     try {
-      const updatedUser = await userService.updateProfile(formData)
+      // Validate required fields before sending
+      if (!formData.first_name?.trim() || !formData.last_name?.trim()) {
+        throw new Error('Nombre y apellido son obligatorios')
+      }
+      
+      if (!formData.email?.trim() && !formData.phone?.trim()) {
+        throw new Error('Email o teléfono es obligatorio')
+      }
+      
+      // Clean up the data before sending
+      const cleanData = {
+        first_name: formData.first_name?.trim(),
+        last_name: formData.last_name?.trim(),
+        email: formData.email?.trim() || undefined,
+        phone: formData.phone?.trim() || undefined,
+        cedula_panama: formData.cedula_panama?.trim() || undefined,
+        avatar_url: formData.avatar_url?.trim() || undefined
+      }
+      
+      // Remove undefined values
+      Object.keys(cleanData).forEach(key => {
+        if (cleanData[key as keyof typeof cleanData] === undefined) {
+          delete cleanData[key as keyof typeof cleanData]
+        }
+      })
+      
+      const updatedUser = await userService.updateProfile(cleanData)
       updateUser(updatedUser)
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving profile:', error)
-      // Show error to user
-      alert('Error al guardar el perfil. Intenta de nuevo.')
+      // Show more specific error to user
+      const errorMessage = error?.message || error?.response?.data?.error?.message || 'Error al guardar el perfil. Intenta de nuevo.'
+      alert(errorMessage)
     } finally {
       setLoading(false)
     }
