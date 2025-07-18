@@ -215,6 +215,9 @@ export default function Users() {
     // Prevent repeated calls to the same company within the same session
     if (lastLoadedCompanyRef.current === currentCompany.id) {
       console.log('⏭️ Users: Already loaded for this company, skipping')
+      if (mountedRef.current) {
+        setLoading(false)
+      }
       return
     }
 
@@ -223,7 +226,7 @@ export default function Users() {
       loadingRef.current = true
       setLoading(true)
 
-      // Connect to real backend service
+      // Connect to real backend service - note: companyId parameter removed since backend uses token context
       const membersList = await userService.getCompanyMembers(currentCompany.id)
       // Ensure membersList is an array
       const safeMembers = Array.isArray(membersList) ? membersList : []
@@ -236,17 +239,20 @@ export default function Users() {
         setMembers(safeMembers)
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Users: Error loading members:', error)
       // Mark this company as loaded even on error to prevent retries
       lastLoadedCompanyRef.current = currentCompany.id
       if (mountedRef.current) {
         setMembers([])
-        toast({
-          type: 'error',
-          title: 'Error',
-          message: 'No se pudieron cargar los miembros del equipo'
-        })
+        // Only show toast for non-404 errors to avoid spam
+        if (!error.message?.includes('Route not found') && !error.message?.includes('404')) {
+          toast({
+            type: 'error',
+            title: 'Error',
+            message: 'No se pudieron cargar los miembros del equipo'
+          })
+        }
       }
     } finally {
       loadingRef.current = false

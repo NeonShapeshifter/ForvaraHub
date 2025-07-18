@@ -32,7 +32,7 @@ export const userService = {
   // Get company members
   async getCompanyMembers(companyId: string): Promise<any[]> {
     try {
-      return await apiCall<any[]>('get', `/companies/${companyId}/members`)
+      return await apiCall<any[]>('get', `/users/company-members`)
     } catch (error) {
       console.error('Error fetching company members:', error)
       return []
