@@ -190,61 +190,40 @@ export default function Users() {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [selectedMember, setSelectedMember] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const loadingRef = useRef(false)
-  const mountedRef = useRef(true)
-  const lastLoadedCompanyRef = useRef<string | null>(null)
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
 
   // Verificar si el usuario puede gestionar miembros
   const canManageMembers = userRole === 'owner' || userRole === 'admin'
 
-  const loadMembers = useCallback(async () => {
-    // Prevent multiple simultaneous calls
-    if (loadingRef.current) {
-      console.log('⏳ Users: Already loading, skipping call')
-      return
-    }
-
+  // Load members only once when component mounts or company changes
+  useEffect(() => {
     if (!currentCompany || currentCompany.id === 'no-company') {
-      if (mountedRef.current) {
-        setLoading(false)
-        setMembers([])
-        lastLoadedCompanyRef.current = 'no-company'
-      }
+      setLoading(false)
+      setMembers([])
+      setHasLoadedOnce(true)
       return
     }
 
-    // Prevent repeated calls to the same company within the same session
-    if (lastLoadedCompanyRef.current === currentCompany.id) {
-      console.log('⏭️ Users: Already loaded for this company, skipping')
-      if (mountedRef.current) {
-        setLoading(false)
-      }
+    // Only load if we haven't loaded for this company yet
+    if (hasLoadedOnce) {
       return
     }
 
-    try {
-      console.log('🔄 Users: Loading members for company:', currentCompany.id)
-      loadingRef.current = true
-      setLoading(true)
+    const loadMembers = async () => {
+      try {
+        console.log('🔄 Users: Loading members for company:', currentCompany.id)
+        setLoading(true)
 
-      // Connect to real backend service - note: companyId parameter removed since backend uses token context
-      const membersList = await userService.getCompanyMembers(currentCompany.id)
-      // Ensure membersList is an array
-      const safeMembers = Array.isArray(membersList) ? membersList : []
-      console.log('✅ Users: Loaded members:', safeMembers.length)
+        const membersList = await userService.getCompanyMembers(currentCompany.id)
+        const safeMembers = Array.isArray(membersList) ? membersList : []
+        console.log('✅ Users: Loaded members:', safeMembers.length)
 
-      if (mountedRef.current) {
         setMembers(safeMembers)
-        // Mark this company as loaded AFTER successful state update
-        lastLoadedCompanyRef.current = currentCompany.id
-      }
-
-    } catch (error: any) {
-      console.error('❌ Users: Error loading members:', error)
-      if (mountedRef.current) {
+        setHasLoadedOnce(true)
+      } catch (error: any) {
+        console.error('❌ Users: Error loading members:', error)
         setMembers([])
-        // Mark this company as loaded even on error to prevent retries
-        lastLoadedCompanyRef.current = currentCompany.id
+        setHasLoadedOnce(true)
         // Only show toast for non-404 errors to avoid spam
         if (!error.message?.includes('Route not found') && !error.message?.includes('404')) {
           toast({
@@ -253,28 +232,18 @@ export default function Users() {
             message: 'No se pudieron cargar los miembros del equipo'
           })
         }
-      }
-    } finally {
-      loadingRef.current = false
-      if (mountedRef.current) {
+      } finally {
         setLoading(false)
       }
     }
-  }, []) // Remove dependency to prevent recreation
 
-  useEffect(() => {
-    // Reset the loaded company ref when company changes to allow reloading
-    if (currentCompany?.id && lastLoadedCompanyRef.current !== currentCompany.id) {
-      lastLoadedCompanyRef.current = null
-    }
-    
     loadMembers()
+  }, [currentCompany?.id, hasLoadedOnce]) // Only run when company changes or we haven't loaded yet
 
-    // Cleanup function to mark component as unmounted
-    return () => {
-      mountedRef.current = false
-    }
-  }, [currentCompany?.id]) // Only depend on company ID, not the entire loadMembers function
+  // Reset hasLoadedOnce when company actually changes
+  useEffect(() => {
+    setHasLoadedOnce(false)
+  }, [currentCompany?.id])
 
 
   const handleInvite = async (data: any) => {
@@ -289,7 +258,8 @@ export default function Users() {
 
       console.log('Invitando usuario:', data)
       setShowInviteModal(false)
-      loadMembers()
+      // Reset hasLoadedOnce to trigger reload
+      setHasLoadedOnce(false)
     } catch (error) {
       console.error('Error inviting member:', error)
     }
@@ -303,7 +273,7 @@ export default function Users() {
       // await tenantService.changeMemberRole(currentCompany!.id, memberId, newRole)
 
       console.log('Cambiando rol:', memberId, newRole)
-      await loadMembers()
+      setHasLoadedOnce(false) // Trigger reload
     } catch (error) {
       console.error('Error changing role:', error)
     } finally {
@@ -323,7 +293,7 @@ export default function Users() {
       // await tenantService.removeMember(currentCompany!.id, memberId)
 
       console.log('Eliminando miembro:', memberId)
-      await loadMembers()
+      setHasLoadedOnce(false) // Trigger reload
     } catch (error) {
       console.error('Error removing member:', error)
     } finally {

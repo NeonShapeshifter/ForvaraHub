@@ -29,8 +29,18 @@ if (import.meta.env.PROD) {
   })
 
   // Test API connectivity
-  fetch(`${import.meta.env.VITE_API_URL}/health`)
-    .then(res => res.json())
+  fetch(`${import.meta.env.VITE_API_URL}/api/health`)
+    .then(async (res) => {
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+      }
+      const contentType = res.headers.get('content-type')
+      if (!contentType?.includes('application/json')) {
+        const text = await res.text()
+        throw new Error(`Expected JSON, got: ${contentType}. Response: ${text.substring(0, 100)}...`)
+      }
+      return res.json()
+    })
     .then(data => console.log('✅ API Health Check:', data))
     .catch(err => console.error('❌ API Health Check Failed:', err))
 }
