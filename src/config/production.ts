@@ -4,16 +4,16 @@ export const PRODUCTION_CONFIG = {
   // API Configuration
   API_URL: import.meta.env.VITE_API_URL || 'https://api.forvara.dev',
   API_TIMEOUT: 10000, // 10 seconds
-  
+
   // Error handling
   ENABLE_ERROR_LOGGING: true,
   FALLBACK_TO_DEMO_DATA: true,
-  
+
   // Features
   ENABLE_OAUTH: false, // OAuth not implemented yet
   ENABLE_NOTIFICATIONS: true,
   ENABLE_ANALYTICS: true,
-  
+
   // Debug settings
   DEBUG_MODE: import.meta.env.DEV,
   LOG_LEVEL: import.meta.env.DEV ? 'debug' : 'error'
@@ -76,7 +76,7 @@ export const DEMO_DATA = {
       installedDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
     }
   ],
-  
+
   members: [
     {
       id: 'user-1',
@@ -93,7 +93,7 @@ export const DEMO_DATA = {
       }
     }
   ],
-  
+
   stats: {
     users: 1,
     companies: 1,

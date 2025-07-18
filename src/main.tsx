@@ -27,7 +27,7 @@ if (import.meta.env.PROD) {
     userAgent: navigator.userAgent,
     url: window.location.href
   })
-  
+
   // Test API connectivity
   fetch(`${import.meta.env.VITE_API_URL}/health`)
     .then(res => res.json())
