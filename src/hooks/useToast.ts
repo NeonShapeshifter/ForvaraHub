@@ -24,17 +24,17 @@ const addToast = (toast: Omit<Toast, 'id'>) => {
     id,
     duration: toast.duration ?? 5000
   }
-  
+
   toasts.push(newToast)
   emitChange()
-  
+
   // Auto remove after duration
   if (newToast.duration > 0) {
     setTimeout(() => {
       removeToast(id)
     }, newToast.duration)
   }
-  
+
   return id
 }
 
@@ -47,24 +47,24 @@ const removeToast = (id: string) => {
 }
 
 export const toast = {
-  success: (title: string, message?: string) => 
+  success: (title: string, message?: string) =>
     addToast({ type: 'success', title, message }),
-  
-  error: (title: string, message?: string) => 
+
+  error: (title: string, message?: string) =>
     addToast({ type: 'error', title, message }),
-  
-  warning: (title: string, message?: string) => 
+
+  warning: (title: string, message?: string) =>
     addToast({ type: 'warning', title, message }),
-  
-  info: (title: string, message?: string) => 
+
+  info: (title: string, message?: string) =>
     addToast({ type: 'info', title, message }),
-  
+
   remove: removeToast
 }
 
 export const useToast = () => {
   const [toastList, setToastList] = useState<Toast[]>([...toasts])
-  
+
   const subscribe = useCallback((listener: (toasts: Toast[]) => void) => {
     listeners.push(listener)
     return () => {
@@ -74,17 +74,17 @@ export const useToast = () => {
       }
     }
   }, [])
-  
+
   const unsubscribe = useCallback(() => {
     listeners.length = 0
   }, [])
-  
+
   // Subscribe to changes
   useState(() => {
     const unsubscribe = subscribe(setToastList)
     return unsubscribe
   })
-  
+
   return {
     toasts: toastList,
     toast,

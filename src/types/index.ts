@@ -4,36 +4,36 @@
 
 export interface User {
   id: string;
-  
+
   // Core identity
   first_name: string;
   last_name: string;
   email?: string;
   phone?: string;
-  
+
   // Panama specific
   cedula_panama?: string;
   tax_id_type: 'cedula' | 'passport' | 'ruc';
-  
+
   // Auth
   email_verified: boolean;
   phone_verified: boolean;
   auth_method: 'email' | 'phone' | 'both';
-  
+
   // Localization
   preferred_language: 'es' | 'en' | 'sv' | 'pt';
   timezone: string;
   currency_code: string;
   country_code: string;
-  
+
   // Profile
   avatar_url?: string;
   settings: Record<string, any>;
-  
+
   // Tracking
   last_login_at?: string;
   last_ip_address?: string;
-  
+
   // Timestamps
   created_at: string;
   updated_at: string;
@@ -41,23 +41,23 @@ export interface User {
 
 export interface Company {
   id: string;
-  
+
   // Core company info
   razon_social: string;
   ruc: string;
   address?: string;
   phone?: string;
   contact_email?: string;
-  
+
   // Localization
   country_code: string;
   currency_code: string;
   timezone: string;
-  
+
   // Business settings
   industry_type?: string;
   company_size?: 'micro' | 'pequena' | 'mediana' | 'grande';
-  
+
   // Forvara specific
   slug: string;
   description?: string;
@@ -65,30 +65,30 @@ export interface Company {
   slots_limit: number;
   storage_limit_gb: number;
   storage_used_bytes: number;
-  
+
   // User context
   user_role?: 'owner' | 'admin' | 'member' | 'viewer';
   joined_at?: string;
   storage_used?: number; // MB
   storage_limit?: number; // MB
-  
+
   // Billing
   billing_email?: string;
   billing_address?: string;
   tax_exempt: boolean;
-  
+
   // Status
   status: 'active' | 'suspended' | 'inactive' | 'trial';
   trial_ends_at?: string;
-  
+
   // Ownership
   owner_id: string;
   created_by?: string;
-  
+
   // Metadata
   settings: Record<string, any>;
   onboarding_completed: boolean;
-  
+
   // Timestamps
   created_at: string;
   updated_at: string;

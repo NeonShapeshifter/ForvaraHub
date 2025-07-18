@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
-  Search, 
-  Filter, 
-  Star, 
-  Download, 
+import {
+  Search,
+  Filter,
+  Star,
+  Download,
   TrendingUp,
   Sparkles,
   Zap,
@@ -72,7 +72,7 @@ const categories: Category[] = [
 export default function Marketplace() {
   const navigate = useNavigate()
   const { currentCompany } = useAuthStore()
-  
+
   const [apps, setApps] = useState<App[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -100,7 +100,7 @@ export default function Marketplace() {
 
   const loadInstalledApps = async () => {
     if (!currentCompany) return
-    
+
     try {
       const response = await api.get(`/companies/${currentCompany.id}/apps`)
       const installed = new Set(response.data.map((app: any) => app.id))
@@ -112,7 +112,7 @@ export default function Marketplace() {
 
   const handleInstallApp = async (appId: string) => {
     if (!currentCompany) return
-    
+
     try {
       setInstalling(appId)
       await api.post(`/companies/${currentCompany.id}/apps`, { app_id: appId })
@@ -129,11 +129,11 @@ export default function Marketplace() {
   // Filter apps based on category and search
   const filteredApps = apps.filter(app => {
     const matchesCategory = selectedCategory === 'all' || app.category === selectedCategory
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       app.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (app.tags || []).some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-    
+
     return matchesCategory && matchesSearch
   })
 
@@ -173,7 +173,7 @@ export default function Marketplace() {
                 Marketplace en construcción
               </h3>
               <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-                Estamos trabajando para traerte las mejores aplicaciones empresariales. 
+                Estamos trabajando para traerte las mejores aplicaciones empresariales.
                 Vuelve pronto para descubrir herramientas increíbles.
               </p>
               <Button onClick={() => navigate('/dashboard')} variant="outline">
@@ -200,10 +200,10 @@ export default function Marketplace() {
             <h3 className="font-semibold text-gray-900 mb-4">Categorías</h3>
             <nav className="space-y-1">
               {categories.map(category => {
-                const categoryApps = category.id === 'all' 
-                  ? apps 
+                const categoryApps = category.id === 'all'
+                  ? apps
                   : apps.filter(app => app.category === category.id)
-                
+
                 return (
                   <button
                     key={category.id}
@@ -280,8 +280,8 @@ export default function Marketplace() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredApps.map(app => (
-                <Card 
-                  key={app.id} 
+                <Card
+                  key={app.id}
                   className="shadow-card hover:shadow-lg transition-all cursor-pointer group"
                   onClick={() => navigate(`/marketplace/${app.id}`)}
                 >
@@ -323,7 +323,7 @@ export default function Marketplace() {
                     {app.tags && app.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-4">
                         {app.tags.slice(0, 3).map(tag => (
-                          <span 
+                          <span
                             key={tag}
                             className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600"
                           >
@@ -365,7 +365,7 @@ export default function Marketplace() {
                           <span className="text-blue-600 font-medium">Freemium</span>
                         )}
                       </div>
-                      
+
                       <Button
                         size="sm"
                         onClick={(e) => {

@@ -10,7 +10,7 @@ export interface LogoProps {
 
 const sizeClasses = {
   xs: 'h-6',
-  sm: 'h-8', 
+  sm: 'h-8',
   md: 'h-12',
   lg: 'h-16',
   xl: 'h-24'
@@ -24,7 +24,7 @@ const textSizeClasses = {
   xl: 'text-4xl'
 }
 
-export function Logo({ 
+export function Logo({
   variant = 'full',
   theme = 'light',
   size = 'md',
@@ -47,7 +47,7 @@ export function Logo({
   if (variant === 'icon') {
     // SVG Icon placeholder
     return (
-      <div 
+      <div
         className={cn(
           sizeClasses[size],
           'flex items-center justify-center rounded-lg gradient-brand text-white font-bold transition-all duration-300 hover:scale-105',
@@ -63,7 +63,7 @@ export function Logo({
 
   // Full logo as text
   return (
-    <div 
+    <div
       className={cn(
         'flex items-center transition-all duration-300 hover:scale-105',
         className
@@ -92,23 +92,23 @@ export function LogoIcon(props: Omit<LogoProps, 'variant'>) {
 }
 
 // Dark mode aware logo (automatically switches based on theme)
-export function LogoAuto({ 
-  className, 
-  ...props 
+export function LogoAuto({
+  className,
+  ...props
 }: Omit<LogoProps, 'theme'>) {
   return (
     <>
       {/* Light mode logo */}
-      <Logo 
-        {...props} 
-        theme="light" 
-        className={cn("dark:hidden", className)} 
+      <Logo
+        {...props}
+        theme="light"
+        className={cn('dark:hidden', className)}
       />
       {/* Dark mode logo */}
-      <Logo 
-        {...props} 
-        theme="dark" 
-        className={cn("hidden dark:block", className)} 
+      <Logo
+        {...props}
+        theme="dark"
+        className={cn('hidden dark:block', className)}
       />
     </>
   )

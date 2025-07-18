@@ -53,7 +53,7 @@ interface App {
 }
 
 const categories = [
-  'ERP', 'CRM', 'Accounting', 'HR', 'Marketing', 'Sales', 
+  'ERP', 'CRM', 'Accounting', 'HR', 'Marketing', 'Sales',
   'Inventory', 'Analytics', 'Communication', 'Productivity', 'Other'
 ]
 
@@ -102,7 +102,7 @@ export function AppManagement() {
       if (searchTerm) params.append('search', searchTerm)
       if (categoryFilter) params.append('category', categoryFilter)
       if (statusFilter) params.append('status', statusFilter)
-      
+
       const response = await api.get(`/admin/apps?${params.toString()}`)
       setApps(response.data.data.apps)
     } catch (error: any) {
@@ -123,7 +123,7 @@ export function AppManagement() {
         ...formData,
         screenshots: formData.screenshots.filter(url => url.trim() !== '')
       })
-      
+
       setShowCreateForm(false)
       resetForm()
       fetchApps()
@@ -136,14 +136,14 @@ export function AppManagement() {
 
   const handleUpdateApp = async () => {
     if (!editingApp) return
-    
+
     setSaving(true)
     try {
       await api.put(`/admin/apps/${editingApp.id}`, {
         ...formData,
         screenshots: formData.screenshots.filter(url => url.trim() !== '')
       })
-      
+
       setEditingApp(null)
       resetForm()
       fetchApps()
@@ -158,7 +158,7 @@ export function AppManagement() {
     if (!confirm('Are you sure you want to delete this app? This action cannot be undone.')) {
       return
     }
-    
+
     try {
       await api.delete(`/admin/apps/${appId}`)
       fetchApps()
@@ -264,7 +264,7 @@ export function AppManagement() {
             👑 EMPEROR CONTROLS: Create, edit, and manage all marketplace apps
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => {
             resetForm()
             setEditingApp(null)
@@ -284,9 +284,9 @@ export function AppManagement() {
             <div className="flex items-center gap-2 text-red-700 dark:text-red-300">
               <AlertTriangle className="w-4 h-4" />
               <span>{error}</span>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setError(null)}
                 className="ml-auto"
               >
@@ -432,7 +432,7 @@ export function AppManagement() {
                   <Button
                     key={country.code}
                     type="button"
-                    variant={formData.supported_countries.includes(country.code) ? "default" : "outline"}
+                    variant={formData.supported_countries.includes(country.code) ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => toggleCountry(country.code)}
                   >
@@ -448,8 +448,8 @@ export function AppManagement() {
                 <input
                   type="checkbox"
                   checked={formData.is_free}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
                     is_free: e.target.checked,
                     base_price_monthly: e.target.checked ? 0 : prev.base_price_monthly
                   }))}
@@ -468,7 +468,7 @@ export function AppManagement() {
 
             {/* Form Actions */}
             <div className="flex gap-2 pt-4">
-              <Button 
+              <Button
                 onClick={editingApp ? handleUpdateApp : handleCreateApp}
                 disabled={saving}
                 className="bg-green-600 hover:bg-green-700"
@@ -476,8 +476,8 @@ export function AppManagement() {
                 <Save className="w-4 h-4 mr-2" />
                 {saving ? 'Saving...' : editingApp ? 'Update App' : 'Create App'}
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setShowCreateForm(false)
                   setEditingApp(null)
@@ -558,18 +558,18 @@ export function AppManagement() {
                           Featured
                         </Badge>
                       )}
-                      <Badge variant={app.is_active ? "default" : "secondary"}>
+                      <Badge variant={app.is_active ? 'default' : 'secondary'}>
                         {app.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                       <Badge variant="outline">
                         {app.category}
                       </Badge>
                     </div>
-                    
+
                     <p className="text-sm text-muted-foreground mb-2">
                       {app.short_description}
                     </p>
-                    
+
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <DollarSign className="w-3 h-3" />
@@ -594,7 +594,7 @@ export function AppManagement() {
                     variant="outline"
                     size="icon"
                     onClick={() => handleToggleFeatured(app.id, !app.is_featured)}
-                    title={app.is_featured ? "Remove from featured" : "Add to featured"}
+                    title={app.is_featured ? 'Remove from featured' : 'Add to featured'}
                   >
                     {app.is_featured ? (
                       <StarOff className="w-4 h-4" />

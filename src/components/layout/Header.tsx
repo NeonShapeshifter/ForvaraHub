@@ -16,20 +16,20 @@ interface HeaderProps {
 export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
   const { user, currentCompany, logout } = useAuthStore()
   const navigate = useNavigate()
-  
-  const userInitials = user ? 
-    `${user.first_name?.charAt(0) || ''}${user.last_name?.charAt(0) || ''}`.toUpperCase() : 
+
+  const userInitials = user ?
+    `${user.first_name?.charAt(0) || ''}${user.last_name?.charAt(0) || ''}`.toUpperCase() :
     '??'
-    
+
   const handleLogout = () => {
     logout()
     navigate('/login')
   }
-  
+
   const handleNavigate = (path: string) => {
     navigate(path)
   }
-  
+
   return (
     <header className="bg-white/80 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-40">
       <div className="flex items-center justify-between px-4 sm:px-6 h-16">
@@ -44,13 +44,13 @@ export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
           >
             <Menu className="w-5 h-5" />
           </Button>
-          
+
           {/* Logo - Solo ícono en móvil */}
           <div className="hidden lg:block">
             <LogoIcon size="sm" theme="light" />
           </div>
         </div>
-        
+
         {/* Right side */}
         <div className="flex items-center gap-4">
           {/* Company selector */}
@@ -64,7 +64,7 @@ export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 bg-white rounded-xl shadow-dropdown">
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => navigate('/companies')}
                   className="cursor-pointer"
                 >
@@ -74,7 +74,7 @@ export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-          
+
           {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -92,14 +92,14 @@ export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
                 </div>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => handleNavigate('/profile')}
                 className="cursor-pointer"
               >
                 <User className="mr-2 h-4 w-4" />
                 <span>Perfil</span>
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => handleNavigate('/settings')}
                 className="cursor-pointer"
               >
@@ -107,7 +107,7 @@ export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
                 <span>Configuración</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={handleLogout}
                 className="cursor-pointer text-red-600 focus:text-red-600"
               >

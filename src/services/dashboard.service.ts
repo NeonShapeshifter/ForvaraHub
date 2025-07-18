@@ -1,15 +1,15 @@
-import { apiCall } from './api';
-import { DashboardStats, ActivityLog } from '@/types';
+import { apiCall } from './api'
+import { DashboardStats, ActivityLog } from '@/types'
 
 export const dashboardService = {
   // Get dashboard statistics
   async getDashboardStats(): Promise<DashboardStats> {
-    return apiCall<DashboardStats>('get', '/dashboard/stats');
+    return apiCall<DashboardStats>('get', '/dashboard/stats')
   },
 
   // Get recent activity
   async getRecentActivity(limit: number = 10): Promise<ActivityLog[]> {
-    return apiCall<ActivityLog[]>('get', `/dashboard/activity?limit=${limit}`);
+    return apiCall<ActivityLog[]>('get', `/dashboard/activity?limit=${limit}`)
   },
 
   // Get quick actions based on user/company state
@@ -48,11 +48,11 @@ export const dashboardService = {
         action: '/settings',
         category: 'management'
       }
-    ];
+    ]
   },
 
   // Get company usage metrics
   async getCompanyUsage(): Promise<any> {
-    return apiCall<any>('get', '/dashboard/usage');
+    return apiCall<any>('get', '/dashboard/usage')
   }
-};
+}

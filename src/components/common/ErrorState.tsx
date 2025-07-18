@@ -11,7 +11,7 @@ interface ErrorStateProps {
   showRetry?: boolean
 }
 
-export function ErrorState({ 
+export function ErrorState({
   title = 'Error',
   message = 'Algo salió mal. Por favor, intenta de nuevo.',
   variant = 'inline',
@@ -23,15 +23,15 @@ export function ErrorState({
       <div className="w-12 h-12 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
         <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
       </div>
-      
+
       <div className="text-center">
         <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
         <p className="text-sm text-muted-foreground">{message}</p>
       </div>
-      
+
       {showRetry && onRetry && (
-        <Button 
-          onClick={onRetry} 
+        <Button
+          onClick={onRetry}
           variant="outline"
           className="gap-2"
         >

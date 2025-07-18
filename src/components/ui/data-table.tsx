@@ -19,7 +19,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from './dropdown-menu'
 
 // Types
@@ -61,7 +61,7 @@ export function DataTable<T extends Record<string, any>>({
   data,
   columns,
   searchable = true,
-  searchPlaceholder = "Buscar...",
+  searchPlaceholder = 'Buscar...',
   actions,
   bulkActions,
   emptyState,
@@ -195,7 +195,7 @@ export function DataTable<T extends Record<string, any>>({
               />
             </div>
           )}
-          
+
           {columns.some(col => col.filterable) && (
             <Button
               variant="outline"

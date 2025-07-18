@@ -35,7 +35,7 @@ export function FormActions({
           {submitLabel}
         </Button>
       )}
-      
+
       {onCancel && (
         <Button
           type="button"

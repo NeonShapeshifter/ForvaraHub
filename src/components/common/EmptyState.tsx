@@ -14,7 +14,7 @@ interface EmptyStateProps {
   variant?: 'inline' | 'page' | 'card'
 }
 
-export function EmptyState({ 
+export function EmptyState({
   icon: Icon,
   title,
   description,
@@ -28,14 +28,14 @@ export function EmptyState({
           <Icon className="w-6 h-6 text-muted-foreground" />
         </div>
       )}
-      
+
       <div className="text-center">
         <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
         {description && (
           <p className="text-sm text-muted-foreground">{description}</p>
         )}
       </div>
-      
+
       {action && (
         <Button onClick={action.onClick} className="gap-2">
           {action.label}

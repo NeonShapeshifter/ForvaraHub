@@ -10,11 +10,11 @@ export function MainLayout() {
     <div className="min-h-screen office-bg">
       {/* Header */}
       <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      
+
       <div className="flex">
         {/* Sidebar */}
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        
+
         {/* Main Content */}
         <main className="flex-1 p-3 sm:p-6 lg:ml-64">
           <div className="max-w-7xl mx-auto">

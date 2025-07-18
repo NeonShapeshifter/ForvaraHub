@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, UserPlus, Mail, Phone, Search, MoreVertical, Shield, Users, User, Eye, ChevronRight, AlertCircle, Building2, Check, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
-
-// TODO: Importar desde los archivos reales del proyecto
-// import { tenantService } from '../services/tenant.service'
-// import { toast } from '../hooks/use-toast'
-// import { CompanyMember, User as UserType } from '../types'
+import { PageContainer } from '@/components/layout/PageContainer'
+import { toast } from '@/hooks/useToast'
+import { userService } from '@/services/user.service'
 
 // Componente para el estado individual mode
 const IndividualModeState = () => {
@@ -22,15 +21,15 @@ const IndividualModeState = () => {
           Estás en modo individual. Para gestionar usuarios del equipo, necesitas crear una empresa.
         </p>
         <div className="space-y-3">
-          <button 
-            onClick={() => window.location.href = '/companies'}
+          <button
+            onClick={() => navigate('/settings')}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium"
           >
             <Building2 className="w-4 h-4" />
             Crear mi empresa
           </button>
-          <button 
-            onClick={() => window.location.href = '/dashboard'}
+          <button
+            onClick={() => navigate('/dashboard')}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
           >
             Volver al dashboard
@@ -52,12 +51,12 @@ const EmptyUsersState = ({ onInvite, canManage }: { onInvite: () => void, canMan
         No hay usuarios en tu equipo
       </h3>
       <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto text-sm">
-        {canManage 
-          ? "Invita a miembros de tu equipo para colaborar en Forvara."
-          : "Aún no hay otros miembros en el equipo."}
+        {canManage
+          ? 'Invita a miembros de tu equipo para colaborar en Forvara.'
+          : 'Aún no hay otros miembros en el equipo.'}
       </p>
       {canManage && (
-        <button 
+        <button
           onClick={onInvite}
           className="inline-flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium"
         >
@@ -70,7 +69,7 @@ const EmptyUsersState = ({ onInvite, canManage }: { onInvite: () => void, canMan
 }
 
 // Componente para el modal de invitación
-const InviteModal = ({ isOpen, onClose, onSubmit }: { 
+const InviteModal = ({ isOpen, onClose, onSubmit }: {
   isOpen: boolean
   onClose: () => void
   onSubmit: (data: any) => void
@@ -106,7 +105,7 @@ const InviteModal = ({ isOpen, onClose, onSubmit }: {
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
-        
+
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -181,11 +180,10 @@ const InviteModal = ({ isOpen, onClose, onSubmit }: {
 
 // Componente principal de Usuarios
 export default function Users() {
-  const { currentCompany, isIndividualMode } = useAuthStore()
-  
-  // TODO: Get user role from company_members table
-  const userRole = 'owner' // TODO: Reemplazar con store real
-  
+  const navigate = useNavigate()
+  const { user, currentCompany, isIndividualMode } = useAuthStore()
+  const userRole = user?.role || 'member'
+
   const [loading, setLoading] = useState(true)
   const [members, setMembers] = useState<any[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -207,25 +205,25 @@ export default function Users() {
   const loadMembers = async () => {
     try {
       setLoading(true)
-      
-      // TODO: Conectar con el servicio real
-      // const membersList = await tenantService.getCompanyMembers(currentCompany!.id)
-      // setMembers(membersList)
-      
-      // Por ahora, solo cambiar el estado de loading
-      setTimeout(() => {
-        setMembers([]) // El backend devolverá los miembros reales
+
+      try {
+        // Connect to real backend service
+        const membersList = await userService.getCompanyMembers(currentCompany!.id)
+        setMembers(membersList)
+      } catch (error) {
+        console.error('Error loading members:', error)
+        setMembers([])
+      } finally {
         setLoading(false)
-      }, 1000)
-      
+      }
+
     } catch (error) {
       console.error('Error loading members:', error)
-      // TODO: Usar toast real
-      // toast({
-      //   title: 'Error',
-      //   description: 'No se pudieron cargar los miembros del equipo',
-      //   variant: 'destructive'
-      // })
+      toast({
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudieron cargar los miembros del equipo'
+      })
       setLoading(false)
     }
   }
@@ -239,7 +237,7 @@ export default function Users() {
       //   role: data.role,
       //   message: data.message
       // })
-      
+
       console.log('Invitando usuario:', data)
       setShowInviteModal(false)
       loadMembers()
@@ -251,10 +249,10 @@ export default function Users() {
   const handleRoleChange = async (memberId: string, newRole: string) => {
     try {
       setActionLoading(memberId)
-      
+
       // TODO: Conectar con el servicio real
       // await tenantService.changeMemberRole(currentCompany!.id, memberId, newRole)
-      
+
       console.log('Cambiando rol:', memberId, newRole)
       await loadMembers()
     } catch (error) {
@@ -267,13 +265,13 @@ export default function Users() {
 
   const handleRemoveMember = async (memberId: string) => {
     if (!confirm('¿Estás seguro de eliminar este miembro del equipo?')) return
-    
+
     try {
       setActionLoading(memberId)
-      
+
       // TODO: Conectar con el servicio real
       // await tenantService.removeMember(currentCompany!.id, memberId)
-      
+
       console.log('Eliminando miembro:', memberId)
       await loadMembers()
     } catch (error) {
@@ -291,14 +289,14 @@ export default function Users() {
       member: 'bg-green-50 text-green-700 dark:bg-green-900/10 dark:text-green-400 border-green-200 dark:border-green-800',
       viewer: 'bg-gray-50 text-gray-700 dark:bg-gray-900/10 dark:text-gray-400 border-gray-200 dark:border-gray-800'
     }
-    
+
     const labels = {
       owner: 'Propietario',
       admin: 'Administrador',
       member: 'Miembro',
       viewer: 'Visor'
     }
-    
+
     return (
       <span className={`inline-flex px-2 py-0.5 rounded-md text-xs font-medium border ${styles[role as keyof typeof styles] || styles.member}`}>
         {labels[role as keyof typeof labels] || role}
@@ -336,7 +334,7 @@ export default function Users() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <PageContainer>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -361,7 +359,7 @@ export default function Users() {
                 className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
               />
             </div>
-            
+
             {canManageMembers && (
               <button
                 onClick={() => setShowInviteModal(true)}
@@ -408,7 +406,7 @@ export default function Users() {
                 {filteredMembers.map((member) => {
                   const user = member.user_data || {}
                   const isLoading = actionLoading === member.id
-                  
+
                   return (
                     <tr key={member.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${isLoading ? 'opacity-50' : ''}`}>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -491,7 +489,7 @@ export default function Users() {
                               >
                                 <MoreVertical className="w-4 h-4 text-gray-400" />
                               </button>
-                              
+
                               {selectedMember === member.id && (
                                 <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10">
                                   <button
@@ -550,7 +548,7 @@ export default function Users() {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
@@ -564,7 +562,7 @@ export default function Users() {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
@@ -582,12 +580,12 @@ export default function Users() {
         )}
 
         {/* Invite Modal */}
-        <InviteModal 
+        <InviteModal
           isOpen={showInviteModal}
           onClose={() => setShowInviteModal(false)}
           onSubmit={handleInvite}
         />
       </div>
-    </div>
+    </PageContainer>
   )
 }

@@ -18,27 +18,30 @@ const Billing = React.lazy(() => import('@/pages/Billing'))
 const Companies = React.lazy(() => import('@/pages/Companies'))
 const Analytics = React.lazy(() => import('@/pages/Analytics'))
 const AdminDashboard = React.lazy(() => import('@/pages/AdminDashboard'))
+const AdminUsers = React.lazy(() => import('@/pages/admin/AdminUsers'))
+const AdminCompanies = React.lazy(() => import('@/pages/admin/AdminCompanies'))
+const AdminRevenue = React.lazy(() => import('@/pages/admin/AdminRevenue'))
 const Profile = React.lazy(() => import('@/pages/Profile'))
 
 // Protected Route component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, token } = useAuthStore()
-  
+
   if (!user || !token) {
     return <Navigate to="/login" replace />
   }
-  
+
   return <>{children}</>
 }
 
 // Public Route component (redirect if authenticated)
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, token } = useAuthStore()
-  
+
   if (user && token) {
     return <Navigate to="/dashboard" replace />
   }
-  
+
   return <>{children}</>
 }
 
@@ -71,7 +74,7 @@ function App() {
               </ErrorBoundary>
             </PublicRoute>
           } />
-          
+
           {/* Protected Routes */}
           <Route path="/" element={
             <ProtectedRoute>
@@ -124,13 +127,28 @@ function App() {
                 <AdminDashboard />
               </ErrorBoundary>
             } />
+            <Route path="admin/users" element={
+              <ErrorBoundary>
+                <AdminUsers />
+              </ErrorBoundary>
+            } />
+            <Route path="admin/companies" element={
+              <ErrorBoundary>
+                <AdminCompanies />
+              </ErrorBoundary>
+            } />
+            <Route path="admin/revenue" element={
+              <ErrorBoundary>
+                <AdminRevenue />
+              </ErrorBoundary>
+            } />
             <Route path="profile/:userId?" element={
               <ErrorBoundary>
                 <Profile />
               </ErrorBoundary>
             } />
           </Route>
-          
+
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

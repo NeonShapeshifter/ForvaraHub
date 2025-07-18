@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 export function formatCurrency(amount: number, currency: string = 'USD'): string {
   return new Intl.NumberFormat('es-PA', {
     style: 'currency',
-    currency,
+    currency
   }).format(amount)
 }
 
@@ -18,7 +18,7 @@ export function formatDate(date: string | Date): string {
   return new Intl.DateTimeFormat('es-PA', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric',
+    day: 'numeric'
   }).format(new Date(date))
 }
 

@@ -7,10 +7,10 @@ interface PageContainerProps {
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '7xl' | 'full'
 }
 
-export function PageContainer({ 
-  children, 
-  className, 
-  maxWidth = '7xl' 
+export function PageContainer({
+  children,
+  className,
+  maxWidth = '7xl'
 }: PageContainerProps) {
   const maxWidthClasses = {
     sm: 'max-w-sm',

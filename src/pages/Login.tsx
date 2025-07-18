@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
-import { 
-  Eye, 
-  EyeOff, 
-  Mail, 
-  Phone, 
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Phone,
   Lock,
   ArrowRight,
   Sparkles,
@@ -29,10 +29,10 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
-  
+
   const navigate = useNavigate()
   const { login, isLoading, error, clearError } = useAuthStore()
-  
+
   const phoneValidation = usePhoneValidation({
     value: loginMethod === 'phone' ? phone : '',
     required: loginMethod === 'phone'
@@ -44,7 +44,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (loginMethod === 'phone' && !phoneValidation.isValid) {
       return
     }
@@ -62,7 +62,7 @@ export default function Login() {
   }
 
   const isFormValid = password && (
-    (loginMethod === 'email' && email) || 
+    (loginMethod === 'email' && email) ||
     (loginMethod === 'phone' && phoneValidation.isValid)
   )
 
@@ -331,7 +331,7 @@ export default function Login() {
           {/* Testimonial */}
           <div className="mt-12 p-6 bg-white/10 backdrop-blur rounded-2xl">
             <p className="text-white/90 italic mb-4">
-              "Forvara Hub transformó completamente la forma en que gestionamos nuestro equipo. 
+              "Forvara Hub transformó completamente la forma en que gestionamos nuestro equipo.
               La productividad aumentó un 40% en solo 2 meses."
             </p>
             <div className="flex items-center gap-3">

@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
-import { 
-  Eye, 
-  EyeOff, 
-  Mail, 
-  Phone, 
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Phone,
   User,
   Building,
   Users,
@@ -32,7 +32,7 @@ type WorkspaceType = 'individual' | 'new_company' | 'join_company'
 export default function Register() {
   const [currentStep, setCurrentStep] = useState<Step>('contact')
   const [contactMethod, setContactMethod] = useState<'email' | 'phone'>('email')
-  
+
   // Form data
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -44,14 +44,14 @@ export default function Register() {
   const [companyName, setCompanyName] = useState('')
   const [ruc, setRuc] = useState('')
   const [inviteCode, setInviteCode] = useState('')
-  
+
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
-  
+
   const navigate = useNavigate()
   const { register, isLoading, error, clearError } = useAuthStore()
-  
+
   const phoneValidation = usePhoneValidation({
     value: contactMethod === 'phone' ? phone : '',
     required: contactMethod === 'phone'
@@ -81,7 +81,7 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (password !== confirmPassword) {
       return
     }
@@ -92,7 +92,7 @@ export default function Register() {
         phone: contactMethod === 'phone' ? phone : undefined,
         password,
         first_name: firstName,
-        last_name: lastName,
+        last_name: lastName
         // TODO: Add company data based on workspaceType
       })
       navigate('/dashboard')
@@ -104,7 +104,7 @@ export default function Register() {
   const isStepValid = () => {
     switch (currentStep) {
       case 'contact':
-        return (contactMethod === 'email' && email) || 
+        return (contactMethod === 'email' && email) ||
                (contactMethod === 'phone' && phoneValidation.isValid)
       case 'personal':
         return firstName && lastName
@@ -154,7 +154,7 @@ export default function Register() {
               <span>{Math.round(progress)}% completado</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+              <div
                 className="gradient-brand h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
@@ -164,16 +164,16 @@ export default function Register() {
           {/* Step indicators */}
           <div className="flex justify-between mb-8">
             {steps.map((step, index) => (
-              <div 
+              <div
                 key={step}
                 className={`flex items-center ${index < steps.length - 1 ? 'flex-1' : ''}`}
               >
                 <div className={`
                   w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
-                  ${index <= currentStepIndex 
-                    ? 'gradient-brand text-white' 
-                    : 'bg-gray-200 text-gray-500'
-                  }
+                  ${index <= currentStepIndex
+                ? 'gradient-brand text-white'
+                : 'bg-gray-200 text-gray-500'
+              }
                 `}>
                   {index < currentStepIndex ? <Check className="w-5 h-5" /> : index + 1}
                 </div>
@@ -199,7 +199,7 @@ export default function Register() {
                   <p className="text-sm text-gray-600 mb-4">
                     Usaremos esto para crear tu cuenta y mantenerte informado
                   </p>
-                  
+
                   {/* Contact method selector */}
                   <div className="flex rounded-xl bg-gray-100 p-1 mb-6">
                     <button
@@ -268,7 +268,7 @@ export default function Register() {
                   <p className="text-sm text-gray-600 mb-6">
                     Necesitamos algunos datos básicos para personalizar tu experiencia
                   </p>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -286,7 +286,7 @@ export default function Register() {
                         />
                       </div>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Apellido
@@ -318,7 +318,7 @@ export default function Register() {
                   <p className="text-sm text-gray-600 mb-6">
                     Esto nos ayuda a configurar tu espacio de trabajo
                   </p>
-                  
+
                   <div className="space-y-3">
                     <button
                       type="button"
@@ -337,7 +337,7 @@ export default function Register() {
                         </div>
                       </div>
                     </button>
-                    
+
                     <button
                       type="button"
                       onClick={() => setWorkspaceType('new_company')}
@@ -355,7 +355,7 @@ export default function Register() {
                         </div>
                       </div>
                     </button>
-                    
+
                     <button
                       type="button"
                       onClick={() => setWorkspaceType('join_company')}
@@ -432,7 +432,7 @@ export default function Register() {
                   <p className="text-sm text-gray-600 mb-6">
                     Crea una contraseña segura para proteger tu información
                   </p>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -456,7 +456,7 @@ export default function Register() {
                           {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
                       </div>
-                      
+
                       {/* Password strength indicator */}
                       {password && (
                         <div className="mt-2">
@@ -475,15 +475,15 @@ export default function Register() {
                           <p className="text-xs text-gray-600">
                             Fortaleza: {
                               passwordStrength() === 0 ? 'Muy débil' :
-                              passwordStrength() === 1 ? 'Débil' :
-                              passwordStrength() === 2 ? 'Media' :
-                              passwordStrength() === 3 ? 'Fuerte' : 'Muy fuerte'
+                                passwordStrength() === 1 ? 'Débil' :
+                                  passwordStrength() === 2 ? 'Media' :
+                                    passwordStrength() === 3 ? 'Fuerte' : 'Muy fuerte'
                             }
                           </p>
                         </div>
                       )}
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Confirmar contraseña
@@ -556,7 +556,7 @@ export default function Register() {
                   Anterior
                 </Button>
               )}
-              
+
               {currentStep !== 'password' ? (
                 <Button
                   type="button"

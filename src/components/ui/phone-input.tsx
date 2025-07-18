@@ -7,7 +7,7 @@ import { AlertCircle, CheckCircle2 } from 'lucide-react'
 
 // LATAM countries + Sweden prioritized (Panama first)
 const SUPPORTED_COUNTRIES: Country[] = [
-  'PA', 'MX', 'CO', 'CR', 'GT', 'HN', 'NI', 'SV', 'BZ', 'BR', 'AR', 'CL', 'PE', 'UY', 'EC', 'BO', 'PY', 'VE', 'GY', 'SR', 'SE', 'US', 'CA', 'ES',
+  'PA', 'MX', 'CO', 'CR', 'GT', 'HN', 'NI', 'SV', 'BZ', 'BR', 'AR', 'CL', 'PE', 'UY', 'EC', 'BO', 'PY', 'VE', 'GY', 'SR', 'SE', 'US', 'CA', 'ES'
 ]
 
 interface PhoneInputProps {
@@ -33,7 +33,7 @@ export function PhoneInputField({
   onChange,
   onBlur,
   error,
-  placeholder = "Ingresa tu número de teléfono",
+  placeholder = 'Ingresa tu número de teléfono',
   disabled = false,
   required = false,
   className,
@@ -47,10 +47,10 @@ export function PhoneInputField({
   return (
     <div className="space-y-2">
       {label && (
-        <Label 
+        <Label
           htmlFor={inputId}
           className={cn(
-            "text-sm font-medium text-gray-700 dark:text-gray-300",
+            'text-sm font-medium text-gray-700 dark:text-gray-300',
             required && "after:content-['*'] after:ml-0.5 after:text-red-500",
             labelClassName
           )}
@@ -58,7 +58,7 @@ export function PhoneInputField({
           {label}
         </Label>
       )}
-      
+
       <div className="relative">
         <PhoneInput
           id={inputId}
@@ -75,52 +75,52 @@ export function PhoneInputField({
           placeholder={placeholder}
           disabled={disabled}
           className={cn(
-            "phone-input-container relative",
+            'phone-input-container relative',
             className
           )}
           style={{
             '--PhoneInputCountryFlag-aspectRatio': '1.5',
             '--PhoneInputCountryFlag-height': '1em',
             '--PhoneInputCountrySelectArrow-color': '#6b7280',
-            '--PhoneInputCountrySelectArrow-opacity': '0.8',
+            '--PhoneInputCountrySelectArrow-opacity': '0.8'
           } as React.CSSProperties}
           numberInputProps={{
             className: cn(
               // Base styles - matching other inputs exactly
-              "flex h-12 w-full rounded-lg border-2 bg-background px-3 py-2 text-base",
-              "ring-offset-background placeholder:text-muted-foreground/60",
-              "transition-all duration-200 ease-in-out",
-              "disabled:cursor-not-allowed disabled:opacity-50",
-              "pl-20", // Space for country selector
-              
+              'flex h-12 w-full rounded-lg border-2 bg-background px-3 py-2 text-base',
+              'ring-offset-background placeholder:text-muted-foreground/60',
+              'transition-all duration-200 ease-in-out',
+              'disabled:cursor-not-allowed disabled:opacity-50',
+              'pl-20', // Space for country selector
+
               // Normal state
-              "border-gray-200 dark:border-gray-700",
-              "focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500",
-              
+              'border-gray-200 dark:border-gray-700',
+              'focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500',
+
               // Valid state (subtle green)
-              isValid && "border-emerald-300 dark:border-emerald-600 bg-emerald-50/30 dark:bg-emerald-900/10",
-              isValid && "focus:border-emerald-500 focus:ring-emerald-500/20",
-              
+              isValid && 'border-emerald-300 dark:border-emerald-600 bg-emerald-50/30 dark:bg-emerald-900/10',
+              isValid && 'focus:border-emerald-500 focus:ring-emerald-500/20',
+
               // Error state (softer red)
-              error && "border-red-300 dark:border-red-600 bg-red-50/30 dark:bg-red-900/10",
-              error && "focus:border-red-400 focus:ring-red-500/20",
-              
+              error && 'border-red-300 dark:border-red-600 bg-red-50/30 dark:bg-red-900/10',
+              error && 'focus:border-red-400 focus:ring-red-500/20',
+
               // Disabled state
-              disabled && "bg-muted/50 text-muted-foreground cursor-not-allowed border-muted"
+              disabled && 'bg-muted/50 text-muted-foreground cursor-not-allowed border-muted'
             ),
             placeholder: placeholder,
             disabled: disabled,
-            autoComplete: "tel",
+            autoComplete: 'tel'
           }}
           countrySelectProps={{
             className: cn(
               // Country selector - integrated design
-              "absolute left-3 top-1/2 transform -translate-y-1/2 z-10",
-              "flex items-center space-x-2 text-sm font-medium",
-              "border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/20",
-              "hover:bg-muted/30 rounded-md px-1.5 py-1 transition-colors duration-200",
-              disabled && "cursor-not-allowed opacity-50"
-            ),
+              'absolute left-3 top-1/2 transform -translate-y-1/2 z-10',
+              'flex items-center space-x-2 text-sm font-medium',
+              'border-0 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500/20',
+              'hover:bg-muted/30 rounded-md px-1.5 py-1 transition-colors duration-200',
+              disabled && 'cursor-not-allowed opacity-50'
+            )
           }}
           {...props}
         />

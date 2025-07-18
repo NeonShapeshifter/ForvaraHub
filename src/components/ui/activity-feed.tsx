@@ -31,12 +31,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from './dropdown-menu'
 import { cn } from '@/lib/utils'
 
 // Tipos de actividad
-export type ActivityType = 
+export type ActivityType =
   | 'user_created' | 'user_updated' | 'user_deleted' | 'user_invited'
   | 'company_created' | 'company_updated' | 'company_deleted'
   | 'app_installed' | 'app_uninstalled' | 'app_updated' | 'app_configured'
@@ -72,7 +72,7 @@ interface ActivityFeedProps {
   className?: string
 }
 
-// Configuración de iconos y colores por tipo de actividad
+// Configuraciï¿½n de iconos y colores por tipo de actividad
 const activityConfig: Record<ActivityType, {
   icon: React.ComponentType<{ className?: string }>
   color: string
@@ -84,43 +84,43 @@ const activityConfig: Record<ActivityType, {
   user_updated: { icon: Edit, color: 'text-blue-600', bgColor: 'bg-blue-100', category: 'user' },
   user_deleted: { icon: Trash2, color: 'text-red-600', bgColor: 'bg-red-100', category: 'user' },
   user_invited: { icon: Plus, color: 'text-purple-600', bgColor: 'bg-purple-100', category: 'user' },
-  
+
   // Empresa
   company_created: { icon: Building, color: 'text-green-600', bgColor: 'bg-green-100', category: 'company' },
   company_updated: { icon: Edit, color: 'text-blue-600', bgColor: 'bg-blue-100', category: 'company' },
   company_deleted: { icon: Trash2, color: 'text-red-600', bgColor: 'bg-red-100', category: 'company' },
-  
+
   // Apps
   app_installed: { icon: Package, color: 'text-green-600', bgColor: 'bg-green-100', category: 'app' },
   app_uninstalled: { icon: Minus, color: 'text-red-600', bgColor: 'bg-red-100', category: 'app' },
   app_updated: { icon: RefreshCw, color: 'text-blue-600', bgColor: 'bg-blue-100', category: 'app' },
   app_configured: { icon: Settings, color: 'text-purple-600', bgColor: 'bg-purple-100', category: 'app' },
-  
+
   // Pagos
   payment_succeeded: { icon: CheckCircle, color: 'text-green-600', bgColor: 'bg-green-100', category: 'payment' },
   payment_failed: { icon: AlertCircle, color: 'text-red-600', bgColor: 'bg-red-100', category: 'payment' },
   subscription_created: { icon: CreditCard, color: 'text-green-600', bgColor: 'bg-green-100', category: 'payment' },
   subscription_cancelled: { icon: CreditCard, color: 'text-red-600', bgColor: 'bg-red-100', category: 'payment' },
-  
+
   // Seguridad
   security_login: { icon: Shield, color: 'text-green-600', bgColor: 'bg-green-100', category: 'security' },
   security_failed_login: { icon: AlertCircle, color: 'text-red-600', bgColor: 'bg-red-100', category: 'security' },
   security_password_changed: { icon: Shield, color: 'text-blue-600', bgColor: 'bg-blue-100', category: 'security' },
-  
+
   // Sistema
   system_backup: { icon: Download, color: 'text-blue-600', bgColor: 'bg-blue-100', category: 'system' },
   system_maintenance: { icon: Settings, color: 'text-yellow-600', bgColor: 'bg-yellow-100', category: 'system' },
   system_error: { icon: AlertCircle, color: 'text-red-600', bgColor: 'bg-red-100', category: 'system' },
-  
+
   // Archivos
   file_uploaded: { icon: Upload, color: 'text-green-600', bgColor: 'bg-green-100', category: 'system' },
   file_downloaded: { icon: Download, color: 'text-blue-600', bgColor: 'bg-blue-100', category: 'system' },
   file_deleted: { icon: Trash2, color: 'text-red-600', bgColor: 'bg-red-100', category: 'system' },
-  
-  // Configuración
+
+  // Configuraciï¿½n
   settings_changed: { icon: Settings, color: 'text-blue-600', bgColor: 'bg-blue-100', category: 'system' },
   integration_connected: { icon: Plus, color: 'text-green-600', bgColor: 'bg-green-100', category: 'system' },
-  integration_disconnected: { icon: Minus, color: 'text-red-600', bgColor: 'bg-red-100', category: 'system' },
+  integration_disconnected: { icon: Minus, color: 'text-red-600', bgColor: 'bg-red-100', category: 'system' }
 }
 
 // Datos de ejemplo para simular actividad en tiempo real
@@ -129,35 +129,35 @@ const generateMockActivity = (): ActivityItem => {
     {
       type: 'user_created',
       title: 'Nuevo usuario registrado',
-      description: 'María García se registró en la plataforma',
+      description: 'Marï¿½a Garcï¿½a se registrï¿½ en la plataforma',
       user: { name: 'Sistema', email: 'system@forvara.com' },
       severity: 'low'
     },
     {
       type: 'app_installed',
       title: 'App instalada',
-      description: 'Se instaló Elaris ERP en la empresa',
+      description: 'Se instalï¿½ Elaris ERP en la empresa',
       user: { name: 'Carlos Ruiz', email: 'carlos@empresa.com' },
       severity: 'low'
     },
     {
       type: 'payment_succeeded',
       title: 'Pago procesado',
-      description: 'Suscripción mensual renovada exitosamente',
+      description: 'Suscripciï¿½n mensual renovada exitosamente',
       user: { name: 'Sistema de Pagos', email: 'billing@forvara.com' },
       severity: 'medium'
     },
     {
       type: 'security_login',
-      title: 'Inicio de sesión',
+      title: 'Inicio de sesiï¿½n',
       description: 'Usuario autenticado desde IP: 192.168.1.100',
-      user: { name: 'Ana López', email: 'ana@empresa.com' },
+      user: { name: 'Ana Lï¿½pez', email: 'ana@empresa.com' },
       severity: 'low'
     },
     {
       type: 'company_updated',
       title: 'Empresa actualizada',
-      description: 'Se actualizó la información de la empresa',
+      description: 'Se actualizï¿½ la informaciï¿½n de la empresa',
       user: { name: 'Luis Mendoza', email: 'luis@empresa.com' },
       severity: 'low'
     },
@@ -171,14 +171,14 @@ const generateMockActivity = (): ActivityItem => {
     {
       type: 'security_failed_login',
       title: 'Intento de login fallido',
-      description: 'Múltiples intentos fallidos desde IP: 203.0.113.45',
+      description: 'Mï¿½ltiples intentos fallidos desde IP: 203.0.113.45',
       user: { name: 'Sistema de Seguridad', email: 'security@forvara.com' },
       severity: 'high'
     },
     {
       type: 'system_backup',
       title: 'Backup completado',
-      description: 'Backup automático de datos completado exitosamente',
+      description: 'Backup automï¿½tico de datos completado exitosamente',
       user: { name: 'Sistema', email: 'system@forvara.com' },
       severity: 'low'
     }
@@ -213,7 +213,7 @@ export function ActivityFeed({
     if (isLive) {
       const interval = setInterval(() => {
         const newActivity = generateMockActivity()
-        setFeedItems(prev => [newActivity, ...prev.slice(0, 49)]) // Mantener máximo 50 items
+        setFeedItems(prev => [newActivity, ...prev.slice(0, 49)]) // Mantener mï¿½ximo 50 items
         setNewItemsCount(prev => prev + 1)
       }, refreshInterval)
 
@@ -226,7 +226,7 @@ export function ActivityFeed({
     if (activeFilter === 'all') {
       setFilteredItems(feedItems)
     } else {
-      setFilteredItems(feedItems.filter(item => 
+      setFilteredItems(feedItems.filter(item =>
         activityConfig[item.type].category === activeFilter
       ))
     }
@@ -258,7 +258,7 @@ export function ActivityFeed({
     { value: 'app', label: 'Apps', count: feedItems.filter(i => activityConfig[i.type].category === 'app').length },
     { value: 'payment', label: 'Pagos', count: feedItems.filter(i => activityConfig[i.type].category === 'payment').length },
     { value: 'security', label: 'Seguridad', count: feedItems.filter(i => activityConfig[i.type].category === 'security').length },
-    { value: 'system', label: 'Sistema', count: feedItems.filter(i => activityConfig[i.type].category === 'system').length },
+    { value: 'system', label: 'Sistema', count: feedItems.filter(i => activityConfig[i.type].category === 'system').length }
   ]
 
   if (loading) {
@@ -300,7 +300,7 @@ export function ActivityFeed({
             </div>
           )}
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -320,7 +320,7 @@ export function ActivityFeed({
               </>
             )}
           </Button>
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -393,9 +393,9 @@ export function ActivityFeed({
             </div>
             <p className="text-gray-500 font-medium mb-1">No hay actividad reciente</p>
             <p className="text-sm text-gray-400">
-              {activeFilter === 'all' 
-                ? 'Cuando ocurran eventos, aparecerán aquí'
-                : `No hay actividad en la categoría "${filterOptions.find(f => f.value === activeFilter)?.label}"`
+              {activeFilter === 'all'
+                ? 'Cuando ocurran eventos, aparecerï¿½n aquï¿½'
+                : `No hay actividad en la categorï¿½a "${filterOptions.find(f => f.value === activeFilter)?.label}"`
               }
             </p>
           </div>
@@ -404,7 +404,7 @@ export function ActivityFeed({
             const config = activityConfig[activity.type]
             const Icon = config.icon
             const timeAgo = formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true, locale: es })
-            
+
             return (
               <div
                 key={activity.id}
@@ -422,7 +422,7 @@ export function ActivityFeed({
                 )}>
                   <Icon className={cn('w-5 h-5', config.color)} />
                 </div>
-                
+
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
@@ -454,12 +454,12 @@ export function ActivityFeed({
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Timestamp */}
                     <div className="text-xs text-gray-400 flex-shrink-0">
-                      {new Date(activity.timestamp).toLocaleTimeString('es', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
+                      {new Date(activity.timestamp).toLocaleTimeString('es', {
+                        hour: '2-digit',
+                        minute: '2-digit'
                       })}
                     </div>
                   </div>
@@ -474,7 +474,7 @@ export function ActivityFeed({
       {filteredItems.length >= 50 && (
         <div className="text-center">
           <Button variant="outline" onClick={() => {/* Load more logic */}}>
-            Cargar más actividades
+            Cargar mï¿½s actividades
           </Button>
         </div>
       )}
@@ -503,10 +503,10 @@ export function useActivityFeed() {
   const fetchActivities = async () => {
     setLoading(true)
     try {
-      // Aquí conectarías con tu API
+      // Aquï¿½ conectarï¿½as con tu API
       // const response = await api.get('/activities')
       // setActivities(response.data)
-      
+
       // Por ahora, simulamos con datos mock
       const mockActivities = Array.from({ length: 10 }, () => generateMockActivity())
       setActivities(mockActivities)

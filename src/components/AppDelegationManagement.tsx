@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { 
-  Shield, 
-  ShieldCheck, 
-  ShieldX, 
-  User, 
+import {
+  Shield,
+  ShieldCheck,
+  ShieldX,
+  User,
   AlertTriangle,
   X,
   Plus,
@@ -109,7 +109,7 @@ export function AppDelegationManagement({ appId, appName, className = '' }: AppD
         </span>
       )
     }
-    
+
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700 dark:bg-green-900/10 dark:text-green-400 border border-green-200 dark:border-green-800">
         <ShieldCheck className="w-3 h-3" />
@@ -138,7 +138,7 @@ export function AppDelegationManagement({ appId, appName, className = '' }: AppD
             Delegación de {appName}
           </h3>
         </div>
-        
+
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
           <div className="flex items-center gap-2">
             <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -174,7 +174,7 @@ export function AppDelegationManagement({ appId, appName, className = '' }: AppD
             </h3>
             <span className="text-sm text-gray-500">({delegates.length})</span>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowGrantModal(true)}
@@ -220,7 +220,7 @@ export function AppDelegationManagement({ appId, appName, className = '' }: AppD
                     <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
                       <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     </div>
-                    
+
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-gray-900 dark:text-white">
@@ -236,7 +236,7 @@ export function AppDelegationManagement({ appId, appName, className = '' }: AppD
                       </div>
                     </div>
                   </div>
-                  
+
                   {delegate.status === 'active' && (
                     <button
                       onClick={() => handleRevokeDelegate(delegate.user.id)}
@@ -263,7 +263,7 @@ export function AppDelegationManagement({ appId, appName, className = '' }: AppD
               Sobre los delegados
             </p>
             <p className="text-yellow-700 dark:text-yellow-300 mt-1">
-              Los delegados actúan como administradores de {appName} con acceso completo. 
+              Los delegados actúan como administradores de {appName} con acceso completo.
               Solo asigna delegados de confianza.
             </p>
           </div>
@@ -285,12 +285,12 @@ export function AppDelegationManagement({ appId, appName, className = '' }: AppD
 }
 
 // Grant Delegate Modal Component
-const GrantDelegateModal = ({ 
-  appName, 
-  availableUsers, 
-  onClose, 
-  onSubmit, 
-  loading 
+const GrantDelegateModal = ({
+  appName,
+  availableUsers,
+  onClose,
+  onSubmit,
+  loading
 }: {
   appName: string
   availableUsers: any[]
@@ -342,7 +342,7 @@ const GrantDelegateModal = ({
 
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
             <div className="text-sm text-blue-700 dark:text-blue-300">
-              <strong>Permisos del delegado:</strong> Acceso completo de administrador dentro de {appName}. 
+              <strong>Permisos del delegado:</strong> Acceso completo de administrador dentro de {appName}.
               Podrán realizar todas las acciones como si fueran el propietario.
             </div>
           </div>

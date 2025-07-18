@@ -1,4 +1,4 @@
-import { apiCall } from './api';
+import { apiCall } from './api'
 
 export interface AdminDashboardOverview {
   total_companies: number;
@@ -39,27 +39,27 @@ export interface AdminDashboard {
 export const adminService = {
   // Get admin dashboard data
   async getDashboard(): Promise<AdminDashboard> {
-    return apiCall<AdminDashboard>('get', '/admin/dashboard');
+    return apiCall<AdminDashboard>('get', '/admin/dashboard')
   },
 
   // Get companies list
   async getCompanies(params?: { page?: number; limit?: number; search?: string; status?: string }) {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.search) queryParams.append('search', params.search);
-    if (params?.status) queryParams.append('status', params.status);
-    
-    return apiCall('get', `/admin/companies?${queryParams.toString()}`);
+    const queryParams = new URLSearchParams()
+    if (params?.page) queryParams.append('page', params.page.toString())
+    if (params?.limit) queryParams.append('limit', params.limit.toString())
+    if (params?.search) queryParams.append('search', params.search)
+    if (params?.status) queryParams.append('status', params.status)
+
+    return apiCall('get', `/admin/companies?${queryParams.toString()}`)
   },
 
   // Get users list
   async getUsers(params?: { page?: number; limit?: number; search?: string }) {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.search) queryParams.append('search', params.search);
-    
-    return apiCall('get', `/admin/users?${queryParams.toString()}`);
+    const queryParams = new URLSearchParams()
+    if (params?.page) queryParams.append('page', params.page.toString())
+    if (params?.limit) queryParams.append('limit', params.limit.toString())
+    if (params?.search) queryParams.append('search', params.search)
+
+    return apiCall('get', `/admin/users?${queryParams.toString()}`)
   }
-};
+}

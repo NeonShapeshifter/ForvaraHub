@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '@/stores/authStore'
-import { 
-  Users, 
-  Building, 
-  Package, 
-  TrendingUp, 
+import {
+  Users,
+  Building,
+  Package,
+  TrendingUp,
   TrendingDown,
   Activity,
   DollarSign,
@@ -24,11 +24,11 @@ import { useToast } from '@/hooks/useToast'
 import { useNavigate } from 'react-router-dom'
 
 // Componente para las métricas
-const MetricCard = ({ 
-  title, 
-  value, 
-  change, 
-  icon: Icon, 
+const MetricCard = ({
+  title,
+  value,
+  change,
+  icon: Icon,
   color = 'gray',
   suffix = '',
   loading = false,
@@ -92,16 +92,16 @@ const formatRelativeTime = (timestamp: string) => {
   const now = new Date()
   const then = new Date(timestamp)
   const diffInMinutes = Math.floor((now.getTime() - then.getTime()) / (1000 * 60))
-  
+
   if (diffInMinutes < 1) return 'Ahora mismo'
   if (diffInMinutes < 60) return `Hace ${diffInMinutes} minuto${diffInMinutes !== 1 ? 's' : ''}`
-  
+
   const diffInHours = Math.floor(diffInMinutes / 60)
   if (diffInHours < 24) return `Hace ${diffInHours} hora${diffInHours !== 1 ? 's' : ''}`
-  
+
   const diffInDays = Math.floor(diffInHours / 24)
   if (diffInDays < 7) return `Hace ${diffInDays} día${diffInDays !== 1 ? 's' : ''}`
-  
+
   return then.toLocaleDateString('es-ES')
 }
 
@@ -129,13 +129,13 @@ export default function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true)
-      
+
       // Load dashboard stats
       const statsData = await dashboardService.getDashboardStats()
-      
+
       // Calculate storage percentage
       const storagePercentage = ((statsData.storage_used_gb / statsData.storage_limit_gb) * 100).toFixed(1)
-      
+
       setStats({
         users: statsData.active_users || 0,
         companies: 1,
@@ -194,7 +194,7 @@ export default function Dashboard() {
       {/* Métricas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <MetricCard
-          title={isIndividualMode ? "Tu cuenta" : "Usuarios activos"}
+          title={isIndividualMode ? 'Tu cuenta' : 'Usuarios activos'}
           value={stats.users}
           icon={Users}
           color="blue"
@@ -245,7 +245,7 @@ export default function Dashboard() {
                 ))
               ) : quickActions.length > 0 ? (
                 quickActions.slice(0, 4).map((action) => (
-                  <button 
+                  <button
                     key={action.id}
                     onClick={() => navigate(action.action)}
                     className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-fast text-left"
@@ -260,7 +260,7 @@ export default function Dashboard() {
                 ))
               ) : (
                 <>
-                  <button 
+                  <button
                     onClick={() => navigate('/users')}
                     className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-fast text-left"
                   >
@@ -268,7 +268,7 @@ export default function Dashboard() {
                     <h4 className="font-medium text-sm">Gestionar Equipo</h4>
                     <p className="text-xs text-gray-500">Invitar y administrar usuarios</p>
                   </button>
-                  <button 
+                  <button
                     onClick={() => navigate('/marketplace')}
                     className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-fast text-left"
                   >
@@ -276,7 +276,7 @@ export default function Dashboard() {
                     <h4 className="font-medium text-sm">Apps Empresariales</h4>
                     <p className="text-xs text-gray-500">Instalar para todo el equipo</p>
                   </button>
-                  <button 
+                  <button
                     onClick={() => navigate('/analytics')}
                     className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-fast text-left"
                   >
@@ -284,7 +284,7 @@ export default function Dashboard() {
                     <h4 className="font-medium text-sm">Analytics</h4>
                     <p className="text-xs text-gray-500">Métricas del equipo</p>
                   </button>
-                  <button 
+                  <button
                     onClick={() => navigate('/settings')}
                     className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-fast text-left"
                   >
@@ -319,10 +319,10 @@ export default function Dashboard() {
                   <div key={activity.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-fast">
                     <div className={`w-2 h-2 rounded-full ${
                       activity.type.includes('login') ? 'bg-green-500' :
-                      activity.type.includes('create') ? 'bg-blue-500' :
-                      activity.type.includes('update') ? 'bg-yellow-500' :
-                      activity.type.includes('delete') ? 'bg-red-500' :
-                      'bg-gray-500'
+                        activity.type.includes('create') ? 'bg-blue-500' :
+                          activity.type.includes('update') ? 'bg-yellow-500' :
+                            activity.type.includes('delete') ? 'bg-red-500' :
+                              'bg-gray-500'
                     }`}></div>
                     <div className="flex-1">
                       <p className="text-sm font-medium">{activity.description}</p>
@@ -333,7 +333,7 @@ export default function Dashboard() {
                   </div>
                 ))}
                 {activities.length >= 5 && (
-                  <button 
+                  <button
                     onClick={() => navigate('/analytics')}
                     className="w-full text-center text-xs text-gradient font-medium hover:underline py-2"
                   >

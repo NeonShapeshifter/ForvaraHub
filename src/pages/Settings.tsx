@@ -1,11 +1,11 @@
 // ForvaraHub/src/pages/Settings.tsx
 
 import React, { useState, useEffect } from 'react'
-import { 
-  User, 
-  Bell, 
-  Shield, 
-  Globe, 
+import {
+  User,
+  Bell,
+  Shield,
+  Globe,
   CreditCard,
   Building,
   Palette,
@@ -48,20 +48,20 @@ interface UserSettings {
   phone: string
   avatar_url?: string
   bio?: string
-  
+
   // Preferences
   language: 'es' | 'en' | 'pt'
   timezone: string
-  
+
   // Notifications
   email_notifications: boolean
   push_notifications: boolean
   sms_notifications: boolean
   marketing_emails: boolean
-  
+
   // Security
   two_factor_enabled: boolean
-  
+
   // Appearance
   theme: 'light' | 'dark' | 'system'
 }
@@ -69,12 +69,12 @@ interface UserSettings {
 export default function Settings() {
   const { user, updateUser } = useAuthStore()
   const { addNotification } = useNotifications()
-  
+
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
-  
+
   const [settings, setSettings] = useState<UserSettings>({
     first_name: user?.first_name || '',
     last_name: user?.last_name || '',
@@ -89,7 +89,7 @@ export default function Settings() {
     two_factor_enabled: false,
     theme: 'system'
   })
-  
+
   const phoneValidation = usePhoneValidation({
     value: settings.phone,
     required: false
@@ -124,7 +124,7 @@ export default function Settings() {
     try {
       setSaving(true)
       await api.put('/user/settings', settings)
-      
+
       // Update local user data
       updateUser({
         first_name: settings.first_name,
@@ -134,13 +134,13 @@ export default function Settings() {
         preferred_language: settings.language,
         timezone: settings.timezone
       })
-      
+
       addNotification({
         type: 'success',
         title: 'Configuración guardada',
         message: 'Tus cambios han sido guardados exitosamente'
       })
-      
+
       setHasChanges(false)
     } catch (error) {
       addNotification({
@@ -161,8 +161,9 @@ export default function Settings() {
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    
-    // TODO: Implement avatar upload
+
+    // Avatar upload functionality would go here
+    console.log('Avatar upload clicked - feature to be implemented')
     addNotification({
       type: 'info',
       title: 'Función en desarrollo',
@@ -545,7 +546,7 @@ export default function Settings() {
           ) : (
             <>
               {renderTabContent()}
-              
+
               {/* Save button */}
               {hasChanges && (
                 <div className="fixed bottom-6 right-6 flex items-center gap-3 bg-white p-4 rounded-xl shadow-lg border border-gray-200">

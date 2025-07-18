@@ -22,7 +22,7 @@ export function NavSection({ title, items, onItemClick }: NavSectionProps) {
           {title}
         </h3>
       )}
-      
+
       {items.map((item) => (
         <NavItem
           key={item.href}

@@ -12,9 +12,9 @@ export function PhoneInputDemo() {
 
   const validation1 = usePhoneValidation({ value: phone1, required: true })
   const validation2 = usePhoneValidation({ value: phone2, required: false })
-  const validation3 = usePhoneValidation({ 
-    value: phone3, 
-    required: true, 
+  const validation3 = usePhoneValidation({
+    value: phone3,
+    required: true,
     countries: ['PA', 'MX', 'CO'] // Restricted to specific countries
   })
 
@@ -47,7 +47,7 @@ export function PhoneInputDemo() {
             placeholder="Enter your phone number"
             required
           />
-          
+
           {phone1 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="space-y-2">
@@ -62,7 +62,7 @@ export function PhoneInputDemo() {
                   </div>
                 )}
               </div>
-              
+
               {validation1.isValid && (
                 <div className="space-y-2">
                   <h4 className="font-medium">Parsed Information:</h4>
@@ -72,7 +72,7 @@ export function PhoneInputDemo() {
                     <div><strong>International:</strong> {validation1.internationalFormat}</div>
                     <div><strong>E.164:</strong> {validation1.e164Format}</div>
                     <div className="flex items-center gap-2">
-                      <strong>LATAM:</strong> 
+                      <strong>LATAM:</strong>
                       {isLATAMCountry(validation1.countryCode) ? (
                         <Badge className="bg-green-100 text-green-800">Yes 🌎</Badge>
                       ) : (
@@ -107,7 +107,7 @@ export function PhoneInputDemo() {
             placeholder="This field is pre-filled"
             className={validation2.isValid ? 'valid' : ''}
           />
-          
+
           {validation2.isValid && (
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
               <div className="flex items-center gap-2 text-green-800 dark:text-green-200 mb-2">
@@ -147,7 +147,7 @@ export function PhoneInputDemo() {
             placeholder="Try numbers from different countries"
             required
           />
-          
+
           <div className="text-sm bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
             <div className="font-medium text-blue-800 dark:text-blue-200 mb-2">
               🔒 Allowed Countries:
@@ -158,7 +158,7 @@ export function PhoneInputDemo() {
               <Badge className="bg-blue-100 text-blue-800">🇨🇴 Colombia</Badge>
             </div>
           </div>
-          
+
           {phone3 && validation3.error && (
             <div className="text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-800 dark:text-red-200">
               <AlertCircle className="w-4 h-4 inline mr-2" />
@@ -187,7 +187,7 @@ export function PhoneInputDemo() {
                 <li>• Cultural awareness</li>
               </ul>
             </div>
-            
+
             <div className="space-y-2">
               <h4 className="font-medium text-blue-600">⚡ Smart Validation</h4>
               <ul className="space-y-1 text-muted-foreground">
@@ -197,7 +197,7 @@ export function PhoneInputDemo() {
                 <li>• Debounced validation</li>
               </ul>
             </div>
-            
+
             <div className="space-y-2">
               <h4 className="font-medium text-purple-600">🎨 Professional UI</h4>
               <ul className="space-y-1 text-muted-foreground">
@@ -207,7 +207,7 @@ export function PhoneInputDemo() {
                 <li>• Mobile responsive</li>
               </ul>
             </div>
-            
+
             <div className="space-y-2">
               <h4 className="font-medium text-orange-600">🔧 Developer Friendly</h4>
               <ul className="space-y-1 text-muted-foreground">
@@ -217,7 +217,7 @@ export function PhoneInputDemo() {
                 <li>• Error boundary safe</li>
               </ul>
             </div>
-            
+
             <div className="space-y-2">
               <h4 className="font-medium text-pink-600">🚀 Performance</h4>
               <ul className="space-y-1 text-muted-foreground">
@@ -227,7 +227,7 @@ export function PhoneInputDemo() {
                 <li>• Bundle size optimized</li>
               </ul>
             </div>
-            
+
             <div className="space-y-2">
               <h4 className="font-medium text-indigo-600">🔒 Enterprise Ready</h4>
               <ul className="space-y-1 text-muted-foreground">
@@ -254,7 +254,7 @@ export function PhoneInputDemo() {
             <div>
               <h4 className="font-medium mb-2">Basic Usage:</h4>
               <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded text-xs overflow-x-auto">
-{`<PhoneInputField
+                {`<PhoneInputField
   label="Phone Number"
   value={phone}
   onChange={setPhone}
@@ -264,11 +264,11 @@ export function PhoneInputDemo() {
 />`}
               </pre>
             </div>
-            
+
             <div>
               <h4 className="font-medium mb-2">With Validation Hook:</h4>
               <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded text-xs overflow-x-auto">
-{`const phoneValidation = usePhoneValidation({
+                {`const phoneValidation = usePhoneValidation({
   value: phone,
   required: true,
   countries: ['PA', 'MX', 'CO'] // Optional restriction

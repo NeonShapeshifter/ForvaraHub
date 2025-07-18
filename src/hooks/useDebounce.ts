@@ -29,7 +29,7 @@ export function useDebounceCallback<T extends (...args: any[]) => any>(
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
       }
-      
+
       timeoutRef.current = setTimeout(() => {
         callback(...args)
       }, delay)
@@ -115,7 +115,7 @@ export function useDebounceWithLoading<T>(
     }
 
     setIsLoading(true)
-    
+
     const handler = setTimeout(() => {
       setDebouncedValue(value)
       setIsLoading(false)

@@ -41,7 +41,7 @@ export const appsService = {
   // Get all available apps from marketplace
   async getAvailableApps(): Promise<App[]> {
     try {
-      return await apiCall<App[]>('get', '/apps');
+      return await apiCall<App[]>('get', '/apps')
     } catch (error) {
       console.error('Error fetching available apps:', error)
       // Return fallback mock data for development
@@ -83,14 +83,14 @@ export const appsService = {
           features: ['Control de stock', 'Alertas de inventario', 'Reportes de movimientos'],
           status: 'available'
         }
-      ];
+      ]
     }
   },
 
   // Get user's installed apps
   async getInstalledApps(): Promise<InstalledApp[]> {
     try {
-      return await apiCall<InstalledApp[]>('get', '/apps/installed');
+      return await apiCall<InstalledApp[]>('get', '/apps/installed')
     } catch (error) {
       console.error('Error fetching installed apps:', error)
       return []
@@ -100,7 +100,7 @@ export const appsService = {
   // Get specific app details
   async getApp(appId: string): Promise<App | null> {
     try {
-      return await apiCall<App>('get', `/apps/${appId}`);
+      return await apiCall<App>('get', `/apps/${appId}`)
     } catch (error) {
       console.error('Error fetching app details:', error)
       return null
@@ -110,7 +110,7 @@ export const appsService = {
   // Install an app
   async installApp(appId: string, planId?: string): Promise<any> {
     try {
-      return await apiCall<any>('post', `/apps/${appId}/install`, { planId });
+      return await apiCall<any>('post', `/apps/${appId}/install`, { planId })
     } catch (error) {
       console.error('Error installing app:', error)
       throw error
@@ -120,7 +120,7 @@ export const appsService = {
   // Uninstall an app
   async uninstallApp(appId: string): Promise<any> {
     try {
-      return await apiCall<any>('post', `/apps/${appId}/uninstall`);
+      return await apiCall<any>('post', `/apps/${appId}/uninstall`)
     } catch (error) {
       console.error('Error uninstalling app:', error)
       throw error
@@ -130,7 +130,7 @@ export const appsService = {
   // Launch an app
   async launchApp(appId: string): Promise<{ url: string; message: string }> {
     try {
-      return await apiCall<{ url: string; message: string }>('post', `/apps/${appId}/launch`);
+      return await apiCall<{ url: string; message: string }>('post', `/apps/${appId}/launch`)
     } catch (error) {
       console.error('Error launching app:', error)
       throw error

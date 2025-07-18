@@ -1,4 +1,4 @@
-import { apiCall } from './api';
+import { apiCall } from './api'
 
 export interface AnalyticsOverview {
   total_users: number;
@@ -38,6 +38,6 @@ export interface AnalyticsData {
 export const analyticsService = {
   // Get analytics data
   async getAnalytics(range: string = '7d'): Promise<AnalyticsData> {
-    return apiCall<AnalyticsData>('get', `/analytics?range=${range}`);
+    return apiCall<AnalyticsData>('get', `/analytics?range=${range}`)
   }
-};
+}

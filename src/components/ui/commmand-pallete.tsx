@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
-  Search, 
-  Home, 
-  Users, 
-  Building, 
-  Package, 
+import {
+  Search,
+  Home,
+  Users,
+  Building,
+  Package,
   CreditCard,
   Settings,
   BarChart3,
@@ -158,7 +158,7 @@ export function CommandPalette() {
   ]
 
   // Filtrar comandos basado en búsqueda
-  const filteredCommands = commands.filter(cmd => 
+  const filteredCommands = commands.filter(cmd =>
     cmd.label.toLowerCase().includes(search.toLowerCase()) ||
     cmd.category.toLowerCase().includes(search.toLowerCase())
   )
@@ -278,8 +278,8 @@ export function CommandPalette() {
                         onClick={cmd.action}
                         onMouseEnter={() => setSelectedIndex(filteredCommands.indexOf(cmd))}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-fast ${
-                          isSelected 
-                            ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-gray-900' 
+                          isSelected
+                            ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-gray-900'
                             : 'hover:bg-gray-50'
                         }`}
                       >

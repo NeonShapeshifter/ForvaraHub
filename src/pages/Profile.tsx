@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { 
+import {
   User,
   Mail,
   Phone,
@@ -60,13 +60,13 @@ export default function Profile() {
   const { userId } = useParams()
   const navigate = useNavigate()
   const { user: currentUser } = useAuthStore()
-  
+
   const [loading, setLoading] = useState(true)
   const [profileUser, setProfileUser] = useState<ProfileUser | null>(null)
   const [stats, setStats] = useState<ProfileStats | null>(null)
   const [activities, setActivities] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'overview' | 'activity' | 'companies'>('overview')
-  
+
   const isOwnProfile = !userId || userId === currentUser?.id
 
   useEffect(() => {
@@ -76,19 +76,19 @@ export default function Profile() {
   const loadProfile = async () => {
     try {
       setLoading(true)
-      
+
       // Load user profile
       const userResponse = userId && userId !== currentUser?.id
         ? await api.get(`/users/${userId}`)
         : { data: currentUser }
-      
+
       setProfileUser(userResponse.data)
-      
+
       // Load stats (only for own profile or if public)
       if (isOwnProfile) {
         const statsResponse = await api.get('/user/stats')
         setStats(statsResponse.data)
-        
+
         // Load recent activity
         const activityData = await dashboardService.getRecentActivity(10)
         setActivities(activityData)
@@ -154,8 +154,8 @@ export default function Profile() {
               {/* Avatar */}
               <div className="relative">
                 {profileUser.avatar_url ? (
-                  <img 
-                    src={profileUser.avatar_url} 
+                  <img
+                    src={profileUser.avatar_url}
                     alt={`${profileUser.first_name} ${profileUser.last_name}`}
                     className="w-24 h-24 rounded-2xl object-cover"
                   />
@@ -305,17 +305,17 @@ export default function Profile() {
                       <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-fast">
                         <div className={`w-2 h-2 rounded-full mt-2 ${
                           activity.type.includes('login') ? 'bg-green-500' :
-                          activity.type.includes('create') ? 'bg-blue-500' :
-                          activity.type.includes('update') ? 'bg-yellow-500' :
-                          activity.type.includes('delete') ? 'bg-red-500' :
-                          'bg-gray-500'
+                            activity.type.includes('create') ? 'bg-blue-500' :
+                              activity.type.includes('update') ? 'bg-yellow-500' :
+                                activity.type.includes('delete') ? 'bg-red-500' :
+                                  'bg-gray-500'
                         }`} />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900">{activity.description}</p>
                           <p className="text-xs text-gray-500">
-                            {formatDistanceToNow(new Date(activity.timestamp), { 
-                              addSuffix: true, 
-                              locale: es 
+                            {formatDistanceToNow(new Date(activity.timestamp), {
+                              addSuffix: true,
+                              locale: es
                             })}
                           </p>
                         </div>
@@ -323,8 +323,8 @@ export default function Profile() {
                     ))}
                     {activities.length > 5 && (
                       <div className="text-center pt-2">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => setActiveTab('activity')}
                         >
@@ -337,7 +337,7 @@ export default function Profile() {
                   <div className="text-center py-8">
                     <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-sm text-gray-500">
-                      {isOwnProfile 
+                      {isOwnProfile
                         ? 'Tu actividad aparecerá aquí'
                         : 'No hay actividad pública disponible'}
                     </p>
@@ -401,10 +401,10 @@ export default function Profile() {
                   <div key={activity.id} className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 transition-fast border border-gray-100">
                     <div className={`w-3 h-3 rounded-full mt-1.5 ${
                       activity.type.includes('login') ? 'bg-green-500' :
-                      activity.type.includes('create') ? 'bg-blue-500' :
-                      activity.type.includes('update') ? 'bg-yellow-500' :
-                      activity.type.includes('delete') ? 'bg-red-500' :
-                      'bg-gray-500'
+                        activity.type.includes('create') ? 'bg-blue-500' :
+                          activity.type.includes('update') ? 'bg-yellow-500' :
+                            activity.type.includes('delete') ? 'bg-red-500' :
+                              'bg-gray-500'
                     }`} />
                     <div className="flex-1">
                       <div className="flex items-start justify-between">
@@ -422,9 +422,9 @@ export default function Profile() {
                         </div>
                         <Badge variant={
                           activity.type.includes('login') ? 'default' :
-                          activity.type.includes('create') ? 'secondary' :
-                          activity.type.includes('update') ? 'outline' :
-                          'destructive'
+                            activity.type.includes('create') ? 'secondary' :
+                              activity.type.includes('update') ? 'outline' :
+                                'destructive'
                         }>
                           {activity.type}
                         </Badge>
@@ -456,7 +456,7 @@ export default function Profile() {
               Empresas
             </h3>
             <p className="text-sm text-gray-500">
-              {isOwnProfile 
+              {isOwnProfile
                 ? 'Aquí verás las empresas en las que participas'
                 : 'Las empresas públicas aparecerán aquí'}
             </p>

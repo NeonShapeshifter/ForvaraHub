@@ -7,10 +7,10 @@ interface ContentSectionProps {
   variant?: 'default' | 'card' | 'bordered'
 }
 
-export function ContentSection({ 
-  children, 
-  className, 
-  variant = 'default' 
+export function ContentSection({
+  children,
+  className,
+  variant = 'default'
 }: ContentSectionProps) {
   const variants = {
     default: '',

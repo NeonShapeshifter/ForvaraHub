@@ -39,13 +39,13 @@ interface SearchModalProps {
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
-  
+
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [searchType, setSearchType] = useState<'all' | 'users' | 'companies' | 'apps' | 'documents'>('all')
   const [recentSearches, setRecentSearches] = useState<string[]>([])
-  
+
   const { debouncedSearchTerm, isSearching } = useSearchDebounce(query, 300)
 
   useEffect(() => {
@@ -112,14 +112,14 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
   const performSearch = async () => {
     try {
-      
+
       const params = {
         q: debouncedSearchTerm,
         type: searchType === 'all' ? undefined : searchType
       }
-      
+
       const response = await api.get('/search', { params })
-      
+
       // Transform API results to our format
       const formattedResults: SearchResult[] = response.data.map((item: any) => ({
         id: item.id,
@@ -130,7 +130,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         url: getUrlForResult(item),
         metadata: item
       }))
-      
+
       setResults(formattedResults)
       setSelectedIndex(0)
     } catch (error) {
@@ -175,11 +175,11 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   return createPortal(
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="relative min-h-screen px-4 flex items-start justify-center pt-20">
         <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden animate-slide-up">
@@ -202,7 +202,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
-            
+
             {/* Search type filters */}
             <div className="px-6 pb-3 flex items-center gap-2">
               {[
@@ -227,7 +227,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               ))}
             </div>
           </div>
-          
+
           {/* Results */}
           <div className="max-h-[60vh] overflow-y-auto">
             {isSearching ? (
@@ -241,7 +241,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   {results.map((result, index) => {
                     const Icon = result.icon
                     const isSelected = index === selectedIndex
-                    
+
                     return (
                       <button
                         key={result.id}
@@ -302,7 +302,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Quick actions */}
                 <div className="mt-6">
                   <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
@@ -355,7 +355,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               </div>
             )}
           </div>
-          
+
           {/* Footer */}
           <div className="border-t px-6 py-3 bg-gray-50">
             <div className="flex items-center justify-between text-xs text-gray-500">

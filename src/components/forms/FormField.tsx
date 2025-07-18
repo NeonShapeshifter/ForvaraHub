@@ -96,9 +96,9 @@ export function FormField({
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </Label>
-      
+
       {renderInput()}
-      
+
       {error && (
         <p className="text-sm text-destructive">{error}</p>
       )}

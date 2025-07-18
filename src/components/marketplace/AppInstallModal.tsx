@@ -1,21 +1,21 @@
 import React, { useState } from 'react'
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
   DialogTitle,
-  DialogFooter 
+  DialogFooter
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { 
-  Star, 
-  Download, 
-  Check, 
-  CreditCard, 
-  Shield, 
+import {
+  Star,
+  Download,
+  Check,
+  CreditCard,
+  Shield,
   Zap,
   Clock,
   DollarSign
@@ -55,7 +55,7 @@ export function AppInstallModal({ app, isOpen, onClose, onInstall }: AppInstallM
       // Free app - direct install
       setInstallStep('installing')
       setIsInstalling(true)
-      
+
       // Simulate installation
       setTimeout(() => {
         setInstallStep('success')
@@ -74,7 +74,7 @@ export function AppInstallModal({ app, isOpen, onClose, onInstall }: AppInstallM
   const handlePaymentConfirm = async () => {
     setInstallStep('installing')
     setIsInstalling(true)
-    
+
     // Simulate payment + installation
     setTimeout(() => {
       setInstallStep('success')
@@ -195,15 +195,15 @@ export function AppInstallModal({ app, isOpen, onClose, onInstall }: AppInstallM
               <Button variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button 
+              <Button
                 onClick={handleInstall}
                 className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                 disabled={app.status === 'coming-soon'}
               >
                 <Zap className="w-4 h-4 mr-2" />
-                {app.status === 'coming-soon' ? 'Próximamente' : 
-                 app.priceType === 'free' ? '🆓 Instalar Gratis' : 
-                 '🎁 Iniciar Prueba Gratis'}
+                {app.status === 'coming-soon' ? 'Próximamente' :
+                  app.priceType === 'free' ? '🆓 Instalar Gratis' :
+                    '🎁 Iniciar Prueba Gratis'}
               </Button>
             </DialogFooter>
           </>
@@ -240,7 +240,7 @@ export function AppInstallModal({ app, isOpen, onClose, onInstall }: AppInstallM
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="border-t pt-4">
                     <div className="flex justify-between items-center text-sm">
                       <span>Período de prueba:</span>
@@ -284,7 +284,7 @@ export function AppInstallModal({ app, isOpen, onClose, onInstall }: AppInstallM
               <Button variant="outline" onClick={() => setInstallStep('details')}>
                 Volver
               </Button>
-              <Button 
+              <Button
                 onClick={handlePaymentConfirm}
                 className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
               >
@@ -317,7 +317,7 @@ export function AppInstallModal({ app, isOpen, onClose, onInstall }: AppInstallM
                   </div>
                 </div>
               </div>
-              
+
               {/* Progress steps */}
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
@@ -357,7 +357,7 @@ export function AppInstallModal({ app, isOpen, onClose, onInstall }: AppInstallM
                   Ya puedes empezar a usar tu nueva aplicación
                 </div>
               </div>
-              
+
               {app.priceType !== 'free' && (
                 <Card className="border-green-200 bg-green-50 dark:bg-green-950">
                   <CardContent className="p-4">

@@ -27,7 +27,7 @@ class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Error Boundary caught an error:', error, errorInfo)
     this.setState({ error, errorInfo })
-    
+
     // Here you could send error to logging service like Sentry
     // logErrorToService(error, errorInfo)
   }
@@ -62,7 +62,7 @@ class ErrorBoundary extends Component<Props, State> {
               <p className="text-gray-600">
                 Ha ocurrido un error inesperado. Nuestro equipo ha sido notificado y está trabajando en una solución.
               </p>
-              
+
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="text-left bg-gray-100 p-3 rounded-lg text-sm">
                   <summary className="cursor-pointer font-medium text-gray-700 mb-2">
@@ -74,9 +74,9 @@ class ErrorBoundary extends Component<Props, State> {
                   </pre>
                 </details>
               )}
-              
+
               <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                <Button 
+                <Button
                   onClick={this.handleReload}
                   className="flex-1"
                   variant="outline"
@@ -84,7 +84,7 @@ class ErrorBoundary extends Component<Props, State> {
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Recargar página
                 </Button>
-                <Button 
+                <Button
                   onClick={this.handleGoHome}
                   className="flex-1 gradient-brand"
                 >
@@ -92,7 +92,7 @@ class ErrorBoundary extends Component<Props, State> {
                   Ir al inicio
                 </Button>
               </div>
-              
+
               <p className="text-xs text-gray-500 pt-2">
                 Si el problema persiste, contacta a soporte técnico
               </p>

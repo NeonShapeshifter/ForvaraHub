@@ -7,8 +7,8 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+      '@': path.resolve(__dirname, './src')
+    }
   },
   build: {
     rollupOptions: {
@@ -18,7 +18,7 @@ export default defineConfig({
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-ui': ['lucide-react', 'framer-motion', 'date-fns'],
           'vendor-utils': ['zustand', '@radix-ui/react-select', '@radix-ui/react-dialog'],
-          
+
           // Page chunks for code splitting
           'auth-pages': ['./src/pages/Login.tsx', './src/pages/Register.tsx'],
           'main-pages': ['./src/pages/Dashboard.tsx', './src/pages/Marketplace.tsx'],
@@ -49,8 +49,8 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:4000',
-        changeOrigin: true,
-      },
-    },
-  },
+        changeOrigin: true
+      }
+    }
+  }
 })

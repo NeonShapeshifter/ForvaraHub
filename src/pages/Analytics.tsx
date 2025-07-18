@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '@/stores/authStore'
-import { 
-  BarChart3, 
-  TrendingUp, 
+import {
+  BarChart3,
+  TrendingUp,
   TrendingDown,
-  Users, 
+  Users,
   Package,
   Activity,
   Calendar,
@@ -74,11 +74,11 @@ const EmptyState = () => (
 )
 
 // Metric card component
-const MetricCard = ({ 
-  title, 
-  value, 
-  change, 
-  icon: Icon, 
+const MetricCard = ({
+  title,
+  value,
+  change,
+  icon: Icon,
   color = 'gray',
   suffix = '',
   trend
@@ -111,8 +111,8 @@ const MetricCard = ({
           <Icon className={`w-5 h-5 ${iconColors[color as keyof typeof iconColors]}`} />
           {change !== undefined && (
             <div className={`flex items-center gap-1 text-xs font-medium ${getTrendColor()}`}>
-              {trend === 'up' ? <TrendingUp className="w-4 h-4" /> : 
-               trend === 'down' ? <TrendingDown className="w-4 h-4" /> : null}
+              {trend === 'up' ? <TrendingUp className="w-4 h-4" /> :
+                trend === 'down' ? <TrendingDown className="w-4 h-4" /> : null}
               {Math.abs(change)}%
             </div>
           )}
@@ -146,7 +146,7 @@ export default function Analytics() {
       setAnalyticsData(data)
       // Check if there's meaningful data
       setHasData(
-        data.overview.total_users > 0 || 
+        data.overview.total_users > 0 ||
         data.overview.total_apps > 0 ||
         data.overview.active_subscriptions > 0
       )
@@ -226,7 +226,7 @@ export default function Analytics() {
           {/* Métricas principales */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricCard
-              title={isIndividualMode ? "Tu cuenta" : "Usuarios totales"}
+              title={isIndividualMode ? 'Tu cuenta' : 'Usuarios totales'}
               value={analyticsData.overview.total_users}
               change={analyticsData.trends.users_growth}
               trend={analyticsData.trends.users_growth > 0 ? 'up' : analyticsData.trends.users_growth < 0 ? 'down' : 'neutral'}
@@ -272,7 +272,7 @@ export default function Analytics() {
                     const height = (day.users / maxUsers) * 100
                     return (
                       <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                        <div 
+                        <div
                           className="w-full bg-gradient-to-t from-blue-500 to-purple-500 rounded-t-lg transition-all duration-500"
                           style={{ height: `${height}%` }}
                         />
@@ -331,7 +331,7 @@ export default function Analytics() {
                 <div>
                   <h4 className="font-medium text-blue-900">¿Sabías que?</h4>
                   <p className="text-sm text-blue-700 mt-1">
-                    Analytics te permite monitorear el uso de aplicaciones, identificar tendencias y optimizar 
+                    Analytics te permite monitorear el uso de aplicaciones, identificar tendencias y optimizar
                     la productividad de tu equipo. Los datos se actualizan en tiempo real.
                   </p>
                 </div>

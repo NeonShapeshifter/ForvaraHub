@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { 
-  Users, 
-  UserPlus, 
-  Mail, 
-  Phone, 
-  Shield, 
-  MoreVertical, 
-  Eye, 
-  Edit3, 
+import {
+  Users,
+  UserPlus,
+  Mail,
+  Phone,
+  Shield,
+  MoreVertical,
+  Eye,
+  Edit3,
   X,
   Check,
   AlertCircle,
@@ -64,7 +64,7 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
   const loadData = async () => {
     try {
       setLoading(true)
-      
+
       const [usersResponse, availableResponse, permissionsResponse] = await Promise.all([
         api.get(`/embedded-users/${appId}`),
         api.get(`/embedded-users/${appId}/available`),
@@ -88,7 +88,7 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
   }) => {
     try {
       setActionLoading('invite')
-      
+
       await api.post(`/embedded-users/${appId}/invite`, userData)
       await loadData()
       setShowInviteModal(false)
@@ -105,7 +105,7 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
   }) => {
     try {
       setActionLoading(userId)
-      
+
       await api.patch(`/embedded-users/${appId}/members/${userId}`, updates)
       await loadData()
       setSelectedUserMenu(null)
@@ -121,7 +121,7 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
 
     try {
       setActionLoading(userId)
-      
+
       await api.delete(`/embedded-users/${appId}/members/${userId}`)
       await loadData()
       setSelectedUserMenu(null)
@@ -139,7 +139,7 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
       viewer: 'bg-gray-50 text-gray-700 dark:bg-gray-900/10 dark:text-gray-400 border-gray-200 dark:border-gray-800',
       owner: 'bg-purple-50 text-purple-700 dark:bg-purple-900/10 dark:text-purple-400 border-purple-200 dark:border-purple-800'
     }
-    
+
     return (
       <span className={`inline-flex px-2 py-0.5 rounded-md text-xs font-medium border ${styles[role as keyof typeof styles] || styles.member}`}>
         {role}
@@ -166,7 +166,7 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
             Usuarios de {appName}
           </h3>
         </div>
-        
+
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
           <div className="flex items-center gap-2">
             <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -202,7 +202,7 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
             </h3>
             <span className="text-sm text-gray-500">({users.length})</span>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowPermissionsModal(true)}
@@ -211,7 +211,7 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
             >
               <Settings className="w-4 h-4 text-gray-500" />
             </button>
-            
+
             <button
               onClick={() => setShowInviteModal(true)}
               className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
@@ -221,7 +221,7 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
             </button>
           </div>
         </div>
-        
+
         {/* Search */}
         <div className="mt-3 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -275,7 +275,7 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
                       </span>
                     )}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-gray-900 dark:text-white">
@@ -283,13 +283,13 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
                       </span>
                       {getRoleBadge(user.role)}
                     </div>
-                    
+
                     <div className="flex items-center gap-4 mt-1">
                       <div className="flex items-center gap-1">
                         <Mail className="w-3 h-3 text-gray-400" />
                         <span className="text-xs text-gray-500">{user.email}</span>
                       </div>
-                      
+
                       {user.phone && (
                         <div className="flex items-center gap-1">
                           <Phone className="w-3 h-3 text-gray-400" />
@@ -299,12 +299,12 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <div className="text-xs text-gray-500">
                     {user.permissions.length} permisos
                   </div>
-                  
+
                   {user.role !== 'owner' && (
                     <div className="relative">
                       <button
@@ -316,7 +316,7 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
                       >
                         <MoreVertical className="w-4 h-4 text-gray-500" />
                       </button>
-                      
+
                       {selectedUserMenu === user.id && (
                         <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10">
                           <button
@@ -330,9 +330,9 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
                             <Edit3 className="w-4 h-4 inline mr-2" />
                             Editar permisos
                           </button>
-                          
+
                           <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
-                          
+
                           <button
                             onClick={() => handleRemoveUser(user.id)}
                             className="block w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 text-left"
@@ -373,8 +373,8 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
             setShowPermissionsModal(false)
             setSelectedUser(null)
           }}
-          onSubmit={selectedUser ? 
-            (updates) => handleUpdateUser(selectedUser.id, updates) : 
+          onSubmit={selectedUser ?
+            (updates) => handleUpdateUser(selectedUser.id, updates) :
             undefined
           }
           loading={selectedUser ? actionLoading === selectedUser.id : false}
@@ -385,13 +385,13 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
 }
 
 // Invite User Modal Component
-const InviteUserModal = ({ 
-  appName, 
-  availableUsers, 
-  permissions, 
-  onClose, 
-  onSubmit, 
-  loading 
+const InviteUserModal = ({
+  appName,
+  availableUsers,
+  permissions,
+  onClose,
+  onSubmit,
+  loading
 }: {
   appName: string
   availableUsers: EmbeddedUser[]
@@ -406,7 +406,7 @@ const InviteUserModal = ({
 
   const handleSubmit = () => {
     if (!selectedUser) return
-    
+
     const user = availableUsers.find(u => u.id === selectedUser)
     if (!user) return
 
@@ -520,13 +520,13 @@ const InviteUserModal = ({
 }
 
 // Permissions Modal Component
-const PermissionsModal = ({ 
-  appName, 
-  permissions, 
-  user, 
-  onClose, 
-  onSubmit, 
-  loading 
+const PermissionsModal = ({
+  appName,
+  permissions,
+  user,
+  onClose,
+  onSubmit,
+  loading
 }: {
   appName: string
   permissions: AppPermission[]
@@ -540,7 +540,7 @@ const PermissionsModal = ({
 
   const handleSubmit = () => {
     if (!onSubmit) return
-    
+
     onSubmit({
       role,
       permissions: selectedPermissions

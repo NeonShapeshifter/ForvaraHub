@@ -14,20 +14,20 @@ interface GridContainerProps {
   className?: string
 }
 
-export function GridContainer({ 
-  children, 
+export function GridContainer({
+  children,
   columns = { default: 1, md: 2, lg: 3 },
   gap = 6,
-  className 
+  className
 }: GridContainerProps) {
   const gridClasses = [
-    `grid`,
+    'grid',
     `gap-${gap}`,
     columns.default && `grid-cols-${columns.default}`,
     columns.sm && `sm:grid-cols-${columns.sm}`,
     columns.md && `md:grid-cols-${columns.md}`,
     columns.lg && `lg:grid-cols-${columns.lg}`,
-    columns.xl && `xl:grid-cols-${columns.xl}`,
+    columns.xl && `xl:grid-cols-${columns.xl}`
   ].filter(Boolean).join(' ')
 
   return (

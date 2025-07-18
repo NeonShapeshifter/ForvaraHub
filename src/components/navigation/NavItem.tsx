@@ -13,16 +13,16 @@ interface NavItemProps {
   onClick?: () => void
 }
 
-export function NavItem({ 
-  href, 
-  icon: Icon, 
-  label, 
+export function NavItem({
+  href,
+  icon: Icon,
+  label,
   isHighlighted = false,
   isAdmin = false,
-  onClick 
+  onClick
 }: NavItemProps) {
   const baseClasses = 'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative'
-  
+
   const getItemClasses = (isActive: boolean) => {
     if (isAdmin) {
       return cn(
@@ -33,7 +33,7 @@ export function NavItem({
           : 'text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/50'
       )
     }
-    
+
     return cn(
       baseClasses,
       isActive

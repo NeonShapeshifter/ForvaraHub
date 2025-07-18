@@ -4,14 +4,14 @@ import { useToast, Toast as ToastType } from '@/hooks/useToast'
 
 const ToastContainer = () => {
   const { toasts, removeToast } = useToast()
-  
+
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2">
       {toasts.map(toast => (
-        <ToastItem 
-          key={toast.id} 
-          toast={toast} 
-          onRemove={() => removeToast(toast.id)} 
+        <ToastItem
+          key={toast.id}
+          toast={toast}
+          onRemove={() => removeToast(toast.id)}
         />
       ))}
     </div>
@@ -33,7 +33,7 @@ const ToastItem = ({ toast, onRemove }: { toast: ToastType; onRemove: () => void
         return null
     }
   }
-  
+
   const getStyles = () => {
     switch (toast.type) {
       case 'success':
@@ -48,14 +48,14 @@ const ToastItem = ({ toast, onRemove }: { toast: ToastType; onRemove: () => void
         return 'bg-gray-50 border-gray-200 text-gray-900'
     }
   }
-  
+
   useEffect(() => {
     if (toast.duration && toast.duration > 0) {
       const timer = setTimeout(onRemove, toast.duration)
       return () => clearTimeout(timer)
     }
   }, [toast.duration, onRemove])
-  
+
   return (
     <div className={`
       max-w-sm w-full shadow-lg rounded-lg border p-4 transform transition-all duration-300 ease-in-out

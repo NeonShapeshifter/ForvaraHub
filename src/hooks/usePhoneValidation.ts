@@ -289,12 +289,12 @@ export function usePhoneValidation({
     }
 
     setIsValidating(true)
-    
+
     const timeoutId = setTimeout(() => {
       try {
         // Basic phone number validation
         const valid = isValidPhoneNumber(value)
-        
+
         if (!valid) {
           setError('Formato de número inválido')
           setIsValid(false)
@@ -305,7 +305,7 @@ export function usePhoneValidation({
 
         // Parse the phone number
         const phoneNumber = parsePhoneNumber(value)
-        
+
         if (!phoneNumber) {
           setError('No se pudo procesar el número')
           setIsValid(false)
@@ -316,7 +316,7 @@ export function usePhoneValidation({
 
         const country = phoneNumber.country
         const nationalNum = phoneNumber.nationalNumber
-        
+
         // Check if country is allowed
         if (allowedCountries.length > 0 && !allowedCountries.includes(country || '')) {
           setError(`País no soportado: ${country || 'desconocido'}`)
@@ -328,15 +328,15 @@ export function usePhoneValidation({
 
         // Get country-specific validation rules
         const spec = country ? LATAM_PHONE_SPECS[country] : null
-        
+
         if (spec) {
           // Validate against LATAM + Sweden specific rules
           const cleanNumber = nationalNum.replace(/\D/g, '')
-          
+
           // Check patterns first, then digit count based on pattern
           const isMobile = spec.mobilePattern.test(cleanNumber)
           const isLandline = spec.landlinePattern ? spec.landlinePattern.test(cleanNumber) : false
-          
+
           if (!isMobile && !isLandline) {
             setError(`Número no válido para ${spec.name}`)
             setIsValid(false)
@@ -346,7 +346,7 @@ export function usePhoneValidation({
             setIsValidating(false)
             return
           }
-          
+
           // For mobile numbers, always check digit count
           if (isMobile && cleanNumber.length !== spec.digitCount) {
             setError(`Número móvil debe tener ${spec.digitCount} dígitos para ${spec.name}`)
@@ -357,9 +357,9 @@ export function usePhoneValidation({
             setIsValidating(false)
             return
           }
-          
+
           // For landlines, digit count already validated by regex pattern
-          
+
           setCountrySpec(spec)
           setFormatHint(`${spec.flag} ${spec.name} - Formato válido`)
         }
@@ -372,7 +372,7 @@ export function usePhoneValidation({
         setNationalNumber(phoneNumber.formatNational())
         setInternationalFormat(phoneNumber.formatInternational())
         setE164Format(phoneNumber.format('E.164'))
-        
+
       } catch (err) {
         console.error('Phone validation error:', err)
         setError('Error al validar el número')
@@ -396,7 +396,7 @@ export function usePhoneValidation({
     internationalFormat,
     e164Format,
     countrySpec,
-    formatHint,
+    formatHint
   }
 }
 
@@ -405,7 +405,7 @@ export function getCountryInfo(countryCode: string | null) {
   if (!countryCode) {
     return { name: null, flag: null, code: null }
   }
-  
+
   const spec = LATAM_PHONE_SPECS[countryCode]
   if (spec) {
     return {
@@ -417,7 +417,7 @@ export function getCountryInfo(countryCode: string | null) {
       example: spec.example
     }
   }
-  
+
   // Fallback for other supported countries
   const fallbackNames: Record<string, string> = {
     US: 'Estados Unidos',
@@ -428,17 +428,17 @@ export function getCountryInfo(countryCode: string | null) {
     DE: 'Alemania',
     GB: 'Reino Unido'
   }
-  
+
   const fallbackFlags: Record<string, string> = {
     US: '🇺🇸',
-    CA: '🇨🇦', 
+    CA: '🇨🇦',
     ES: '🇪🇸',
     FR: '🇫🇷',
     IT: '🇮🇹',
     DE: '🇩🇪',
     GB: '🇬🇧'
   }
-  
+
   return {
     name: fallbackNames[countryCode] || countryCode,
     flag: fallbackFlags[countryCode] || '🌍',
@@ -466,9 +466,9 @@ export function validateCountryPhoneFormat(phoneNumber: string, countryCode: str
   if (!spec) {
     return { isValid: false, error: `País no soportado: ${countryCode}` }
   }
-  
+
   const cleanNumber = phoneNumber.replace(/\D/g, '')
-  
+
   if (cleanNumber.length !== spec.digitCount) {
     return {
       isValid: false,
@@ -476,7 +476,7 @@ export function validateCountryPhoneFormat(phoneNumber: string, countryCode: str
       suggestion: `Ejemplo: ${spec.callingCode} ${spec.example}`
     }
   }
-  
+
   if (!spec.mobilePattern.test(cleanNumber)) {
     if (spec.landlinePattern && spec.landlinePattern.test(cleanNumber)) {
       return { isValid: true }
@@ -487,6 +487,6 @@ export function validateCountryPhoneFormat(phoneNumber: string, countryCode: str
       suggestion: `Formato móvil: ${spec.callingCode} ${spec.example}`
     }
   }
-  
+
   return { isValid: true }
 }

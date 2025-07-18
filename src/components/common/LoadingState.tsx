@@ -8,10 +8,10 @@ interface LoadingStateProps {
   variant?: 'inline' | 'page' | 'card'
 }
 
-export function LoadingState({ 
-  message = 'Cargando...', 
+export function LoadingState({
+  message = 'Cargando...',
   size = 'md',
-  variant = 'inline' 
+  variant = 'inline'
 }: LoadingStateProps) {
   const content = (
     <div className="flex flex-col items-center justify-center gap-3">

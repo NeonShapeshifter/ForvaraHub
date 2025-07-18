@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { 
-  X, 
-  ArrowRight, 
+import {
+  X,
+  ArrowRight,
   ArrowLeft,
   Sparkles,
   CheckCircle,
@@ -46,13 +46,13 @@ export function OnboardingTour({ steps, onComplete, onSkip }: OnboardingTourProp
       if (element) {
         const rect = element.getBoundingClientRect()
         setTargetRect(rect)
-        
+
         // Scroll element into view
         element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        
+
         // Add highlight class
         element.classList.add('tour-highlight')
-        
+
         return () => {
           element.classList.remove('tour-highlight')
         }
@@ -164,7 +164,7 @@ export function OnboardingTour({ steps, onComplete, onSkip }: OnboardingTourProp
             top: targetRect.top - 8,
             left: targetRect.left - 8,
             width: targetRect.width + 16,
-            height: targetRect.height + 16,
+            height: targetRect.height + 16
           }}
         />
       </div>
@@ -175,7 +175,7 @@ export function OnboardingTour({ steps, onComplete, onSkip }: OnboardingTourProp
         className="fixed z-[9999] w-80 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden animate-slide-up"
         style={{
           top: `${tooltipPosition.top}px`,
-          left: `${tooltipPosition.left}px`,
+          left: `${tooltipPosition.left}px`
         }}
       >
         {/* Progress bar */}
@@ -236,7 +236,7 @@ export function OnboardingTour({ steps, onComplete, onSkip }: OnboardingTourProp
             >
               Omitir tour
             </button>
-            
+
             <div className="flex items-center gap-2">
               {currentStep > 0 && (
                 <Button
@@ -247,7 +247,7 @@ export function OnboardingTour({ steps, onComplete, onSkip }: OnboardingTourProp
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
               )}
-              
+
               <Button
                 onClick={handleNext}
                 className="gradient-brand text-white"
@@ -279,11 +279,11 @@ export function OnboardingTour({ steps, onComplete, onSkip }: OnboardingTourProp
 }
 
 // Welcome modal component
-export function WelcomeModal({ 
-  userName, 
-  onStart, 
-  onSkip 
-}: { 
+export function WelcomeModal({
+  userName,
+  onStart,
+  onSkip
+}: {
   userName: string
   onStart: () => void
   onSkip: () => void
@@ -296,19 +296,19 @@ export function WelcomeModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      
+
       {/* Modal */}
       <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
         {/* Gradient header */}
         <div className="h-2 gradient-brand" />
-        
+
         {/* Content */}
         <div className="p-8 text-center">
           {/* Icon */}
           <div className="w-20 h-20 mx-auto mb-6 rounded-2xl gradient-brand flex items-center justify-center text-white animate-pulse-glow">
             <Sparkles className="w-10 h-10" />
           </div>
-          
+
           {/* Welcome message */}
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
             ¡Bienvenido, {userName}! 🎉
@@ -316,7 +316,7 @@ export function WelcomeModal({
           <p className="text-gray-600 mb-8">
             Estamos emocionados de tenerte aquí. Te mostraremos cómo sacar el máximo provecho de Forvara Hub en solo 2 minutos.
           </p>
-          
+
           {/* Features preview */}
           <div className="grid grid-cols-3 gap-4 mb-8">
             <div className="p-4 bg-gray-50 rounded-xl">
@@ -338,7 +338,7 @@ export function WelcomeModal({
               <p className="text-xs text-gray-600">Configuración</p>
             </div>
           </div>
-          
+
           {/* Actions */}
           <div className="flex gap-3">
             <Button
@@ -363,7 +363,7 @@ export function WelcomeModal({
             </Button>
           </div>
         </div>
-        
+
         {/* Decorative elements */}
         <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full blur-3xl opacity-20" />
         <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full blur-3xl opacity-20" />
