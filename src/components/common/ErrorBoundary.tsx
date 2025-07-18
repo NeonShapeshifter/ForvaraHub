@@ -28,6 +28,20 @@ class ErrorBoundary extends Component<Props, State> {
     console.error('Error Boundary caught an error:', error, errorInfo)
     this.setState({ error, errorInfo })
 
+    // Enhanced production logging for debugging
+    if (import.meta.env.PROD) {
+      console.error('🚨 PRODUCTION ERROR DETAILS:', {
+        error: error.toString(),
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+        env: import.meta.env.VITE_ENV,
+        apiUrl: import.meta.env.VITE_API_URL
+      })
+    }
+
     // Here you could send error to logging service like Sentry
     // logErrorToService(error, errorInfo)
   }

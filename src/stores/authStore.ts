@@ -165,7 +165,18 @@ export const useAuthStore = create<AuthState>(
         token: state.token,
         companies: state.companies,
         currentCompany: state.currentCompany
-      })
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (import.meta.env.PROD) {
+          console.log('🔄 Auth Store Rehydrated:', {
+            hasUser: !!state?.user,
+            hasToken: !!state?.token,
+            companiesCount: state?.companies?.length || 0,
+            currentCompanyId: state?.currentCompany?.id || 'none',
+            timestamp: new Date().toISOString()
+          })
+        }
+      }
     }
   )
 )

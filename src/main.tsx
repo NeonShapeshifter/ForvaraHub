@@ -15,6 +15,24 @@ const queryClient = new QueryClient({
   }
 })
 
+// Production debugging information
+if (import.meta.env.PROD) {
+  console.log('🔍 PRODUCTION DEBUG INFO:', {
+    apiUrl: import.meta.env.VITE_API_URL,
+    env: import.meta.env.VITE_ENV,
+    mode: import.meta.env.MODE,
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+    url: window.location.href
+  })
+  
+  // Test API connectivity
+  fetch(`${import.meta.env.VITE_API_URL}/health`)
+    .then(res => res.json())
+    .then(data => console.log('✅ API Health Check:', data))
+    .catch(err => console.error('❌ API Health Check Failed:', err))
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>

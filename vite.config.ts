@@ -17,20 +17,19 @@ export default defineConfig({
           // Vendor chunks for better caching
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-ui': ['lucide-react', 'framer-motion', 'date-fns'],
-          'vendor-utils': ['zustand', '@radix-ui/react-select', '@radix-ui/react-dialog'],
-
-          // Page chunks for code splitting
-          'auth-pages': ['./src/pages/Login.tsx', './src/pages/Register.tsx'],
-          'main-pages': ['./src/pages/Dashboard.tsx', './src/pages/Marketplace.tsx'],
-          'management-pages': ['./src/pages/Users.tsx', './src/pages/Companies.tsx', './src/pages/Settings.tsx'],
-          'admin-pages': ['./src/pages/AdminDashboard.tsx', './src/pages/Analytics.tsx']
+          'vendor-utils': ['zustand', '@radix-ui/react-select', '@radix-ui/react-dialog']
+          // Temporarily disable page chunks to fix production issues
+          // 'auth-pages': ['./src/pages/Login.tsx', './src/pages/Register.tsx'],
+          // 'main-pages': ['./src/pages/Dashboard.tsx', './src/pages/Marketplace.tsx'],
+          // 'management-pages': ['./src/pages/Users.tsx', './src/pages/Companies.tsx', './src/pages/Settings.tsx'],
+          // 'admin-pages': ['./src/pages/AdminDashboard.tsx', './src/pages/Analytics.tsx']
         }
       }
     },
     // Increase chunk size warning limit
     chunkSizeWarningLimit: 1000,
-    // Disable source maps for production
-    sourcemap: false,
+    // Enable source maps for debugging production issues
+    sourcemap: true,
     // Optimize CSS
     cssCodeSplit: true,
     // Asset optimization
@@ -39,7 +38,7 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true, // Remove console.log in production
+        drop_console: false, // Keep console logs for debugging production issues
         drop_debugger: true
       }
     }
