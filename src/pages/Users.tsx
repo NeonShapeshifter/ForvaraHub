@@ -208,6 +208,7 @@ export default function Users() {
       if (mountedRef.current) {
         setLoading(false)
         setMembers([])
+        lastLoadedCompanyRef.current = 'no-company'
       }
       return
     }
@@ -232,19 +233,18 @@ export default function Users() {
       const safeMembers = Array.isArray(membersList) ? membersList : []
       console.log('✅ Users: Loaded members:', safeMembers.length)
 
-      // Mark this company as loaded (even if empty/error)
-      lastLoadedCompanyRef.current = currentCompany.id
-
       if (mountedRef.current) {
         setMembers(safeMembers)
+        // Mark this company as loaded AFTER successful state update
+        lastLoadedCompanyRef.current = currentCompany.id
       }
 
     } catch (error: any) {
       console.error('❌ Users: Error loading members:', error)
-      // Mark this company as loaded even on error to prevent retries
-      lastLoadedCompanyRef.current = currentCompany.id
       if (mountedRef.current) {
         setMembers([])
+        // Mark this company as loaded even on error to prevent retries
+        lastLoadedCompanyRef.current = currentCompany.id
         // Only show toast for non-404 errors to avoid spam
         if (!error.message?.includes('Route not found') && !error.message?.includes('404')) {
           toast({
@@ -260,16 +260,21 @@ export default function Users() {
         setLoading(false)
       }
     }
-  }, [currentCompany?.id]) // Use only the ID to prevent object reference changes
+  }, []) // Remove dependency to prevent recreation
 
   useEffect(() => {
+    // Reset the loaded company ref when company changes to allow reloading
+    if (currentCompany?.id && lastLoadedCompanyRef.current !== currentCompany.id) {
+      lastLoadedCompanyRef.current = null
+    }
+    
     loadMembers()
 
     // Cleanup function to mark component as unmounted
     return () => {
       mountedRef.current = false
     }
-  }, [loadMembers])
+  }, [currentCompany?.id]) // Only depend on company ID, not the entire loadMembers function
 
 
   const handleInvite = async (data: any) => {
