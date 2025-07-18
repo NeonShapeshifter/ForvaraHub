@@ -1,8 +1,8 @@
 // ForvaraHub/src/components/ui/notifications.tsx
 
 import React, { createContext, useContext, useState, useCallback } from 'react'
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react'
-import { AnimatePresence, motion } from 'framer-motion'
+import React, { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react'
+import React, { AnimatePresence, motion } from 'framer-motion'
 
 // Tipos de notificaciones
 export type NotificationType = 'success' | 'error' | 'warning' | 'info'

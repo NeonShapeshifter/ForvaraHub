@@ -1,6 +1,6 @@
 // ForvaraHub/src/components/ui/onboarding-tour.tsx
 
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import {
   X,

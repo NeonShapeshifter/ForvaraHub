@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card'
 import { PhoneInputField } from './phone-input'
 import { usePhoneValidation, getCountryInfo, isLATAMCountry } from '@/hooks/usePhoneValidation'

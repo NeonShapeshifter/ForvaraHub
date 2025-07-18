@@ -10,7 +10,7 @@ export interface ApiResponse<T> {
 // Safe API call with fallbacks
 export async function safeApiCall<T>(
   url: string,
-  options: RequestInit = {},
+  options: Record<string, any> = {},
   fallbackData?: T
 ): Promise<ApiResponse<T>> {
   try {

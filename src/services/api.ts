@@ -133,16 +133,12 @@ export async function apiCall<T = any>(
   data?: any,
   config?: any
 ): Promise<T> {
-  try {
-    const response = await api[method](endpoint, data, config)
+  const response = await api[method](endpoint, data, config)
 
-    // Handle backend response structure: { data: {...} } or direct data
-    if (response.data && typeof response.data === 'object' && 'data' in response.data) {
-      return response.data.data
-    }
-
-    return response.data
-  } catch (error) {
-    throw error
+  // Handle backend response structure: { data: {...} } or direct data
+  if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+    return response.data.data
   }
+
+  return response.data
 }

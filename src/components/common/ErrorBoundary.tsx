@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react'
+import { Component, ErrorInfo, ReactNode } from 'react'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -77,7 +77,7 @@ class ErrorBoundary extends Component<Props, State> {
                 Ha ocurrido un error inesperado. Nuestro equipo ha sido notificado y está trabajando en una solución.
               </p>
 
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {import.meta.env.DEV && this.state.error && (
                 <details className="text-left bg-gray-100 p-3 rounded-lg text-sm">
                   <summary className="cursor-pointer font-medium text-gray-700 mb-2">
                     Detalles del error (desarrollo)

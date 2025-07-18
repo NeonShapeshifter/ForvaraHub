@@ -1,18 +1,14 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Users,
   UserPlus,
   Mail,
   Phone,
-  Shield,
   MoreVertical,
   Eye,
   Edit3,
   X,
-  Check,
-  AlertCircle,
   Search,
-  Filter,
   Settings
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
@@ -117,7 +113,8 @@ export function EmbeddedUserManagement({ appId, appName, className = '' }: Embed
   }
 
   const handleRemoveUser = async (userId: string) => {
-    if (!confirm('¿Eliminar acceso de este usuario a la aplicación?')) return
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('¿Eliminar acceso de este usuario a la aplicación?')) return
 
     try {
       setActionLoading(userId)

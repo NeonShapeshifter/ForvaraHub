@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Building2, Plus, Users, Calendar, Package, ExternalLink, Crown, Settings, X, ChevronRight, HardDrive, RefreshCw } from 'lucide-react'
 
 import { useAuthStore } from '@/stores/authStore'

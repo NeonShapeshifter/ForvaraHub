@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, MoreVertical, Building2, Users, Crown, Ban, CheckCircle, Calendar, Filter, DollarSign, Package } from 'lucide-react'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -126,7 +126,8 @@ export default function AdminCompanies() {
       delete: `¿Eliminar permanentemente ${company.razon_social}? Esta acción no se puede deshacer.`
     }
 
-    if (!confirm(confirmMessages[action])) return
+    // eslint-disable-next-line no-alert
+    if (!window.confirm(confirmMessages[action])) return
 
     try {
       setActionLoading(companyId)

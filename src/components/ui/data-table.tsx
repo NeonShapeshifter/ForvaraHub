@@ -12,8 +12,8 @@ import {
   Check,
   X
 } from 'lucide-react'
-import { Button } from './button'
-import { Input } from './input'
+import React, { Button } from './button'
+import React, { Input } from './input'
 import {
   DropdownMenu,
   DropdownMenuContent,

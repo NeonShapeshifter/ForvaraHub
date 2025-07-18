@@ -1,6 +1,6 @@
 // ForvaraHub/src/pages/Marketplace.tsx
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Search,
@@ -89,7 +89,9 @@ export default function Marketplace() {
     try {
       setLoading(true)
       const response = await api.get('/marketplace/apps')
-      setApps(response.data || [])
+      // Ensure response.data is an array
+      const appsData = Array.isArray(response.data) ? response.data : []
+      setApps(appsData)
     } catch (error) {
       console.error('Error loading apps:', error)
       setApps([])

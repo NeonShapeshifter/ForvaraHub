@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, UserPlus, Mail, Phone, Search, MoreVertical, Shield, Users, User, Eye, ChevronRight, AlertCircle, Building2, Check, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
@@ -266,7 +266,8 @@ export default function Users() {
   }
 
   const handleRemoveMember = async (memberId: string) => {
-    if (!confirm('¿Estás seguro de eliminar este miembro del equipo?')) return
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('¿Estás seguro de eliminar este miembro del equipo?')) return
 
     try {
       setActionLoading(memberId)

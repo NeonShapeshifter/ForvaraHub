@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -155,7 +155,8 @@ export function AppManagement() {
   }
 
   const handleDeleteApp = async (appId: string) => {
-    if (!confirm('Are you sure you want to delete this app? This action cannot be undone.')) {
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('Are you sure you want to delete this app? This action cannot be undone.')) {
       return
     }
 

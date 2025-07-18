@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Settings, ExternalLink, Trash2, BarChart3, Users, Calendar, DollarSign, Package, Crown, Clock, CheckCircle, AlertTriangle, Zap, Building2, Calculator, HardDrive, MoreHorizontal, Sparkles, X, RefreshCw } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
@@ -69,7 +69,7 @@ export default function MyApps() {
         : `/companies/${currentCompany?.id}/apps` // Company mode - company's apps
 
       const response = await api.get(endpoint)
-      const installedApps = response.data || []
+      const installedApps = Array.isArray(response.data) ? response.data : []
 
       console.log('✅ Loaded installed apps from backend:', installedApps)
       setApps(installedApps)
@@ -177,7 +177,8 @@ export default function MyApps() {
 
   const handleUninstallApp = async (appId: string) => {
     const app = apps.find(a => a.id === appId)
-    if (!confirm(`¿Estás seguro de que deseas desinstalar ${app?.name}?\n\nEsta acción no se puede deshacer.`)) {
+    // eslint-disable-next-line no-alert
+    if (!window.confirm(`¿Estás seguro de que deseas desinstalar ${app?.name}?\n\nEsta acción no se puede deshacer.`)) {
       return
     }
 

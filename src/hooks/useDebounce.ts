@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 
 // Basic debounce hook
 export function useDebounce<T>(value: T, delay: number): T {

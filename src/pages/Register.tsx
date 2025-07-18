@@ -1,8 +1,8 @@
 // ForvaraHub/src/pages/Register.tsx
 
 import React, { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { useAuthStore } from '@/stores/authStore'
+import React, { useNavigate, Link } from 'react-router-dom'
+import React, { useAuthStore } from '@/stores/authStore'
 import {
   Eye,
   EyeOff,
@@ -21,10 +21,10 @@ import {
   Globe,
   Lock
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { PhoneInputField } from '@/components/ui/phone-input'
-import { usePhoneValidation } from '@/hooks/usePhoneValidation'
+import React, { Button } from '@/components/ui/button'
+import React, { Input } from '@/components/ui/input'
+import React, { PhoneInputField } from '@/components/ui/phone-input'
+import React, { usePhoneValidation } from '@/hooks/usePhoneValidation'
 
 type Step = 'contact' | 'personal' | 'workspace' | 'password'
 type WorkspaceType = 'individual' | 'new_company' | 'join_company'

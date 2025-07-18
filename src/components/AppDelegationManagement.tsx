@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Shield,
   ShieldCheck,
@@ -85,7 +85,8 @@ export function AppDelegationManagement({ appId, appName, className = '' }: AppD
   }
 
   const handleRevokeDelegate = async (userId: string) => {
-    if (!confirm('¿Revocar acceso de delegado? El usuario ya no tendrá permisos de administrador en esta app.')) {
+    // eslint-disable-next-line no-alert
+    if (!window.confirm('¿Revocar acceso de delegado? El usuario ya no tendrá permisos de administrador en esta app.')) {
       return
     }
 
@@ -131,7 +132,9 @@ export function AppDelegationManagement({ appId, appName, className = '' }: AppD
   // Individual mode - show explanation
   if (isIndividualMode()) {
     return (
-      <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 ${className}`}>
+      <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 ${
+        className
+      }`}>
         <div className="flex items-center gap-2 mb-4">
           <Shield className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           <h3 className="font-medium text-gray-900 dark:text-white">
@@ -153,7 +156,9 @@ export function AppDelegationManagement({ appId, appName, className = '' }: AppD
 
   if (loading) {
     return (
-      <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 ${className}`}>
+      <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 ${
+        className
+      }`}>
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-300 border-t-blue-600"></div>
           <span className="ml-2 text-sm text-gray-500">Cargando delegaciones...</span>

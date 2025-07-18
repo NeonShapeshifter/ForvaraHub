@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, MoreVertical, UserPlus, Shield, Ban, CheckCircle, X, Mail, Phone, Building2, Calendar, Filter } from 'lucide-react'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -108,7 +108,8 @@ export default function AdminUsers() {
       delete: `¿Eliminar permanentemente a ${user.first_name} ${user.last_name}? Esta acción no se puede deshacer.`
     }
 
-    if (!confirm(confirmMessages[action])) return
+    // eslint-disable-next-line no-alert
+    if (!window.confirm(confirmMessages[action])) return
 
     try {
       setActionLoading(userId)

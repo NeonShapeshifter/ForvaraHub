@@ -1,8 +1,8 @@
 // ForvaraHub/src/components/ui/activity-feed.tsx
 
 import React, { useState, useEffect } from 'react'
-import { formatDistanceToNow } from 'date-fns'
-import { es } from 'date-fns/locale'
+import React, { formatDistanceToNow } from 'date-fns'
+import React, { es } from 'date-fns/locale'
 import {
   User,
   Package,
@@ -25,15 +25,15 @@ import {
   Filter,
   MoreHorizontal
 } from 'lucide-react'
-import { Button } from './button'
-import { Badge } from './badge'
+import React, { Button } from './button'
+import React, { Badge } from './badge'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
 } from './dropdown-menu'
-import { cn } from '@/lib/utils'
+import React, { cn } from '@/lib/utils'
 
 // Tipos de actividad
 export type ActivityType =

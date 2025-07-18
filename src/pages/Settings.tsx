@@ -111,7 +111,7 @@ export default function Settings() {
   const loadSettings = async () => {
     try {
       setLoading(true)
-      const response = await api.get('/user/settings')
+      const response = await api.get('/users/settings')
       setSettings(prev => ({ ...prev, ...response.data }))
     } catch (error) {
       console.error('Error loading settings:', error)
@@ -123,7 +123,7 @@ export default function Settings() {
   const handleSaveSettings = async () => {
     try {
       setSaving(true)
-      await api.put('/user/settings', settings)
+      await api.put('/users/settings', settings)
 
       // Update local user data
       updateUser({
