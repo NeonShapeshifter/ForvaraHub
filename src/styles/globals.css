@@ -112,8 +112,84 @@
   }
   
   .text-gradient {
-    @apply bg-clip-text text-transparent;
+    /* Fallback color first - light mode */
+    color: #004AAD;
+    @apply bg-clip-text;
     background: linear-gradient(135deg, #004AAD 0%, #CB6CE6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    
+    /* Fallback for unsupported browsers */
+    @supports not (-webkit-background-clip: text) {
+      color: #004AAD;
+      background: none;
+    }
+  }
+
+  .dark .text-gradient {
+    /* Fallback color for dark mode */
+    color: #5B7FFF;
+    background: linear-gradient(135deg, #5B7FFF 0%, #E4A0F7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    
+    /* Fallback for dark mode unsupported browsers */
+    @supports not (-webkit-background-clip: text) {
+      color: #5B7FFF;
+      background: none;
+    }
+  }
+
+  /* Safe logo gradient with fallback */
+  .logo-gradient {
+    /* Fallback color first */
+    color: #2563eb; /* blue-600 fallback */
+    background: linear-gradient(to right, #2563eb, #9333ea);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    
+    /* Fallback for unsupported browsers */
+    @supports not (-webkit-background-clip: text) {
+      color: #2563eb;
+      background: none;
+    }
+  }
+
+  /* Force visible text - emergency utility */
+  .text-force-visible {
+    color: hsl(var(--foreground)) !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    background: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  /* Safe numeric display for statistics */
+  .stat-number {
+    color: hsl(var(--foreground));
+    font-weight: 700;
+    /* Apply gradient if supported, fallback to normal color */
+    background: linear-gradient(135deg, #004AAD 0%, #CB6CE6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    
+    /* Ensure fallback works */
+    @supports not (-webkit-background-clip: text) {
+      color: #004AAD;
+      background: none;
+    }
+  }
+
+  .dark .stat-number {
+    color: hsl(var(--foreground));
+    background: linear-gradient(135deg, #5B7FFF 0%, #E4A0F7 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    
+    @supports not (-webkit-background-clip: text) {
+      color: #5B7FFF;
+      background: none;
+    }
   }
   
   /* Sombras mejoradas */

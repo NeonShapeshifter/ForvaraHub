@@ -192,6 +192,7 @@ export default function Users() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const loadingRef = useRef(false)
   const mountedRef = useRef(true)
+  const lastLoadedCompanyRef = useRef<string | null>(null)
 
   // Verificar si el usuario puede gestionar miembros
   const canManageMembers = userRole === 'owner' || userRole === 'admin'
@@ -211,6 +212,12 @@ export default function Users() {
       return
     }
 
+    // Prevent repeated calls to the same company within the same session
+    if (lastLoadedCompanyRef.current === currentCompany.id) {
+      console.log('⏭️ Users: Already loaded for this company, skipping')
+      return
+    }
+
     try {
       console.log('🔄 Users: Loading members for company:', currentCompany.id)
       loadingRef.current = true
@@ -222,12 +229,17 @@ export default function Users() {
       const safeMembers = Array.isArray(membersList) ? membersList : []
       console.log('✅ Users: Loaded members:', safeMembers.length)
 
+      // Mark this company as loaded (even if empty/error)
+      lastLoadedCompanyRef.current = currentCompany.id
+
       if (mountedRef.current) {
         setMembers(safeMembers)
       }
 
     } catch (error) {
       console.error('❌ Users: Error loading members:', error)
+      // Mark this company as loaded even on error to prevent retries
+      lastLoadedCompanyRef.current = currentCompany.id
       if (mountedRef.current) {
         setMembers([])
         toast({
@@ -242,7 +254,7 @@ export default function Users() {
         setLoading(false)
       }
     }
-  }, [currentCompany])
+  }, [currentCompany?.id]) // Use only the ID to prevent object reference changes
 
   useEffect(() => {
     loadMembers()
@@ -252,6 +264,7 @@ export default function Users() {
       mountedRef.current = false
     }
   }, [loadMembers])
+
 
   const handleInvite = async (data: any) => {
     try {

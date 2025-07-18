@@ -73,7 +73,7 @@ export function Logo({
     >
       <span className={cn(
         textSizeClasses[size],
-        'font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent',
+        'font-bold logo-gradient',
         getThemeColors()
       )}>
         Forvara
