@@ -1,563 +1,682 @@
+// ForvaraHub/src/pages/Register.tsx
+
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useAuthStore } from '@/stores/authStore'
+import { 
+  Eye, 
+  EyeOff, 
+  Mail, 
+  Phone, 
+  User,
+  Building,
+  Users,
+  Briefcase,
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  Sparkles,
+  Zap,
+  Shield,
+  Globe,
+  Lock
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAuthStore } from '@/stores/authStore'
-import { Eye, EyeOff, Mail, Phone, User, Building, Shield, Zap, CheckCircle, Users, Briefcase, AlertCircle } from 'lucide-react'
-import { LogoAuto } from '@/components/ui/logo'
 import { PhoneInputField } from '@/components/ui/phone-input'
-import { usePhoneValidation, getCountryInfo } from '@/hooks/usePhoneValidation'
+import { usePhoneValidation } from '@/hooks/usePhoneValidation'
+
+type Step = 'contact' | 'personal' | 'workspace' | 'password'
+type WorkspaceType = 'individual' | 'new_company' | 'join_company'
 
 export default function Register() {
-  const [step, setStep] = useState<'contact' | 'password' | 'workspace'>('contact')
+  const [currentStep, setCurrentStep] = useState<Step>('contact')
   const [contactMethod, setContactMethod] = useState<'email' | 'phone'>('email')
   
   // Form data
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [workspaceType, setWorkspaceType] = useState<'individual' | 'new_company' | 'join_company'>('individual')
+  const [workspaceType, setWorkspaceType] = useState<WorkspaceType>('individual')
   const [companyName, setCompanyName] = useState('')
   const [ruc, setRuc] = useState('')
   const [inviteCode, setInviteCode] = useState('')
   
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isAnimating, setIsAnimating] = useState(false)
-  const navigate = useNavigate()
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   
+  const navigate = useNavigate()
   const { register, isLoading, error, clearError } = useAuthStore()
   
-  // Phone validation hook
   const phoneValidation = usePhoneValidation({
-    value: contactMethod === 'phone' ? phone : undefined,
-    required: false // Let user type, validate when needed
+    value: contactMethod === 'phone' ? phone : '',
+    required: contactMethod === 'phone'
   })
 
-  // Smooth entrance animation
   useEffect(() => {
-    setIsAnimating(true)
-  }, [])
-
-  // Password validation
-  const isPasswordValid = password.length >= 8
-  const doPasswordsMatch = password === confirmPassword && password !== ''
-
-  const handleStepSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
     clearError()
-    
-    if (step === 'contact') {
-      // Validate contact information
-      if (contactMethod === 'email' && !email.trim()) return
-      if (contactMethod === 'phone' && (!phone || !phoneValidation.isValid)) return
-      if (!firstName.trim() || !lastName.trim()) return
-      
-      setStep('password')
-    } else if (step === 'password') {
-      // Validate password
-      if (!isPasswordValid || !doPasswordsMatch) return
-      
-      setStep('workspace')
-    } else if (step === 'workspace') {
-      // Submit registration
-      handleRegister()
+  }, [currentStep, clearError])
+
+  const steps: Step[] = ['contact', 'personal', 'workspace', 'password']
+  const currentStepIndex = steps.indexOf(currentStep)
+  const progress = ((currentStepIndex + 1) / steps.length) * 100
+
+  const handleNextStep = () => {
+    const stepIndex = steps.indexOf(currentStep)
+    if (stepIndex < steps.length - 1) {
+      setCurrentStep(steps[stepIndex + 1])
     }
   }
 
-  const handleRegister = async () => {
+  const handlePrevStep = () => {
+    const stepIndex = steps.indexOf(currentStep)
+    if (stepIndex > 0) {
+      setCurrentStep(steps[stepIndex - 1])
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (password !== confirmPassword) {
+      return
+    }
+
     try {
-      const registrationData = {
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        email: contactMethod === 'email' ? email.trim() : undefined,
-        phone: contactMethod === 'phone' ? (phoneValidation.e164Format || phone) : undefined,
+      await register({
+        email: contactMethod === 'email' ? email : undefined,
+        phone: contactMethod === 'phone' ? phone : undefined,
         password,
-        // Company data only if creating new company
-        company_name: workspaceType === 'new_company' ? companyName.trim() : undefined,
-        ruc: workspaceType === 'new_company' ? ruc.trim() : undefined,
-        // Invite code if joining company
-        invite_code: workspaceType === 'join_company' ? inviteCode.trim() : undefined,
-        auth_method: contactMethod,
-        country_code: contactMethod === 'phone' ? phoneValidation.countryCode : 'PA',
-        workspace_type: workspaceType,
-      }
-      
-      await register(registrationData)
-      // Success animation before navigation
-      setTimeout(() => navigate('/dashboard'), 1000)
+        first_name: firstName,
+        last_name: lastName,
+        // TODO: Add company data based on workspaceType
+      })
+      navigate('/dashboard')
     } catch (error) {
       // Error is handled by the store
     }
   }
 
-  const goBack = () => {
-    if (step === 'password') setStep('contact')
-    else if (step === 'workspace') setStep('password')
-  }
-
-  const getStepProgress = () => {
-    if (step === 'contact') return 33
-    if (step === 'password') return 66
-    return 100
-  }
-
-  const getWorkspaceStepTitle = () => {
-    if (workspaceType === 'individual') return '👤 Espacio Individual'
-    if (workspaceType === 'new_company') return '🏢 Crear Nueva Empresa'
-    return '🤝 Unirse a Empresa'
-  }
-
-  const getWorkspaceStepDescription = () => {
-    if (workspaceType === 'individual') return 'Úsalo para proyectos personales o freelancing'
-    if (workspaceType === 'new_company') return 'Configura tu empresa y empieza a invitar tu equipo'
-    return 'Únete al espacio de trabajo de tu empresa'
-  }
-
-  // Form validation
-  const canProceed = () => {
-    if (step === 'contact') {
-      const contactValid = contactMethod === 'email' ? email.trim() : (phone && phoneValidation.isValid)
-      return firstName.trim() && lastName.trim() && contactValid
+  const isStepValid = () => {
+    switch (currentStep) {
+      case 'contact':
+        return (contactMethod === 'email' && email) || 
+               (contactMethod === 'phone' && phoneValidation.isValid)
+      case 'personal':
+        return firstName && lastName
+      case 'workspace':
+        if (workspaceType === 'new_company') return companyName && ruc
+        if (workspaceType === 'join_company') return inviteCode
+        return true
+      case 'password':
+        return password && confirmPassword && password === confirmPassword && agreedToTerms
+      default:
+        return false
     }
-    if (step === 'password') {
-      return isPasswordValid && doPasswordsMatch
-    }
-    if (step === 'workspace') {
-      if (workspaceType === 'individual') return true
-      if (workspaceType === 'new_company') return companyName.trim()
-      if (workspaceType === 'join_company') return inviteCode.trim()
-    }
-    return false
+  }
+
+  const passwordStrength = () => {
+    if (!password) return 0
+    let strength = 0
+    if (password.length >= 8) strength++
+    if (password.match(/[a-z]/) && password.match(/[A-Z]/)) strength++
+    if (password.match(/[0-9]/)) strength++
+    if (password.match(/[^a-zA-Z0-9]/)) strength++
+    return strength
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-4 -right-4 w-32 h-32 bg-purple-200/20 dark:bg-purple-500/10 rounded-full animate-pulse" />
-        <div className="absolute top-1/4 -left-8 w-24 h-24 bg-blue-200/30 dark:bg-blue-500/10 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
-        <div className="absolute bottom-1/3 right-1/3 w-28 h-28 bg-cyan-200/20 dark:bg-cyan-500/10 rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
-      
-      {/* Registration Card */}
-      <div className={`w-full max-w-lg transform transition-all duration-1000 ${
-        isAnimating ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-      }`}>
-        <div className="text-center mb-8">
-          <LogoAuto size="lg" className="mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-foreground mb-2">
-            🚀 Únete a Forvara
-          </h1>
-          <p className="text-muted-foreground">
-            Herramientas profesionales para individuos y equipos
-          </p>
-        </div>
+    <div className="min-h-screen flex">
+      {/* Left side - Form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-md w-full">
+          {/* Logo and header */}
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl gradient-brand flex items-center justify-center text-white font-bold text-2xl shadow-lg animate-pulse-glow">
+              F
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900">
+              Crea tu cuenta
+            </h2>
+            <p className="mt-2 text-gray-600">
+              Únete a miles de empresas que confían en Forvara
+            </p>
+          </div>
 
-        <Card className="border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl ring-1 ring-white/10">
-          <CardHeader className="space-y-1 text-center pb-4">
-            <CardTitle className="text-xl font-semibold text-foreground">
-              {step === 'contact' && '📝 Tu Información Personal'}
-              {step === 'password' && '🔐 Crear Contraseña Segura'}
-              {step === 'workspace' && getWorkspaceStepTitle()}
-            </CardTitle>
-            <CardDescription className="text-sm">
-              {step === 'contact' && 'Cuéntanos sobre ti y cómo prefieres que te contactemos'}
-              {step === 'password' && 'Elige una contraseña segura para proteger tu cuenta'}
-              {step === 'workspace' && getWorkspaceStepDescription()}
-            </CardDescription>
-            
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-4">
+          {/* Progress bar */}
+          <div className="mb-8">
+            <div className="flex justify-between text-sm text-gray-600 mb-2">
+              <span>Paso {currentStepIndex + 1} de {steps.length}</span>
+              <span>{Math.round(progress)}% completado</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-gradient-to-r from-purple-600 to-blue-600 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${getStepProgress()}%` }}
+                className="gradient-brand h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
               />
             </div>
-          </CardHeader>
-          
-          <CardContent className="space-y-6">
-            <form onSubmit={handleStepSubmit} className="space-y-5">
-              
-              {/* Step 1: Contact Information */}
-              {step === 'contact' && (
-                <>
-                  {/* Name Fields */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">
-                        Nombre *
+          </div>
+
+          {/* Step indicators */}
+          <div className="flex justify-between mb-8">
+            {steps.map((step, index) => (
+              <div 
+                key={step}
+                className={`flex items-center ${index < steps.length - 1 ? 'flex-1' : ''}`}
+              >
+                <div className={`
+                  w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
+                  ${index <= currentStepIndex 
+                    ? 'gradient-brand text-white' 
+                    : 'bg-gray-200 text-gray-500'
+                  }
+                `}>
+                  {index < currentStepIndex ? <Check className="w-5 h-5" /> : index + 1}
+                </div>
+                {index < steps.length - 1 && (
+                  <div className={`
+                    flex-1 h-1 mx-2
+                    ${index < currentStepIndex ? 'gradient-brand' : 'bg-gray-200'}
+                  `} />
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Form content */}
+          <form onSubmit={handleSubmit}>
+            {/* Step 1: Contact */}
+            {currentStep === 'contact' && (
+              <div className="space-y-6 animate-slide-up">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    ¿Cómo prefieres que te contactemos?
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Usaremos esto para crear tu cuenta y mantenerte informado
+                  </p>
+                  
+                  {/* Contact method selector */}
+                  <div className="flex rounded-xl bg-gray-100 p-1 mb-6">
+                    <button
+                      type="button"
+                      onClick={() => setContactMethod('email')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
+                        contactMethod === 'email'
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <Mail className="w-4 h-4" />
+                      Email
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setContactMethod('phone')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
+                        contactMethod === 'phone'
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <Phone className="w-4 h-4" />
+                      Teléfono
+                    </button>
+                  </div>
+
+                  {contactMethod === 'email' ? (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Correo electrónico
                       </label>
-                      <Input
-                        placeholder="Tu nombre"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        required
-                        className="h-11"
-                      />
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="pl-10"
+                          placeholder="tu@ejemplo.com"
+                          required
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">
-                        Apellido *
-                      </label>
-                      <Input
-                        placeholder="Tu apellido"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        required
-                        className="h-11"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Contact Method Toggle */}
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium text-center text-muted-foreground">
-                      💡 ¿Cómo prefieres que te contactemos?
-                    </p>
-                    <div className="flex rounded-xl border-2 border-muted/20 p-1 bg-muted/5">
-                      <button
-                        type="button"
-                        onClick={() => setContactMethod('email')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-                          contactMethod === 'email'
-                            ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg transform scale-[0.98]'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/20'
-                        }`}
-                      >
-                        <Mail className="w-4 h-4" />
-                         Email
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setContactMethod('phone')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-                          contactMethod === 'phone'
-                            ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg transform scale-[0.98]'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/20'
-                        }`}
-                      >
-                        <Phone className="w-4 h-4" />
-                         Teléfono
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Contact Field */}
-                  <div className="space-y-2">
-                    {contactMethod === 'email' ? (
-                      <>
-                        <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                          <Mail className="w-4 h-4" /> Tu Email *
-                        </label>
-                        <div className="relative">
-                          <Input
-                            type="email"
-                            placeholder="✉️ tu@email.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="h-11 pl-4"
-                          />
-                          {email && email.includes('@') && email.includes('.') && (
-                            <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <PhoneInputField
-                        label="🌎 Tu Teléfono *"
-                        value={phone}
-                        onChange={(value) => setPhone(value || '')}
-                        error={phone && phoneValidation.error ? phoneValidation.error : undefined}
-                        placeholder="Ingresa tu número de teléfono"
-                        className={`transition-all duration-300`}
-                        labelClassName="text-sm font-medium text-foreground flex items-center gap-2"
-                      />
-                    )}
-                  </div>
-
-                  {/* Show subtle country info for phone - ONLY when valid */}
-                  {contactMethod === 'phone' && phoneValidation.isValid && (
-                    <div className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                      <span>{getCountryInfo(phoneValidation.countryCode).flag}</span>
-                      <span>{getCountryInfo(phoneValidation.countryCode).name}</span>
-                    </div>
+                  ) : (
+                    <PhoneInputField
+                      label="Número de teléfono"
+                      value={phone}
+                      onChange={setPhone}
+                      error={phoneValidation.error}
+                      required
+                    />
                   )}
-                </>
-              )}
+                </div>
+              </div>
+            )}
 
-              {/* Step 2: Password */}
-              {step === 'password' && (
-                <>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                      <Shield className="w-4 h-4" />
-                      Contraseña *
-                    </label>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Mínimo 8 caracteres"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        autoComplete="new-password"
-                        className="h-11 pr-10 border-2 focus:border-purple-500 focus:ring-purple-500/20 transition-all pl-4"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    {password && (
-                      <div className={`text-xs flex items-center gap-1 ${isPasswordValid ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {isPasswordValid ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
-                        {isPasswordValid ? 'Contraseña válida' : 'Mínimo 8 caracteres'}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                      <Shield className="w-4 h-4" />
-                      Confirmar Contraseña *
-                    </label>
-                    <div className="relative">
-                      <Input
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        placeholder="Confirma tu contraseña"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        autoComplete="new-password"
-                        className="h-11 pr-10 border-2 focus:border-purple-500 focus:ring-purple-500/20 transition-all pl-4"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    {confirmPassword && (
-                      <div className={`text-xs flex items-center gap-1 ${doPasswordsMatch ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {doPasswordsMatch ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
-                        {doPasswordsMatch ? 'Las contraseñas coinciden' : 'Las contraseñas no coinciden'}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {/* Step 3: Workspace Setup */}
-              {step === 'workspace' && (
-                <>
-                  {/* Workspace Type Selection */}
+            {/* Step 2: Personal info */}
+            {currentStep === 'personal' && (
+              <div className="space-y-6 animate-slide-up">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Cuéntanos sobre ti
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Necesitamos algunos datos básicos para personalizar tu experiencia
+                  </p>
+                  
                   <div className="space-y-4">
-                    <p className="text-sm font-medium text-center text-muted-foreground">
-                      ¿Cómo vas a usar Forvara?
-                    </p>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nombre
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Input
+                          type="text"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          className="pl-10"
+                          placeholder="Juan"
+                          required
+                        />
+                      </div>
+                    </div>
                     
-                    <div className="space-y-3">
-                      {/* Individual */}
-                      <button
-                        type="button"
-                        onClick={() => setWorkspaceType('individual')}
-                        className={`w-full p-4 rounded-lg border-2 transition-all duration-300 text-left ${
-                          workspaceType === 'individual'
-                            ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                            : 'border-muted hover:border-purple-300 hover:bg-muted/20'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <User className="w-5 h-5 mt-0.5 text-purple-600" />
-                          <div>
-                            <h4 className="font-medium text-foreground">Uso Personal</h4>
-                            <p className="text-sm text-muted-foreground">Para proyectos individuales, freelancing o uso personal</p>
-                          </div>
-                        </div>
-                      </button>
-
-                      {/* New Company */}
-                      <button
-                        type="button"
-                        onClick={() => setWorkspaceType('new_company')}
-                        className={`w-full p-4 rounded-lg border-2 transition-all duration-300 text-left ${
-                          workspaceType === 'new_company'
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                            : 'border-muted hover:border-blue-300 hover:bg-muted/20'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <Building className="w-5 h-5 mt-0.5 text-blue-600" />
-                          <div>
-                            <h4 className="font-medium text-foreground">Crear Mi Empresa</h4>
-                            <p className="text-sm text-muted-foreground">Soy dueño/administrador y quiero configurar mi empresa</p>
-                          </div>
-                        </div>
-                      </button>
-
-                      {/* Join Company */}
-                      <button
-                        type="button"
-                        onClick={() => setWorkspaceType('join_company')}
-                        className={`w-full p-4 rounded-lg border-2 transition-all duration-300 text-left ${
-                          workspaceType === 'join_company'
-                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                            : 'border-muted hover:border-emerald-300 hover:bg-muted/20'
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <Users className="w-5 h-5 mt-0.5 text-emerald-600" />
-                          <div>
-                            <h4 className="font-medium text-foreground">Unirme a Empresa</h4>
-                            <p className="text-sm text-muted-foreground">Trabajo para una empresa que ya usa Forvara</p>
-                          </div>
-                        </div>
-                      </button>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Apellido
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Input
+                          type="text"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          className="pl-10"
+                          placeholder="Pérez"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
 
-                  {/* Dynamic fields based on workspace type */}
+            {/* Step 3: Workspace */}
+            {currentStep === 'workspace' && (
+              <div className="space-y-6 animate-slide-up">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    ¿Cómo usarás Forvara?
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Esto nos ayuda a configurar tu espacio de trabajo
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => setWorkspaceType('individual')}
+                      className={`w-full p-4 rounded-xl border-2 transition-all ${
+                        workspaceType === 'individual'
+                          ? 'border-[#004AAD] bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <User className={`w-5 h-5 ${workspaceType === 'individual' ? 'text-[#004AAD]' : 'text-gray-400'}`} />
+                        <div className="text-left">
+                          <p className="font-medium text-gray-900">Uso personal</p>
+                          <p className="text-sm text-gray-600">Para proyectos individuales</p>
+                        </div>
+                      </div>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setWorkspaceType('new_company')}
+                      className={`w-full p-4 rounded-xl border-2 transition-all ${
+                        workspaceType === 'new_company'
+                          ? 'border-[#004AAD] bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <Building className={`w-5 h-5 ${workspaceType === 'new_company' ? 'text-[#004AAD]' : 'text-gray-400'}`} />
+                        <div className="text-left">
+                          <p className="font-medium text-gray-900">Crear empresa</p>
+                          <p className="text-sm text-gray-600">Configura un nuevo espacio de trabajo</p>
+                        </div>
+                      </div>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setWorkspaceType('join_company')}
+                      className={`w-full p-4 rounded-xl border-2 transition-all ${
+                        workspaceType === 'join_company'
+                          ? 'border-[#004AAD] bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <Users className={`w-5 h-5 ${workspaceType === 'join_company' ? 'text-[#004AAD]' : 'text-gray-400'}`} />
+                        <div className="text-left">
+                          <p className="font-medium text-gray-900">Unirse a empresa</p>
+                          <p className="text-sm text-gray-600">Tienes un código de invitación</p>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Additional fields based on workspace type */}
                   {workspaceType === 'new_company' && (
-                    <div className="space-y-4 pt-4 border-t border-muted/20">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                          <Building className="w-4 h-4" />
-                          Nombre de la Empresa *
+                    <div className="mt-6 space-y-4 animate-fade-in">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Nombre de la empresa
                         </label>
                         <Input
-                          placeholder="🏢 Mi Empresa S.A."
+                          type="text"
                           value={companyName}
                           onChange={(e) => setCompanyName(e.target.value)}
+                          placeholder="Mi Empresa S.A."
                           required
-                          className="h-11"
                         />
                       </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-foreground">
-                          RUC (Opcional)
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          RUC (opcional)
                         </label>
                         <Input
-                          placeholder="📄 123-456-789"
+                          type="text"
                           value={ruc}
                           onChange={(e) => setRuc(e.target.value)}
-                          className="h-11"
+                          placeholder="12345678-1-123456"
                         />
-                        <p className="text-xs text-muted-foreground">
-                          Puedes agregarlo después en configuración
-                        </p>
                       </div>
                     </div>
                   )}
 
                   {workspaceType === 'join_company' && (
-                    <div className="space-y-4 pt-4 border-t border-muted/20">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                          <Users className="w-4 h-4" />
-                          Código de Invitación *
-                        </label>
-                        <Input
-                          placeholder="🎫 ABC123XYZ"
-                          value={inviteCode}
-                          onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                          required
-                          className="h-11"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Tu administrador te debe haber dado este código
-                        </p>
-                      </div>
+                    <div className="mt-6 animate-fade-in">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Código de invitación
+                      </label>
+                      <Input
+                        type="text"
+                        value={inviteCode}
+                        onChange={(e) => setInviteCode(e.target.value)}
+                        placeholder="XXXX-XXXX-XXXX"
+                        required
+                      />
                     </div>
                   )}
-
-                  {workspaceType === 'individual' && (
-                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
-                      <div className="flex items-center gap-2 text-purple-800 dark:text-purple-200 mb-2">
-                        <Briefcase className="w-5 h-5" />
-                        <span className="font-medium">✨ Perfecto para empezar</span>
-                      </div>
-                      <p className="text-sm text-purple-700 dark:text-purple-300">
-                        Puedes crear o unirte a una empresa más tarde desde tu panel de control.
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Error Message */}
-              {error && (
-                <div className="flex items-start gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-900/10 border border-red-200/50 dark:border-red-800/30 rounded-md p-3">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">{error}</span>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Navigation Buttons */}
-              <div className="flex gap-3 pt-4">
-                {step !== 'contact' && (
-                  <Button 
-                    type="button"
-                    variant="outline"
-                    onClick={goBack}
-                    className="flex-1 h-11"
-                    disabled={isLoading}
-                  >
-                    ← Atrás
-                  </Button>
-                )}
-                
-                <Button 
-                  type="submit" 
-                  className={`${step === 'contact' ? 'w-full' : 'flex-1'} h-11 font-semibold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:opacity-60`}
-                  disabled={!canProceed() || isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Creando cuenta...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      {step === 'workspace' ? (
-                        <>
-                          <Zap className="w-4 h-4" />
-                          ¡Crear Cuenta! 🎉
-                        </>
-                      ) : (
-                        <>
-                          Continuar →
-                        </>
+            {/* Step 4: Password */}
+            {currentStep === 'password' && (
+              <div className="space-y-6 animate-slide-up">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Asegura tu cuenta
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Crea una contraseña segura para proteger tu información
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Contraseña
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Input
+                          type={showPassword ? 'text' : 'password'}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="pl-10 pr-10"
+                          placeholder="••••••••"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                      
+                      {/* Password strength indicator */}
+                      {password && (
+                        <div className="mt-2">
+                          <div className="flex gap-1 mb-1">
+                            {[...Array(4)].map((_, i) => (
+                              <div
+                                key={i}
+                                className={`h-1 flex-1 rounded-full transition-colors ${
+                                  i < passwordStrength()
+                                    ? passwordStrength() <= 2 ? 'bg-orange-500' : 'bg-green-500'
+                                    : 'bg-gray-200'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <p className="text-xs text-gray-600">
+                            Fortaleza: {
+                              passwordStrength() === 0 ? 'Muy débil' :
+                              passwordStrength() === 1 ? 'Débil' :
+                              passwordStrength() === 2 ? 'Media' :
+                              passwordStrength() === 3 ? 'Fuerte' : 'Muy fuerte'
+                            }
+                          </p>
+                        </div>
                       )}
                     </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Confirmar contraseña
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <Input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="pl-10 pr-10"
+                          placeholder="••••••••"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                      {confirmPassword && password !== confirmPassword && (
+                        <p className="text-xs text-red-600 mt-1">Las contraseñas no coinciden</p>
+                      )}
+                    </div>
+
+                    <div className="mt-6">
+                      <label className="flex items-start gap-2">
+                        <input
+                          type="checkbox"
+                          checked={agreedToTerms}
+                          onChange={(e) => setAgreedToTerms(e.target.checked)}
+                          className="mt-1 rounded border-gray-300"
+                        />
+                        <span className="text-sm text-gray-600">
+                          Acepto los{' '}
+                          <Link to="/terms" className="text-gradient hover:underline">
+                            términos y condiciones
+                          </Link>
+                          {' '}y la{' '}
+                          <Link to="/privacy" className="text-gradient hover:underline">
+                            política de privacidad
+                          </Link>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error message */}
+            {error && (
+              <div className="mt-4 rounded-lg bg-red-50 p-4 animate-shake">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+
+            {/* Navigation buttons */}
+            <div className="mt-8 flex gap-3">
+              {currentStep !== 'contact' && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePrevStep}
+                  className="flex-1"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Anterior
+                </Button>
+              )}
+              
+              {currentStep !== 'password' ? (
+                <Button
+                  type="button"
+                  onClick={handleNextStep}
+                  disabled={!isStepValid()}
+                  className="flex-1 gradient-brand text-white"
+                >
+                  Siguiente
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={!isStepValid() || isLoading}
+                  className="flex-1 gradient-brand text-white"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Creando cuenta...</span>
+                    </div>
+                  ) : (
+                    <>
+                      Crear cuenta
+                      <Check className="w-4 h-4 ml-2" />
+                    </>
                   )}
                 </Button>
-              </div>
-            </form>
-
-            {/* Login Link */}
-            <div className="text-center text-sm text-muted-foreground border-t pt-4">
-              ¿Ya tienes cuenta?{' '}
-              <Link 
-                to="/login" 
-                className="font-medium text-primary hover:underline transition-colors"
-              >
-                Inicia sesión aquí
-              </Link>
+              )}
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Login link */}
+            <p className="mt-6 text-center text-sm text-gray-600">
+              ¿Ya tienes una cuenta?{' '}
+              <Link to="/login" className="font-medium text-gradient hover:underline">
+                Inicia sesión
+              </Link>
+            </p>
+          </form>
+        </div>
+      </div>
+
+      {/* Right side - Benefits showcase */}
+      <div className="hidden lg:flex flex-1 items-center justify-center bg-gradient-to-br from-[#004AAD] to-[#CB6CE6] p-12 relative overflow-hidden">
+        <div className="max-w-lg text-white relative z-10">
+          <h1 className="text-4xl font-bold mb-6">
+            Comienza gratis hoy mismo
+          </h1>
+          <p className="text-xl mb-8 text-white/90">
+            30 días de prueba gratuita. Sin tarjeta de crédito. Cancela cuando quieras.
+          </p>
+
+          {/* Benefits */}
+          <div className="space-y-6 mb-12">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center flex-shrink-0">
+                <Check className="w-5 h-5" />
+              </div>
+              <p>Acceso completo a todas las funciones</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center flex-shrink-0">
+                <Check className="w-5 h-5" />
+              </div>
+              <p>Soporte 24/7 en español</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center flex-shrink-0">
+                <Check className="w-5 h-5" />
+              </div>
+              <p>Migración gratuita de datos</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center flex-shrink-0">
+                <Check className="w-5 h-5" />
+              </div>
+              <p>Capacitación para tu equipo incluida</p>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-6 p-6 bg-white/10 backdrop-blur rounded-2xl">
+            <div className="text-center">
+              <p className="text-3xl font-bold">10K+</p>
+              <p className="text-sm text-white/80">Usuarios activos</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold">500+</p>
+              <p className="text-sm text-white/80">Empresas</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold">99.9%</p>
+              <p className="text-sm text-white/80">Uptime</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+        </div>
+
+        {/* Floating icons */}
+        <div className="absolute top-20 left-20 animate-float">
+          <div className="w-16 h-16 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center">
+            <Sparkles className="w-8 h-8 text-white/80" />
+          </div>
+        </div>
+        <div className="absolute bottom-20 right-20 animate-float" style={{ animationDelay: '1s' }}>
+          <div className="w-16 h-16 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center">
+            <Shield className="w-8 h-8 text-white/80" />
+          </div>
+        </div>
+        <div className="absolute top-1/3 right-40 animate-float" style={{ animationDelay: '2s' }}>
+          <div className="w-16 h-16 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center">
+            <Zap className="w-8 h-8 text-white/80" />
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -1,422 +1,312 @@
-import React, { useState, useEffect } from 'react'
-import { Crown, Building2, Users, TrendingUp, DollarSign, Activity, Eye, Package, BarChart3, ChevronRight, AlertCircle } from 'lucide-react'
-import { useAuthStore } from '@/stores/authStore'
-import { api } from '@/services/api'
-import { AppManagement } from '@/components/admin/AppManagement'
-import { PageHeader, PageContainer, ContentSection, GridContainer } from '@/components/layout'
-import { LoadingState, ErrorState } from '@/components/common'
+// ForvaraHub/src/pages/AdminDashboard.tsx
 
-interface AdminDashboardData {
-  overview: {
-    total_companies: number
-    total_users: number
-    active_companies: number
-    trial_companies: number
-    revenue_monthly: number
-    revenue_total: number
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { 
+  Users, 
+  Building, 
+  DollarSign,
+  Package,
+  Activity,
+  Settings,
+  Database,
+  Shield,
+  TrendingUp,
+  AlertCircle,
+  CreditCard
+} from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { PageContainer } from '@/components/layout/PageContainer'
+import { adminService, type AdminDashboard } from '@/services/admin.service'
+import { useToast } from '@/hooks/useToast'
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
+
+// Admin tool card component
+const AdminToolCard = ({ 
+  title, 
+  description, 
+  icon: Icon, 
+  color, 
+  onClick,
+  comingSoon = false
+}: {
+  title: string
+  description: string
+  icon: any
+  color: string
+  onClick?: () => void
+  comingSoon?: boolean
+}) => {
+  const colorClasses = {
+    blue: 'text-blue-600 bg-blue-100',
+    green: 'text-green-600 bg-green-100',
+    purple: 'text-purple-600 bg-purple-100',
+    orange: 'text-orange-600 bg-orange-100',
+    red: 'text-red-600 bg-red-100',
+    indigo: 'text-indigo-600 bg-indigo-100'
   }
-  recent_activity: {
-    companies: Array<{
-      id: string
-      razon_social: string
-      created_at: string
-      status: string
-    }>
-    users: Array<{
-      id: string
-      first_name: string
-      last_name: string
-      email: string
-      created_at: string
-    }>
-  }
-  growth: {
-    companies_this_month: number
-    users_this_month: number
-  }
+
+  return (
+    <Card 
+      className={`shadow-card hover:shadow-md transition-fast cursor-pointer border-2 border-transparent hover:border-gray-200 ${
+        comingSoon ? 'opacity-60' : ''
+      }`}
+      onClick={!comingSoon ? onClick : undefined}
+    >
+      <CardContent className="p-6">
+        <div className={`w-12 h-12 rounded-xl ${colorClasses[color as keyof typeof colorClasses]} flex items-center justify-center mb-4`}>
+          <Icon className="w-6 h-6" />
+        </div>
+        <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
+        <p className="text-sm text-gray-500">{description}</p>
+        {comingSoon && (
+          <div className="mt-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+            Próximamente
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
 }
 
 export default function AdminDashboard() {
-  const { user } = useAuthStore()
-  const [dashboardData, setDashboardData] = useState<AdminDashboardData | null>(null)
+  const navigate = useNavigate()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [activeSection, setActiveSection] = useState<'overview' | 'apps' | 'analytics'>('overview')
-
-  // Check if user is admin
-  const isAdmin = user?.email === 'ale@forvara.com' || user?.email === 'admin@forvara.com'
+  const [dashboardData, setDashboardData] = useState<AdminDashboard | null>(null)
 
   useEffect(() => {
-    if (!isAdmin) return
-    fetchDashboardData()
-  }, [isAdmin])
+    loadDashboardData()
+  }, [])
 
-  const fetchDashboardData = async () => {
+  const loadDashboardData = async () => {
     try {
       setLoading(true)
-      
-      // Try to get real data from admin endpoint
-      try {
-        const response = await api.get('/admin/dashboard')
-        setDashboardData(response.data)
-        setLoading(false)
-      } catch (apiError) {
-        console.warn('Admin API not available, using mock data:', apiError)
-        
-        // Fallback to mock data
-        setTimeout(() => {
-          setDashboardData({
-            overview: {
-              total_companies: 1,
-              total_users: 1,
-              active_companies: 0,
-              trial_companies: 1,
-              revenue_monthly: 0,
-              revenue_total: 0
-            },
-            recent_activity: {
-              companies: [
-                {
-                  id: '090cff73-f808-427e-b499-938febf403e7',
-                  razon_social: 'Forvara S.A.',
-                  created_at: '2025-07-13T18:55:10.69804+00:00',
-                  status: 'trial'
-                }
-              ],
-              users: [
-                {
-                  id: '500700cc-0d43-41d1-aea7-353b716a7e30',
-                  first_name: 'Alejandro',
-                  last_name: 'Forvara',
-                  email: 'ale@forvara.com',
-                  created_at: '2025-07-13T18:39:35.19163+00:00'
-                }
-              ]
-            },
-            growth: {
-              companies_this_month: 1,
-              users_this_month: 1
-            }
-          })
-          setLoading(false)
-        }, 500)
-      }
-      
-    } catch (error: any) {
-      setError(error.message || 'Failed to load admin dashboard')
+      const data = await adminService.getDashboard()
+      setDashboardData(data)
+    } catch (error) {
+      console.error('Error loading admin dashboard:', error)
+      showToast({
+        title: 'Error',
+        description: 'No se pudieron cargar los datos del dashboard',
+        variant: 'destructive'
+      })
+    } finally {
       setLoading(false)
     }
   }
 
-  if (!isAdmin) {
-    return (
-      <PageContainer>
-        <ErrorState
-          title="Acceso denegado"
-          message="Necesitas privilegios de administrador para acceder a esta área"
-          variant="page"
-          showRetry={false}
-        />
-      </PageContainer>
-    )
-  }
+  const adminTools = [
+    {
+      title: 'Gestión de Empresas',
+      description: 'Ver y administrar todas las empresas',
+      icon: Building,
+      color: 'blue',
+      path: '/admin/companies'
+    },
+    {
+      title: 'Gestión de Usuarios',
+      description: 'Buscar y administrar cuentas',
+      icon: Users,
+      color: 'green',
+      path: '/admin/users'
+    },
+    {
+      title: 'Análisis de Ingresos',
+      description: 'Métricas financieras detalladas',
+      icon: DollarSign,
+      color: 'purple',
+      path: '/admin/revenue'
+    },
+    {
+      title: 'Gestión de Apps',
+      description: 'Administrar el marketplace',
+      icon: Package,
+      color: 'orange',
+      path: '/admin/apps',
+      comingSoon: true
+    },
+    {
+      title: 'Monitoreo del Sistema',
+      description: 'Estado y rendimiento',
+      icon: Activity,
+      color: 'red',
+      path: '/admin/monitoring',
+      comingSoon: true
+    },
+    {
+      title: 'Configuración Global',
+      description: 'Ajustes del sistema',
+      icon: Settings,
+      color: 'indigo',
+      path: '/admin/settings',
+      comingSoon: true
+    }
+  ]
 
-  if (loading) {
-    return (
-      <PageContainer>
-        <LoadingState
-          message="Cargando panel de administración..."
-          variant="page"
-        />
-      </PageContainer>
-    )
-  }
-
-  if (error) {
-    return (
-      <PageContainer>
-        <ErrorState
-          title="Error"
-          message={error}
-          variant="page"
-          onRetry={fetchDashboardData}
-        />
-      </PageContainer>
-    )
-  }
-
-  const data = dashboardData!
+  const stats = dashboardData ? [
+    { 
+      label: 'Empresas totales', 
+      value: dashboardData.overview.total_companies.toString(), 
+      icon: Building, 
+      change: `+${dashboardData.growth.companies_this_month} este mes` 
+    },
+    { 
+      label: 'Usuarios totales', 
+      value: dashboardData.overview.total_users.toString(), 
+      icon: Users, 
+      change: `+${dashboardData.growth.users_this_month} este mes` 
+    },
+    { 
+      label: 'Suscripciones activas', 
+      value: dashboardData.overview.active_companies.toString(), 
+      icon: CreditCard, 
+      change: `${dashboardData.overview.trial_companies} en prueba` 
+    },
+    { 
+      label: 'Ingresos mensuales', 
+      value: `$${(dashboardData.overview.revenue_monthly / 100).toFixed(2)}`, 
+      icon: DollarSign, 
+      change: dashboardData.overview.revenue_monthly > 0 ? '+12% vs mes anterior' : 'Sin cambios' 
+    }
+  ] : []
 
   return (
     <PageContainer>
       <PageHeader
         title="Centro de comando admin"
         description="Bienvenido, CEO! Aquí está el panorama de tu imperio"
-        icon={Crown}
       />
 
-        {/* Tabs */}
-        <div className="mb-8">
-          <div className="inline-flex bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1">
-            <button
-              onClick={() => setActiveSection('overview')}
-              className={`px-4 py-1.5 rounded-md transition-all text-sm font-medium flex items-center gap-2 ${
-                activeSection === 'overview'
-                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-              }`}
-            >
-              <Crown className="w-4 h-4" />
-              Resumen
-            </button>
-            <button
-              onClick={() => setActiveSection('apps')}
-              className={`px-4 py-1.5 rounded-md transition-all text-sm font-medium flex items-center gap-2 ${
-                activeSection === 'apps'
-                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-              }`}
-            >
-              <Package className="w-4 h-4" />
-              App Store
-            </button>
-            <button
-              onClick={() => setActiveSection('analytics')}
-              className={`px-4 py-1.5 rounded-md transition-all text-sm font-medium flex items-center gap-2 ${
-                activeSection === 'analytics'
-                  ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-              }`}
-            >
-              <BarChart3 className="w-4 h-4" />
-              Analytics
-            </button>
-          </div>
+      {/* Loading state */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <LoadingSpinner />
         </div>
-
-        {/* Content */}
-        {activeSection === 'overview' && (
-          <>
-            {/* Overview Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-500" />
-                  <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                    +{data?.growth?.companies_this_month || 0} este mes
-                  </span>
-                </div>
-                <div>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {data?.overview?.total_companies || 0}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Empresas totales
-                  </p>
-                </div>
+      ) : (
+        <>
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {stats.map((stat) => (
+          <Card key={stat.label} className="shadow-card">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <stat.icon className="w-5 h-5 text-gray-400" />
+                <span className="text-xs text-gray-500">{stat.change}</span>
               </div>
-
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <Users className="w-5 h-5 text-green-600 dark:text-green-500" />
-                  <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                    +{data?.growth?.users_this_month || 0} este mes
-                  </span>
-                </div>
-                <div>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {data?.overview?.total_users || 0}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Usuarios totales
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <TrendingUp className="w-5 h-5 text-orange-600 dark:text-orange-500" />
-                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                    {data?.overview?.trial_companies || 0} en prueba
-                  </span>
-                </div>
-                <div>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {data?.overview?.active_companies || 0}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Suscripciones activas
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <DollarSign className="w-5 h-5 text-purple-600 dark:text-purple-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    ${(data?.overview?.revenue_monthly || 0).toLocaleString()}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Ingresos mensuales
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Total: ${(data?.overview?.revenue_total || 0).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              {/* Recent Companies */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Building2 className="w-5 h-5" />
-                    Empresas recientes
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Registradas en los últimos 30 días
-                  </p>
-                </div>
-                <div className="p-6">
-                  {data?.recent_activity?.companies?.length > 0 ? (
-                    <div className="space-y-3">
-                      {data?.recent_activity?.companies?.map((company) => (
-                        <div key={company.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                          <div>
-                            <p className="font-medium text-gray-900 dark:text-white">
-                              {company.razon_social}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {new Date(company.created_at).toLocaleDateString('es-ES')}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${
-                              company.status === 'active' ? 'bg-green-500' : 'bg-blue-500'
-                            }`}></div>
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                              {company.status === 'active' ? 'Activo' : 'Prueba'}
-                            </span>
-                            <button className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors">
-                              <Eye className="w-4 h-4 text-gray-400" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">
-                      No hay empresas recientes
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Recent Users */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Users className="w-5 h-5" />
-                    Usuarios recientes
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Registrados en los últimos 30 días
-                  </p>
-                </div>
-                <div className="p-6">
-                  {data?.recent_activity?.users?.length > 0 ? (
-                    <div className="space-y-3">
-                      {data?.recent_activity?.users?.map((user) => (
-                        <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                          <div>
-                            <p className="font-medium text-gray-900 dark:text-white">
-                              {user.first_name} {user.last_name}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {user.email}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-gray-500">
-                              {new Date(user.created_at).toLocaleDateString('es-ES')}
-                            </span>
-                            <button className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors">
-                              <Eye className="w-4 h-4 text-gray-400" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">
-                      No hay usuarios recientes
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-                <Activity className="w-5 h-5" />
-                Acciones rápidas
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all text-left group">
-                  <Building2 className="w-6 h-6 text-blue-600 mb-2" />
-                  <h4 className="font-medium text-gray-900 dark:text-white">Gestionar empresas</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Ver y administrar todas las empresas
-                  </p>
-                  <ChevronRight className="w-4 h-4 text-gray-400 mt-2 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
-                </button>
-                
-                <button className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all text-left group">
-                  <Users className="w-6 h-6 text-green-600 mb-2" />
-                  <h4 className="font-medium text-gray-900 dark:text-white">Gestión de usuarios</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Buscar y administrar cuentas
-                  </p>
-                  <ChevronRight className="w-4 h-4 text-gray-400 mt-2 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
-                </button>
-                
-                <button className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all text-left group">
-                  <DollarSign className="w-6 h-6 text-purple-600 mb-2" />
-                  <h4 className="font-medium text-gray-900 dark:text-white">Analytics de ingresos</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Métricas financieras detalladas
-                  </p>
-                  <ChevronRight className="w-4 h-4 text-gray-400 mt-2 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* App Store Management Section */}
-        {activeSection === 'apps' && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <AppManagement />
+              <div className="text-2xl font-bold text-gradient">{stat.value}</div>
+              <p className="text-sm text-gray-500 mt-1">{stat.label}</p>
+            </CardContent>
+          </Card>
+            ))}
           </div>
-        )}
 
-        {/* Analytics Section */}
-        {activeSection === 'analytics' && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
-            <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Analytics avanzado
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400">
-              Dashboard de analytics detallado próximamente...
-            </p>
+      {/* Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <Card className="shadow-card lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Empresas recientes</CardTitle>
+            <CardDescription>Registradas en los últimos 30 días</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {dashboardData && dashboardData.recent_activity.companies.length > 0 ? (
+              <div className="space-y-3">
+                {dashboardData.recent_activity.companies.slice(0, 5).map((company) => (
+                  <div key={company.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-fast">
+                    <div>
+                      <p className="font-medium text-sm">{company.razon_social}</p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(company.created_at).toLocaleDateString('es-ES')}
+                      </p>
+                    </div>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      company.status === 'active' ? 'bg-green-100 text-green-700' :
+                      company.status === 'trial' ? 'bg-blue-100 text-blue-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {company.status === 'trial' ? 'Prueba' : company.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Building className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No hay empresas recientes</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle>Usuarios recientes</CardTitle>
+            <CardDescription>Registrados en los últimos 30 días</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {dashboardData && dashboardData.recent_activity.users.length > 0 ? (
+              <div className="space-y-3">
+                {dashboardData.recent_activity.users.slice(0, 5).map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-fast">
+                    <div>
+                      <p className="font-medium text-sm">{user.first_name} {user.last_name}</p>
+                      <p className="text-xs text-gray-500">{user.email}</p>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {new Date(user.created_at).toLocaleDateString('es-ES')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No hay usuarios recientes</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Admin Tools */}
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Shield className="w-5 h-5" />
+          Acciones rápidas
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {adminTools.map((tool) => (
+            <AdminToolCard
+              key={tool.path}
+              title={tool.title}
+              description={tool.description}
+              icon={tool.icon}
+              color={tool.color}
+              onClick={() => !tool.comingSoon && navigate(tool.path)}
+              comingSoon={tool.comingSoon}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Alert */}
+      <Card className="border-blue-200 bg-blue-50">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-blue-900">Panel de administración</h4>
+              <p className="text-sm text-blue-700 mt-1">
+                Este es el centro de comando para administradores. Desde aquí puedes gestionar todos los aspectos 
+                de la plataforma. Las herramientas se irán habilitando gradualmente.
+              </p>
+            </div>
           </div>
-        )}
+        </CardContent>
+      </Card>
+        </>
+      )}
     </PageContainer>
   )
 }

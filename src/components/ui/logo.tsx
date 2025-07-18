@@ -9,11 +9,19 @@ export interface LogoProps {
 }
 
 const sizeClasses = {
-  xs: 'h-6 w-auto',
-  sm: 'h-8 w-auto', 
-  md: 'h-12 w-auto',
-  lg: 'h-16 w-auto',
-  xl: 'h-24 w-auto'
+  xs: 'h-6',
+  sm: 'h-8', 
+  md: 'h-12',
+  lg: 'h-16',
+  xl: 'h-24'
+}
+
+const textSizeClasses = {
+  xs: 'text-sm',
+  sm: 'text-base',
+  md: 'text-xl',
+  lg: 'text-2xl',
+  xl: 'text-4xl'
 }
 
 export function Logo({ 
@@ -23,32 +31,54 @@ export function Logo({
   className,
   alt = 'Forvara Logo'
 }: LogoProps) {
-  // Auto-detect dark mode if theme is 'auto'
-  const getLogoPath = () => {
-    const baseDir = variant === 'full' ? '/logos' : '/icons'
-    const fileName = variant === 'full' ? 'ForvaraLogo' : 'ForvaraIcon'
-    
-    const themeMapping = {
-      light: 'BlackWhite',
-      dark: 'WhiteBlack', 
-      grey: 'WhiteGrey',
-      purple: 'WhitePurple'
+  const getThemeColors = () => {
+    switch (theme) {
+      case 'dark':
+        return 'text-white'
+      case 'grey':
+        return 'text-gray-600'
+      case 'purple':
+        return 'text-purple-600'
+      default:
+        return 'text-gray-900'
     }
-    
-    return `${baseDir}/${fileName}${themeMapping[theme]}.png`
   }
 
+  if (variant === 'icon') {
+    // SVG Icon placeholder
+    return (
+      <div 
+        className={cn(
+          sizeClasses[size],
+          'flex items-center justify-center rounded-lg gradient-brand text-white font-bold transition-all duration-300 hover:scale-105',
+          className
+        )}
+        role="img"
+        aria-label={alt}
+      >
+        <span className={textSizeClasses[size]}>F</span>
+      </div>
+    )
+  }
+
+  // Full logo as text
   return (
-    <img
-      src={getLogoPath()}
-      alt={alt}
+    <div 
       className={cn(
-        sizeClasses[size],
-        'object-contain transition-all duration-300 hover:scale-105',
+        'flex items-center transition-all duration-300 hover:scale-105',
         className
       )}
-      draggable={false}
-    />
+      role="img"
+      aria-label={alt}
+    >
+      <span className={cn(
+        textSizeClasses[size],
+        'font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent',
+        getThemeColors()
+      )}>
+        Forvara
+      </span>
+    </div>
   )
 }
 
@@ -67,7 +97,7 @@ export function LogoAuto({
   ...props 
 }: Omit<LogoProps, 'theme'>) {
   return (
-    <div className="relative">
+    <>
       {/* Light mode logo */}
       <Logo 
         {...props} 
@@ -80,6 +110,6 @@ export function LogoAuto({
         theme="dark" 
         className={cn("hidden dark:block", className)} 
       />
-    </div>
+    </>
   )
 }

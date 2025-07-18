@@ -1,654 +1,579 @@
-import React, { useState, useEffect } from 'react'
-import { Building2, User, Shield, Bell, Globe, CreditCard, ChevronRight, Mail, Phone, Camera, Save, AlertCircle, Check } from 'lucide-react'
-import { useAuthStore } from '@/stores/authStore'
-import { companyService } from '@/services/company.service'
-import { authService } from '@/services/auth.service'
-import { userService } from '@/services/user.service'
-import { useNavigate } from 'react-router-dom'
+// ForvaraHub/src/pages/Settings.tsx
 
-// Componente para el estado vacío cuando no hay empresa
-const NoCompanyState = () => {
-  const navigate = useNavigate()
+import React, { useState, useEffect } from 'react'
+import { 
+  User, 
+  Bell, 
+  Shield, 
+  Globe, 
+  CreditCard,
+  Building,
+  Palette,
+  Moon,
+  Sun,
+  Monitor,
+  Key,
+  Mail,
+  Phone,
+  Camera,
+  Save,
+  AlertCircle,
+  Check,
+  ChevronRight,
+  LogOut,
+  Trash2,
+  Download,
+  Upload
+} from 'lucide-react'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { PageContainer } from '@/components/layout/PageContainer'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { useAuthStore } from '@/stores/authStore'
+import { PhoneInputField } from '@/components/ui/phone-input'
+import { usePhoneValidation } from '@/hooks/usePhoneValidation'
+import { useNotifications } from '@/components/ui/notifications'
+import { api } from '@/services/api'
+
+type SettingsTab = 'profile' | 'account' | 'notifications' | 'security' | 'appearance' | 'billing'
+
+interface UserSettings {
+  // Profile
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  avatar_url?: string
+  bio?: string
   
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
-      <div className="text-center max-w-md">
-        <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4">
-          <Building2 className="w-8 h-8 text-gray-400" />
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-          No tienes una empresa
-        </h3>
-        <p className="text-gray-500 dark:text-gray-400 mb-6">
-          Para acceder a configuración, primero necesitas crear una empresa.
-        </p>
-        <button 
-          onClick={() => navigate('/companies')}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium"
-        >
-          Crear mi primera empresa
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  )
+  // Preferences
+  language: 'es' | 'en' | 'pt'
+  timezone: string
+  
+  // Notifications
+  email_notifications: boolean
+  push_notifications: boolean
+  sms_notifications: boolean
+  marketing_emails: boolean
+  
+  // Security
+  two_factor_enabled: boolean
+  
+  // Appearance
+  theme: 'light' | 'dark' | 'system'
 }
 
-// Componente de navegación lateral
-const SettingsSidebar = ({ activeSection, onSectionChange, hideCompany = false }: { 
-  activeSection: string
-  onSectionChange: (section: string) => void 
-  hideCompany?: boolean
-}) => {
-  const allSections = [
-    { id: 'profile', label: 'Mi Perfil', icon: User },
-    { id: 'company', label: 'Empresa', icon: Building2 },
-    { id: 'security', label: 'Seguridad', icon: Shield },
+export default function Settings() {
+  const { user, updateUser } = useAuthStore()
+  const { addNotification } = useNotifications()
+  
+  const [activeTab, setActiveTab] = useState<SettingsTab>('profile')
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [hasChanges, setHasChanges] = useState(false)
+  
+  const [settings, setSettings] = useState<UserSettings>({
+    first_name: user?.first_name || '',
+    last_name: user?.last_name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    language: user?.preferred_language || 'es',
+    timezone: user?.timezone || 'America/Panama',
+    email_notifications: true,
+    push_notifications: true,
+    sms_notifications: false,
+    marketing_emails: true,
+    two_factor_enabled: false,
+    theme: 'system'
+  })
+  
+  const phoneValidation = usePhoneValidation({
+    value: settings.phone,
+    required: false
+  })
+
+  const tabs = [
+    { id: 'profile', label: 'Perfil', icon: User },
+    { id: 'account', label: 'Cuenta', icon: Building },
     { id: 'notifications', label: 'Notificaciones', icon: Bell },
-    { id: 'preferences', label: 'Preferencias', icon: Globe }
+    { id: 'security', label: 'Seguridad', icon: Shield },
+    { id: 'appearance', label: 'Apariencia', icon: Palette },
+    { id: 'billing', label: 'Facturación', icon: CreditCard }
   ]
 
-  const sections = hideCompany 
-    ? allSections.filter(section => section.id !== 'company')
-    : allSections
-
-  return (
-    <nav className="space-y-1">
-      {sections.map(section => {
-        const Icon = section.icon
-        return (
-          <button
-            key={section.id}
-            onClick={() => onSectionChange(section.id)}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm ${
-              activeSection === section.id
-                ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-            }`}
-          >
-            <Icon className="w-4 h-4" />
-            <span>{section.label}</span>
-          </button>
-        )
-      })}
-    </nav>
-  )
-}
-
-// Sección de Perfil
-const ProfileSection = () => {
-  const { user, updateUser } = useAuthStore()
-  const [loading, setLoading] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    cedula_panama: '',
-    avatar_url: ''
-  })
-
   useEffect(() => {
-    if (user) {
-      setFormData({
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        cedula_panama: user.cedula_panama || '',
-        avatar_url: user.avatar_url || ''
-      })
-    }
-  }, [user])
+    loadSettings()
+  }, [])
 
-  const handleSave = async () => {
-    setLoading(true)
+  const loadSettings = async () => {
     try {
-      // Validate required fields before sending
-      if (!formData.first_name?.trim() || !formData.last_name?.trim()) {
-        throw new Error('Nombre y apellido son obligatorios')
-      }
-      
-      if (!formData.email?.trim() && !formData.phone?.trim()) {
-        throw new Error('Email o teléfono es obligatorio')
-      }
-      
-      // Clean up the data before sending
-      const cleanData = {
-        first_name: formData.first_name?.trim(),
-        last_name: formData.last_name?.trim(),
-        email: formData.email?.trim() || undefined,
-        phone: formData.phone?.trim() || undefined,
-        cedula_panama: formData.cedula_panama?.trim() || undefined,
-        avatar_url: formData.avatar_url?.trim() || undefined
-      }
-      
-      // Remove undefined values
-      Object.keys(cleanData).forEach(key => {
-        if (cleanData[key as keyof typeof cleanData] === undefined) {
-          delete cleanData[key as keyof typeof cleanData]
-        }
-      })
-      
-      const updatedUser = await userService.updateProfile(cleanData)
-      updateUser(updatedUser)
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
-    } catch (error: any) {
-      console.error('Error saving profile:', error)
-      // Show more specific error to user
-      const errorMessage = error?.message || error?.response?.data?.error?.message || 'Error al guardar el perfil. Intenta de nuevo.'
-      alert(errorMessage)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-          Información personal
-        </h3>
-        <p className="text-sm text-gray-500">
-          Actualiza tu información personal y de contacto
-        </p>
-      </div>
-
-      {/* Avatar */}
-      <div className="flex items-center gap-4">
-        <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-          {formData.avatar_url ? (
-            <img src={formData.avatar_url} alt="" className="w-20 h-20 rounded-full" />
-          ) : (
-            <User className="w-10 h-10 text-gray-400" />
-          )}
-        </div>
-        <button className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium flex items-center gap-2">
-          <Camera className="w-4 h-4" />
-          Cambiar foto
-        </button>
-      </div>
-
-      {/* Form */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Nombre
-          </label>
-          <input
-            type="text"
-            value={formData.first_name}
-            onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Apellido
-          </label>
-          <input
-            type="text"
-            value={formData.last_name}
-            onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Email
-          </label>
-          <input
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Teléfono
-          </label>
-          <input
-            type="tel"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            placeholder="+507 6000-0000"
-            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Cédula (Panamá)
-          </label>
-          <input
-            type="text"
-            value={formData.cedula_panama}
-            onChange={(e) => setFormData({ ...formData, cedula_panama: e.target.value })}
-            placeholder="8-123-4567"
-            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-          />
-        </div>
-      </div>
-
-      {/* Save button */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={handleSave}
-          disabled={loading}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium disabled:opacity-50"
-        >
-          {loading ? (
-            <>Guardando...</>
-          ) : saved ? (
-            <>
-              <Check className="w-4 h-4" />
-              Guardado
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4" />
-              Guardar cambios
-            </>
-          )}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// Sección de Empresa
-const CompanySection = () => {
-  const { currentCompany, setCurrentCompany } = useAuthStore()
-  const [loading, setLoading] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [formData, setFormData] = useState({
-    razon_social: '',
-    ruc: '',
-    phone: '',
-    contact_email: '',
-    address: '',
-    industry_type: '',
-    company_size: 'pequena'
-  })
-
-  useEffect(() => {
-    if (currentCompany) {
-      setFormData({
-        razon_social: currentCompany.razon_social || '',
-        ruc: currentCompany.ruc || '',
-        phone: currentCompany.phone || '',
-        contact_email: currentCompany.contact_email || '',
-        address: currentCompany.address || '',
-        industry_type: currentCompany.industry_type || '',
-        company_size: currentCompany.company_size || 'pequena'
-      })
-    }
-  }, [currentCompany])
-
-  // TODO: Verificar permisos reales
-  const canEdit = true // Solo owner y admin pueden editar
-
-  const handleSave = async () => {
-    if (!currentCompany) return
-    
-    setLoading(true)
-    try {
-      const updatedCompany = await companyService.updateCompany(currentCompany.id, formData)
-      setCurrentCompany(updatedCompany)
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      setLoading(true)
+      const response = await api.get('/user/settings')
+      setSettings(prev => ({ ...prev, ...response.data }))
     } catch (error) {
-      console.error('Error saving company:', error)
-      alert('Error al guardar la información de la empresa. Intenta de nuevo.')
+      console.error('Error loading settings:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-          Información de la empresa
-        </h3>
-        <p className="text-sm text-gray-500">
-          Detalles y configuración de tu empresa
-        </p>
-      </div>
+  const handleSaveSettings = async () => {
+    try {
+      setSaving(true)
+      await api.put('/user/settings', settings)
+      
+      // Update local user data
+      updateUser({
+        first_name: settings.first_name,
+        last_name: settings.last_name,
+        email: settings.email,
+        phone: settings.phone,
+        preferred_language: settings.language,
+        timezone: settings.timezone
+      })
+      
+      addNotification({
+        type: 'success',
+        title: 'Configuración guardada',
+        message: 'Tus cambios han sido guardados exitosamente'
+      })
+      
+      setHasChanges(false)
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: 'Error al guardar',
+        message: 'No se pudieron guardar los cambios. Intenta de nuevo.'
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
 
-      {!canEdit && (
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              Solo los administradores pueden editar la información de la empresa.
-            </p>
+  const handleInputChange = (field: keyof UserSettings, value: any) => {
+    setSettings(prev => ({ ...prev, [field]: value }))
+    setHasChanges(true)
+  }
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    // TODO: Implement avatar upload
+    addNotification({
+      type: 'info',
+      title: 'Función en desarrollo',
+      message: 'La carga de avatar estará disponible pronto'
+    })
+  }
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'profile':
+        return (
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle>Información personal</CardTitle>
+              <CardDescription>
+                Actualiza tu información de perfil y cómo otros te ven
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Avatar */}
+              <div className="flex items-center gap-6">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-2xl gradient-brand flex items-center justify-center text-white font-bold text-2xl">
+                    {settings.first_name.charAt(0)}{settings.last_name.charAt(0)}
+                  </div>
+                  <label className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors">
+                    <Camera className="w-4 h-4 text-gray-600" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                    />
+                  </label>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900">Foto de perfil</h3>
+                  <p className="text-sm text-gray-500">JPG, GIF o PNG. Máximo 1MB.</p>
+                </div>
+              </div>
+
+              {/* Form fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="first_name">Nombre</Label>
+                  <Input
+                    id="first_name"
+                    value={settings.first_name}
+                    onChange={(e) => handleInputChange('first_name', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="last_name">Apellido</Label>
+                  <Input
+                    id="last_name"
+                    value={settings.last_name}
+                    onChange={(e) => handleInputChange('last_name', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="email">Correo electrónico</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={settings.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <PhoneInputField
+                label="Teléfono"
+                value={settings.phone}
+                onChange={(value) => handleInputChange('phone', value)}
+                error={phoneValidation.error}
+              />
+
+              <div>
+                <Label htmlFor="bio">Biografía</Label>
+                <textarea
+                  id="bio"
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Cuéntanos sobre ti..."
+                  value={settings.bio || ''}
+                  onChange={(e) => handleInputChange('bio', e.target.value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )
+
+      case 'notifications':
+        return (
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle>Preferencias de notificaciones</CardTitle>
+              <CardDescription>
+                Controla cómo y cuándo quieres recibir notificaciones
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="email_notifications">Notificaciones por email</Label>
+                    <p className="text-sm text-gray-500">
+                      Recibe actualizaciones importantes en tu correo
+                    </p>
+                  </div>
+                  <Switch
+                    id="email_notifications"
+                    checked={settings.email_notifications}
+                    onCheckedChange={(checked) => handleInputChange('email_notifications', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="push_notifications">Notificaciones push</Label>
+                    <p className="text-sm text-gray-500">
+                      Recibe notificaciones en tu navegador
+                    </p>
+                  </div>
+                  <Switch
+                    id="push_notifications"
+                    checked={settings.push_notifications}
+                    onCheckedChange={(checked) => handleInputChange('push_notifications', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="sms_notifications">Notificaciones SMS</Label>
+                    <p className="text-sm text-gray-500">
+                      Recibe alertas críticas por mensaje de texto
+                    </p>
+                  </div>
+                  <Switch
+                    id="sms_notifications"
+                    checked={settings.sms_notifications}
+                    onCheckedChange={(checked) => handleInputChange('sms_notifications', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="marketing_emails">Emails de marketing</Label>
+                    <p className="text-sm text-gray-500">
+                      Recibe noticias y ofertas especiales
+                    </p>
+                  </div>
+                  <Switch
+                    id="marketing_emails"
+                    checked={settings.marketing_emails}
+                    onCheckedChange={(checked) => handleInputChange('marketing_emails', checked)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )
+
+      case 'security':
+        return (
+          <div className="space-y-6">
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle>Seguridad de la cuenta</CardTitle>
+                <CardDescription>
+                  Mantén tu cuenta segura con estas opciones
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Key className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Cambiar contraseña</h4>
+                      <p className="text-sm text-gray-500">Última actualización hace 3 meses</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    Cambiar
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Autenticación de dos factores</h4>
+                      <p className="text-sm text-gray-500">
+                        {settings.two_factor_enabled ? 'Activado' : 'Añade una capa extra de seguridad'}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={settings.two_factor_enabled}
+                    onCheckedChange={(checked) => handleInputChange('two_factor_enabled', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Download className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Descargar mis datos</h4>
+                      <p className="text-sm text-gray-500">Obtén una copia de toda tu información</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    Descargar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card border-red-200 bg-red-50">
+              <CardHeader>
+                <CardTitle className="text-red-900">Zona de peligro</CardTitle>
+                <CardDescription className="text-red-700">
+                  Acciones irreversibles. Procede con precaución.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <button className="flex items-center gap-2 text-red-600 hover:text-red-700 font-medium">
+                  <Trash2 className="w-4 h-4" />
+                  Eliminar mi cuenta permanentemente
+                </button>
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      )}
+        )
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Razón Social
-          </label>
-          <input
-            type="text"
-            value={formData.razon_social}
-            onChange={(e) => setFormData({ ...formData, razon_social: e.target.value })}
-            disabled={!canEdit}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm disabled:opacity-50"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            RUC
-          </label>
-          <input
-            type="text"
-            value={formData.ruc}
-            onChange={(e) => setFormData({ ...formData, ruc: e.target.value })}
-            disabled={!canEdit}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm disabled:opacity-50"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Email de contacto
-          </label>
-          <input
-            type="email"
-            value={formData.contact_email}
-            onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
-            disabled={!canEdit}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm disabled:opacity-50"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Teléfono
-          </label>
-          <input
-            type="tel"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            disabled={!canEdit}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm disabled:opacity-50"
-          />
-        </div>
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Dirección
-          </label>
-          <textarea
-            value={formData.address}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            disabled={!canEdit}
-            rows={2}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm resize-none disabled:opacity-50"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Industria
-          </label>
-          <select
-            value={formData.industry_type}
-            onChange={(e) => setFormData({ ...formData, industry_type: e.target.value })}
-            disabled={!canEdit}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm disabled:opacity-50"
-          >
-            <option value="">Seleccionar industria</option>
-            <option value="tecnologia">Tecnología</option>
-            <option value="retail">Retail</option>
-            <option value="servicios">Servicios</option>
-            <option value="manufactura">Manufactura</option>
-            <option value="otro">Otro</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Tamaño de empresa
-          </label>
-          <select
-            value={formData.company_size}
-            onChange={(e) => setFormData({ ...formData, company_size: e.target.value })}
-            disabled={!canEdit}
-            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm disabled:opacity-50"
-          >
-            <option value="micro">Micro (1-10 empleados)</option>
-            <option value="pequena">Pequeña (11-50 empleados)</option>
-            <option value="mediana">Mediana (51-200 empleados)</option>
-            <option value="grande">Grande (200+ empleados)</option>
-          </select>
-        </div>
-      </div>
+      case 'appearance':
+        return (
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle>Personalización</CardTitle>
+              <CardDescription>
+                Ajusta la apariencia de Forvara Hub a tu gusto
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label className="mb-4 block">Tema de la aplicación</Label>
+                <div className="grid grid-cols-3 gap-4">
+                  {[
+                    { value: 'light', label: 'Claro', icon: Sun },
+                    { value: 'dark', label: 'Oscuro', icon: Moon },
+                    { value: 'system', label: 'Sistema', icon: Monitor }
+                  ].map(theme => (
+                    <button
+                      key={theme.value}
+                      onClick={() => handleInputChange('theme', theme.value as any)}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        settings.theme === theme.value
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <theme.icon className={`w-8 h-8 mx-auto mb-2 ${
+                        settings.theme === theme.value ? 'text-blue-600' : 'text-gray-400'
+                      }`} />
+                      <p className={`text-sm font-medium ${
+                        settings.theme === theme.value ? 'text-blue-900' : 'text-gray-700'
+                      }`}>
+                        {theme.label}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-      {canEdit && (
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium disabled:opacity-50"
-          >
-            {loading ? (
-              <>Guardando...</>
-            ) : saved ? (
-              <>
-                <Check className="w-4 h-4" />
-                Guardado
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                Guardar cambios
-              </>
-            )}
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
+              <div>
+                <Label htmlFor="language">Idioma</Label>
+                <select
+                  id="language"
+                  value={settings.language}
+                  onChange={(e) => handleInputChange('language', e.target.value as any)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="es">Español</option>
+                  <option value="en">English</option>
+                  <option value="pt">Português</option>
+                </select>
+              </div>
 
-// Sección de Seguridad
-const SecuritySection = () => {
-  const [changingPassword, setChangingPassword] = useState(false)
-  const [passwordForm, setPasswordForm] = useState({
-    current_password: '',
-    new_password: '',
-    confirm_password: ''
-  })
+              <div>
+                <Label htmlFor="timezone">Zona horaria</Label>
+                <select
+                  id="timezone"
+                  value={settings.timezone}
+                  onChange={(e) => handleInputChange('timezone', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="America/Panama">América/Panamá (GMT-5)</option>
+                  <option value="America/Mexico_City">América/Ciudad de México (GMT-6)</option>
+                  <option value="America/Bogota">América/Bogotá (GMT-5)</option>
+                  <option value="America/Lima">América/Lima (GMT-5)</option>
+                  <option value="America/Buenos_Aires">América/Buenos Aires (GMT-3)</option>
+                </select>
+              </div>
+            </CardContent>
+          </Card>
+        )
+
+      default:
+        return null
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-          Seguridad
-        </h3>
-        <p className="text-sm text-gray-500">
-          Gestiona tu contraseña y configuración de seguridad
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Configuración"
+        description="Gestiona tu cuenta y preferencias"
+      />
 
-      {/* Change Password */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h4 className="font-medium text-gray-900 dark:text-white mb-4">
-          Cambiar contraseña
-        </h4>
-        
-        {!changingPassword ? (
-          <button
-            onClick={() => setChangingPassword(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
-          >
-            <Shield className="w-4 h-4" />
-            Cambiar contraseña
-          </button>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Contraseña actual
-              </label>
-              <input
-                type="password"
-                value={passwordForm.current_password}
-                onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Nueva contraseña
-              </label>
-              <input
-                type="password"
-                value={passwordForm.new_password}
-                onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Confirmar nueva contraseña
-              </label>
-              <input
-                type="password"
-                value={passwordForm.confirm_password}
-                onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
-                className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-              />
-            </div>
-            <div className="flex gap-3">
-              <button className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium">
-                Actualizar contraseña
-              </button>
+      <div className="flex gap-6">
+        {/* Sidebar */}
+        <aside className="w-64 flex-shrink-0">
+          <nav className="space-y-1">
+            {tabs.map(tab => (
               <button
-                onClick={() => {
-                  setChangingPassword(false)
-                  setPasswordForm({ current_password: '', new_password: '', confirm_password: '' })
-                }}
-                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as SettingsTab)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-fast ${
+                  activeTab === tab.id
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'hover:bg-gray-50 text-gray-700'
+                }`}
               >
-                Cancelar
+                <tab.icon className="w-4 h-4" />
+                <span className="text-sm font-medium">{tab.label}</span>
+                <ChevronRight className={`w-4 h-4 ml-auto transition-transform ${
+                  activeTab === tab.id ? 'rotate-90' : ''
+                }`} />
+              </button>
+            ))}
+          </nav>
+
+          {/* Quick actions */}
+          <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+            <h4 className="text-sm font-medium text-gray-900 mb-3">Acciones rápidas</h4>
+            <div className="space-y-2">
+              <button className="w-full text-left text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                <Download className="w-4 h-4 inline mr-2" />
+                Exportar datos
+              </button>
+              <button className="w-full text-left text-sm text-gray-600 hover:text-gray-900 transition-colors">
+                <LogOut className="w-4 h-4 inline mr-2" />
+                Cerrar sesión
               </button>
             </div>
           </div>
-        )}
-      </div>
+        </aside>
 
-      {/* Two-Factor Authentication */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h4 className="font-medium text-gray-900 dark:text-white mb-1">
-              Autenticación de dos factores
-            </h4>
-            <p className="text-sm text-gray-500">
-              Añade una capa extra de seguridad a tu cuenta
-            </p>
-          </div>
-          <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-            Próximamente
-          </span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Componente principal de Settings
-export default function Settings() {
-  const { currentCompany, user, isIndividualMode } = useAuthStore()
-  
-  const [activeSection, setActiveSection] = useState('profile')
-
-  // Individual mode - allow access without company
-  if (isIndividualMode()) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-              Configuración Personal
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">
-              Gestiona tu perfil y preferencias personales
-            </p>
-          </div>
-
-          {/* Individual Mode Settings */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="grid grid-cols-1 lg:grid-cols-4">
-              <div className="lg:col-span-1 border-r border-gray-200 dark:border-gray-700">
-                <SettingsSidebar activeSection={activeSection} onSectionChange={setActiveSection} hideCompany={true} />
-              </div>
-              <div className="lg:col-span-3">
-                <SettingsContent section={activeSection} />
+        {/* Main content */}
+        <div className="flex-1">
+          {loading ? (
+            <div className="flex items-center justify-center h-96">
+              <div className="text-center">
+                <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-500">Cargando configuración...</p>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Company mode - check if company exists
-  if (!currentCompany) {
-    return <NoCompanyState />
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-            Configuración
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            Gestiona tu cuenta y preferencias
-          </p>
-        </div>
-
-        {/* Content */}
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
-          <div className="lg:w-64">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-              <SettingsSidebar 
-                activeSection={activeSection} 
-                onSectionChange={setActiveSection} 
-              />
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              {activeSection === 'profile' && <ProfileSection />}
-              {activeSection === 'company' && <CompanySection />}
-              {activeSection === 'security' && <SecuritySection />}
-              {activeSection === 'notifications' && (
-                <div className="text-center py-12">
-                  <Bell className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500">Configuración de notificaciones próximamente</p>
+          ) : (
+            <>
+              {renderTabContent()}
+              
+              {/* Save button */}
+              {hasChanges && (
+                <div className="fixed bottom-6 right-6 flex items-center gap-3 bg-white p-4 rounded-xl shadow-lg border border-gray-200">
+                  <AlertCircle className="w-5 h-5 text-orange-500" />
+                  <span className="text-sm text-gray-700">Tienes cambios sin guardar</span>
+                  <Button
+                    onClick={handleSaveSettings}
+                    disabled={saving}
+                    className="gradient-brand text-white"
+                  >
+                    {saving ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                        Guardando...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Guardar cambios
+                      </>
+                    )}
+                  </Button>
                 </div>
               )}
-              {activeSection === 'preferences' && (
-                <div className="text-center py-12">
-                  <Globe className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500">Preferencias regionales próximamente</p>
-                </div>
-              )}
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
-    </div>
+    </PageContainer>
   )
 }

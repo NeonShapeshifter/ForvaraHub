@@ -1,10 +1,12 @@
+// ForvaraHub/src/components/layout/Header.tsx
+
 import { useAuthStore } from '@/stores/authStore'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Building, ChevronDown, LogOut, Settings, User } from 'lucide-react'
-import { LogoAuto } from '@/components/ui/logo'
-import { MobileMenuButton } from '@/components/navigation'
+import { Building, ChevronDown, LogOut, Settings, User, Menu } from 'lucide-react'
+import { LogoIcon } from '@/components/ui/logo'
 
 interface HeaderProps {
   sidebarOpen: boolean
@@ -13,77 +15,104 @@ interface HeaderProps {
 
 export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps) {
   const { user, currentCompany, logout } = useAuthStore()
+  const navigate = useNavigate()
   
-  const userInitials = user ? `${user.first_name[0]}${user.last_name[0]}` : 'U'
+  const userInitials = user ? 
+    `${user.first_name?.charAt(0) || ''}${user.last_name?.charAt(0) || ''}`.toUpperCase() : 
+    '??'
+    
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+  
+  const handleNavigate = (path: string) => {
+    navigate(path)
+  }
   
   return (
-    <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-      <div className="flex items-center justify-between px-6 py-3">
-        {/* Logo */}
-        <div className="flex items-center space-x-4">
+    <header className="bg-white/80 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-40">
+      <div className="flex items-center justify-between px-4 sm:px-6 h-16">
+        {/* Left side */}
+        <div className="flex items-center gap-4">
           {/* Mobile menu button */}
-          <MobileMenuButton
-            isOpen={sidebarOpen}
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setSidebarOpen(!sidebarOpen)}
-          />
+            className="lg:hidden"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
           
-          <div className="flex items-center space-x-3">
-            <LogoAuto variant="icon" size="sm" className="hover:scale-110 transition-transform" />
-            <LogoAuto variant="full" size="sm" className="hidden sm:block" />
+          {/* Logo - Solo ícono en móvil */}
+          <div className="hidden lg:block">
+            <LogoIcon size="sm" theme="light" />
           </div>
         </div>
-
-        {/* Center - Company Switcher */}
-        {currentCompany && (
-          <div className="flex items-center space-x-2 bg-muted/50 rounded-lg px-3 py-2">
-            <Building className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{currentCompany.razon_social}</span>
-            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded capitalize">
-              {currentCompany.status}
-            </span>
-          </div>
-        )}
-
-        {/* Right - User Menu */}
-        <div className="flex items-center space-x-4">
+        
+        {/* Right side */}
+        <div className="flex items-center gap-4">
+          {/* Company selector */}
+          {currentCompany && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="hidden sm:flex items-center gap-2">
+                  <Building className="w-4 h-4" />
+                  <span className="max-w-[150px] truncate">{currentCompany.razon_social}</span>
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 bg-white rounded-xl shadow-dropdown">
+                <DropdownMenuItem 
+                  onClick={() => navigate('/companies')}
+                  className="cursor-pointer"
+                >
+                  <Building className="mr-2 h-4 w-4" />
+                  <span>Cambiar empresa</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          
+          {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center space-x-2 h-9">
-                <Avatar className="w-7 h-7">
-                  <AvatarFallback className="text-xs">
-                    {userInitials}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium hidden md:block">
-                  {user?.first_name} {user?.last_name}
-                </span>
-                <ChevronDown className="w-4 h-4" />
+              <Button variant="ghost" className="relative h-8 w-8 rounded-xl p-0">
+                <div className="w-8 h-8 rounded-xl gradient-brand flex items-center justify-center text-white font-medium text-sm">
+                  {userInitials}
+                </div>
               </Button>
             </DropdownMenuTrigger>
-            
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-1.5 text-sm">
-                <div className="font-medium">{user?.first_name} {user?.last_name}</div>
-                <div className="text-xs text-muted-foreground">{user?.email}</div>
+            <DropdownMenuContent className="w-56 bg-white rounded-xl shadow-dropdown" align="end">
+              <div className="flex items-center justify-start gap-2 p-2">
+                <div className="flex flex-col space-y-1 leading-none">
+                  <p className="font-medium">{user?.first_name} {user?.last_name}</p>
+                  <p className="text-xs text-gray-500">{user?.email || user?.phone}</p>
+                </div>
               </div>
-              
               <DropdownMenuSeparator />
-              
-              <DropdownMenuItem>
-                <User className="w-4 h-4 mr-2" />
-                Perfil
+              <DropdownMenuItem 
+                onClick={() => handleNavigate('/profile')}
+                className="cursor-pointer"
+              >
+                <User className="mr-2 h-4 w-4" />
+                <span>Perfil</span>
               </DropdownMenuItem>
-              
-              <DropdownMenuItem>
-                <Settings className="w-4 h-4 mr-2" />
-                Configuración
+              <DropdownMenuItem 
+                onClick={() => handleNavigate('/settings')}
+                className="cursor-pointer"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Configuración</span>
               </DropdownMenuItem>
-              
               <DropdownMenuSeparator />
-              
-              <DropdownMenuItem onClick={logout} className="text-destructive">
-                <LogOut className="w-4 h-4 mr-2" />
-                Cerrar sesión
+              <DropdownMenuItem 
+                onClick={handleLogout}
+                className="cursor-pointer text-red-600 focus:text-red-600"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Cerrar sesión</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

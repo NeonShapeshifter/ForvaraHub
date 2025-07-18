@@ -142,21 +142,21 @@ export interface ApiResponse<T = any> {
 // =====================================================
 
 export interface DashboardStats {
-  total_users: number;
   active_users: number;
-  total_companies: number;
-  trial_companies: number;
-  active_subscriptions: number;
-  mrr: number;
+  installed_apps: number;
   storage_used_gb: number;
-  api_calls_today: number;
+  storage_limit_gb: number;
+  api_calls_month: number;
+  team_members: number;
+  mode: 'individual' | 'company';
 }
 
 export interface ActivityLog {
   id: string;
-  user_id: string;
-  company_id?: string;
-  action: string;
+  type: string;
+  description: string;
+  timestamp: string;
+  user: string;
   entity_type: string;
   entity_id: string;
   ip_address?: string;

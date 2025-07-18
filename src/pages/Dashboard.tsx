@@ -1,499 +1,369 @@
+// ForvaraHub/src/pages/Dashboard.tsx
+
 import React, { useState, useEffect } from 'react'
-import { Building2, Users, Clock, DollarSign, Package, TrendingUp, Calendar, Activity, ChevronRight, AlertCircle, CheckCircle, ArrowRight, Zap } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
-import { useNavigate } from 'react-router-dom'
+import { 
+  Users, 
+  Building, 
+  Package, 
+  TrendingUp, 
+  TrendingDown,
+  Activity,
+  DollarSign,
+  Clock,
+  AlertCircle,
+  Settings,
+  Database
+} from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PageHeader } from '@/components/layout/PageHeader'
+import { PageContainer } from '@/components/layout/PageContainer'
 import { dashboardService } from '@/services/dashboard.service'
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
+import { useToast } from '@/hooks/useToast'
+import { useNavigate } from 'react-router-dom'
 
-// Función helper para calcular días restantes
-const daysUntil = (dateString: string) => {
-  const date = new Date(dateString)
-  const today = new Date()
-  const diffTime = date.getTime() - today.getTime()
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return Math.max(0, diffDays)
-}
-
-export default function Dashboard() {
-  const { user, currentCompany, refreshCompanies, isIndividualMode } = useAuthStore()
-  const navigate = useNavigate()
-  
-  const [loading, setLoading] = useState(true)
-  const [dashboardData, setDashboardData] = useState<any>(null)
-  const [quickActions, setQuickActions] = useState<any[]>([])
-  
-  const trialDaysLeft = currentCompany?.trial_ends_at 
-    ? daysUntil(currentCompany.trial_ends_at)
-    : 0
-    
-  const storageUsedPercent = dashboardData?.stats 
-    ? (dashboardData.stats.storage_used_gb / (dashboardData.stats.storage_limit_gb || 5)) * 100
-    : 0
-
-  useEffect(() => {
-    loadDashboard()
-    if (currentCompany) {
-      refreshCompanies()
-    }
-  }, [currentCompany?.id])
-
-  const loadDashboard = async () => {
-    try {
-      setLoading(true)
-      
-      // Load quick actions (always available)
-      const actions = await dashboardService.getQuickActions()
-      setQuickActions(actions)
-      
-      // Load dashboard stats (works for both individual and company modes)
-      try {
-        const stats = await dashboardService.getDashboardStats()
-        setDashboardData({ stats })
-      } catch (error) {
-        console.warn('Could not load dashboard stats:', error)
-        // Fallback to basic data based on mode
-        const fallbackStats = isIndividualMode() ? {
-          active_users: 1,
-          installed_apps: 0,
-          storage_used_gb: 0.5,
-          storage_limit_gb: 2,
-          api_calls_today: 0,
-          total_users: 1,
-          total_companies: 0,
-          active_subscriptions: 0,
-          mrr: 0
-        } : {
-          active_users: 1,
-          installed_apps: 0,
-          storage_used_gb: currentCompany?.storage_used_bytes ? (currentCompany.storage_used_bytes / (1024 * 1024 * 1024)) : 0,
-          storage_limit_gb: currentCompany?.storage_limit_gb || 5,
-          api_calls_today: 0,
-          total_users: 1,
-          total_companies: 1,
-          active_subscriptions: 0,
-          mrr: 0
-        }
-        
-        setDashboardData({ stats: fallbackStats })
-      }
-      
-      setLoading(false)
-    } catch (error) {
-      console.error('Error loading dashboard:', error)
-      setLoading(false)
-    }
+// Componente para las métricas
+const MetricCard = ({ 
+  title, 
+  value, 
+  change, 
+  icon: Icon, 
+  color = 'gray',
+  suffix = '',
+  loading = false,
+  trend = 'up'
+}: {
+  title: string
+  value: number | string
+  change?: number
+  icon: any
+  color?: string
+  suffix?: string
+  loading?: boolean
+  trend?: 'up' | 'down'
+}) => {
+  const iconColors = {
+    blue: 'text-blue-600',
+    green: 'text-green-600',
+    purple: 'text-purple-600',
+    orange: 'text-orange-600',
+    gray: 'text-gray-600'
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-black dark:border-gray-700 dark:border-t-white mx-auto mb-4"></div>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Cargando dashboard...</p>
-        </div>
-      </div>
+      <Card className="shadow-card">
+        <CardContent className="p-6">
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-            Bienvenido, {user?.first_name}
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            Panel de administración de Forvara Hub
-          </p>
-          
-          {/* Individual Mode Indicator */}
-          {isIndividualMode() && (
-            <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-              <div className="flex items-center space-x-2">
-                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                  Modo Individual
-                </span>
-              </div>
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                Estás usando Forvara sin empresa. Puedes instalar apps personales y crear una empresa cuando quieras.
-              </p>
+    <Card className="shadow-card hover:shadow-md transition-fast">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <Icon className={`w-5 h-5 ${iconColors[color as keyof typeof iconColors]}`} />
+          {change !== undefined && (
+            <div className={`flex items-center gap-1 text-xs font-medium ${
+              trend === 'up' ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {trend === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+              {Math.abs(change)}%
             </div>
           )}
         </div>
-
-        {/* Trial Warning */}
-        {currentCompany?.status === 'trial' && trialDaysLeft <= 7 && (
-          <div className="mb-6 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-xl p-6 border border-orange-200 dark:border-orange-800">
-            <div className="flex items-start gap-4">
-              <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                <Clock className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-                  Periodo de prueba
-                </h3>
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                  Te quedan {trialDaysLeft} días de prueba. Actualiza tu plan para continuar usando todas las funciones.
-                </p>
-                <button className="inline-flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors text-sm font-medium">
-                  Actualizar plan
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {/* Company Info */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-start justify-between mb-4">
-              <Building2 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              <span className={`text-xs font-medium px-2 py-1 rounded-md ${
-                isIndividualMode()
-                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
-                  : currentCompany?.status === 'trial' 
-                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' 
-                    : 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-              }`}>
-                {isIndividualMode() ? 'Individual' : currentCompany?.status === 'trial' ? 'Prueba' : 'Activo'}
-              </span>
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {isIndividualMode() ? 'Modo Individual' : currentCompany?.razon_social || 'Sin empresa'}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {isIndividualMode() ? 'Usuario personal' : `RUC: ${currentCompany?.ruc || 'N/A'}`}
-              </p>
-            </div>
-          </div>
-
-          {/* Users */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-start justify-between mb-4">
-              <Users className="w-5 h-5 text-blue-600 dark:text-blue-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                {isIndividualMode() ? '1' : dashboardData?.stats?.active_users || 1}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {isIndividualMode() ? 'solo tú' : `de ${currentCompany?.slots_limit || 50} usuarios`}
-              </p>
-            </div>
-          </div>
-
-          {/* Storage */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-start justify-between mb-4">
-              <Package className="w-5 h-5 text-purple-600 dark:text-purple-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                {isIndividualMode() ? '0%' : storageUsedPercent.toFixed(0) + '%'}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {isIndividualMode() 
-                  ? '2 GB gratis para uso personal' 
-                  : `${(dashboardData?.stats?.storage_used_gb || 0).toFixed(1)} GB de ${dashboardData?.stats?.storage_limit_gb || 5} GB`
-                }
-              </p>
-              <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                <div 
-                  className="bg-purple-600 h-1.5 rounded-full transition-all duration-300"
-                  style={{ width: `${isIndividualMode() ? 0 : storageUsedPercent}%` }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Apps */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-start justify-between mb-4">
-              <Zap className="w-5 h-5 text-green-600 dark:text-green-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                {dashboardData?.stats?.installed_apps || 0}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Apps instaladas
-              </p>
-            </div>
-          </div>
+        <div className="text-2xl font-bold text-gradient">
+          {value}{suffix}
         </div>
+        <p className="text-sm text-gray-500 mt-1">{title}</p>
+      </CardContent>
+    </Card>
+  )
+}
 
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            {isIndividualMode() ? 'Acciones personales' : 'Acciones del equipo'}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Individual Mode Actions */}
-            {isIndividualMode() && (
-              <>
-                <button
-                  onClick={() => navigate('/marketplace')}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800/30 transition-colors">
-                      <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
-                        Explorar Apps
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Instala apps para uso personal
-                      </p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => navigate('/companies')}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800/30 transition-colors">
-                      <Building2 className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
-                        Crear Empresa
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Upgrade a modo empresa
-                      </p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => navigate('/settings')}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800/30 transition-colors">
-                      <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
-                        Mi Perfil
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Configurar cuenta personal
-                      </p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
-                  </div>
-                </button>
-              </>
-            )}
-            
-            {/* Company Mode Actions */}
-            {!isIndividualMode() && (
-              <>
-                <button
-                  onClick={() => navigate('/users')}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-800/30 transition-colors">
-                      <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
-                        Gestionar Equipo
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Invitar y administrar usuarios
-                      </p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => navigate('/marketplace')}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-800/30 transition-colors">
-                      <Package className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
-                        Apps Empresariales
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Instalar para todo el equipo
-                      </p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => navigate('/analytics')}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-800/30 transition-colors">
-                      <Activity className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
-                        Analytics
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Métricas del equipo
-                      </p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => navigate('/settings')}
-                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all group"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-orange-100 dark:bg-orange-900/20 rounded-lg group-hover:bg-orange-200 dark:group-hover:bg-orange-800/30 transition-colors">
-                      <Building2 className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-1">
-                        Configuración
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Ajustes de la empresa
-                      </p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
-                  </div>
-                </button>
-              </>
-            )}
+// Helper function to format relative time
+const formatRelativeTime = (timestamp: string) => {
+  const now = new Date()
+  const then = new Date(timestamp)
+  const diffInMinutes = Math.floor((now.getTime() - then.getTime()) / (1000 * 60))
+  
+  if (diffInMinutes < 1) return 'Ahora mismo'
+  if (diffInMinutes < 60) return `Hace ${diffInMinutes} minuto${diffInMinutes !== 1 ? 's' : ''}`
+  
+  const diffInHours = Math.floor(diffInMinutes / 60)
+  if (diffInHours < 24) return `Hace ${diffInHours} hora${diffInHours !== 1 ? 's' : ''}`
+  
+  const diffInDays = Math.floor(diffInHours / 24)
+  if (diffInDays < 7) return `Hace ${diffInDays} día${diffInDays !== 1 ? 's' : ''}`
+  
+  return then.toLocaleDateString('es-ES')
+}
+
+export default function Dashboard() {
+  const { user, currentCompany, isIndividualMode } = useAuthStore()
+  const navigate = useNavigate()
+  const { showToast } = useToast()
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    users: 0,
+    companies: 1,
+    storage: '0%',
+    apps: 0,
+    apiCalls: 0,
+    storageUsed: 0,
+    storageLimit: 0
+  })
+  const [activities, setActivities] = useState<any[]>([])
+  const [quickActions, setQuickActions] = useState<any[]>([])
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [currentCompany, isIndividualMode])
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true)
+      
+      // Load dashboard stats
+      const statsData = await dashboardService.getDashboardStats()
+      
+      // Calculate storage percentage
+      const storagePercentage = ((statsData.storage_used_gb / statsData.storage_limit_gb) * 100).toFixed(1)
+      
+      setStats({
+        users: statsData.active_users || 0,
+        companies: 1,
+        storage: `${storagePercentage}%`,
+        apps: statsData.installed_apps || 0,
+        apiCalls: statsData.api_calls_month || 0,
+        storageUsed: statsData.storage_used_gb || 0,
+        storageLimit: statsData.storage_limit_gb || 0
+      })
+
+      // Load recent activity
+      const activityData = await dashboardService.getRecentActivity(5)
+      setActivities(activityData)
+
+      // Load quick actions
+      const actionsData = await dashboardService.getQuickActions()
+      setQuickActions(actionsData)
+
+    } catch (error) {
+      console.error('Error loading dashboard data:', error)
+      showToast({
+        title: 'Error',
+        description: 'No se pudieron cargar los datos del dashboard',
+        variant: 'destructive'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <PageContainer>
+      <PageHeader
+        title={`Bienvenido, ${user?.first_name}`}
+        description="Panel de administración de Forvara Hub"
+      />
+
+      {/* Alert de periodo de prueba */}
+      <Card className="mb-6 border-orange-200 bg-orange-50">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-orange-600 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-orange-900">Período de prueba</h3>
+              <p className="text-sm text-orange-700 mt-1">
+                Tu período de prueba finaliza en 30 días. Actualiza tu plan para continuar usando todas las funciones.
+              </p>
+              <button className="mt-2 px-3 py-1.5 gradient-brand text-white text-sm rounded-lg font-medium hover:opacity-90 transition-fast">
+                Actualizar plan
+              </button>
+            </div>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Info Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Activity */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Actividad reciente
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 text-sm">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-gray-600 dark:text-gray-400">Sesión iniciada</span>
-                <span className="text-gray-500 ml-auto">Hace 5 minutos</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-gray-600 dark:text-gray-400">Empresa creada</span>
-                <span className="text-gray-500 ml-auto">Hoy</span>
-              </div>
-              {dashboardData?.stats?.installed_apps === 0 && (
-                <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    No has instalado ninguna aplicación aún. 
-                    <a href="/marketplace" className="text-blue-600 dark:text-blue-400 hover:underline ml-1">
-                      Explorar marketplace
-                    </a>
-                  </p>
-                </div>
+      {/* Métricas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <MetricCard
+          title={isIndividualMode ? "Tu cuenta" : "Usuarios activos"}
+          value={stats.users}
+          icon={Users}
+          color="blue"
+          loading={loading}
+        />
+        <MetricCard
+          title="Apps instaladas"
+          value={stats.apps}
+          icon={Package}
+          color="green"
+          loading={loading}
+        />
+        <MetricCard
+          title="Almacenamiento"
+          value={`${stats.storageUsed}/${stats.storageLimit}GB`}
+          icon={Database}
+          color="purple"
+          loading={loading}
+          change={parseInt(stats.storage)}
+          trend={parseInt(stats.storage) > 80 ? 'down' : 'up'}
+        />
+        <MetricCard
+          title="Llamadas API"
+          value={stats.apiCalls.toLocaleString()}
+          suffix="/mes"
+          icon={Activity}
+          color="orange"
+          loading={loading}
+        />
+      </div>
+
+      {/* Acciones del equipo */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle>Acciones del equipo</CardTitle>
+            <CardDescription>Gestiona tu equipo y aplicaciones</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              {loading ? (
+                [...Array(4)].map((_, i) => (
+                  <div key={i} className="p-4 border border-gray-200 rounded-xl animate-pulse">
+                    <div className="w-5 h-5 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-1"></div>
+                    <div className="h-3 bg-gray-200 rounded w-full"></div>
+                  </div>
+                ))
+              ) : quickActions.length > 0 ? (
+                quickActions.slice(0, 4).map((action) => (
+                  <button 
+                    key={action.id}
+                    onClick={() => navigate(action.action)}
+                    className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-fast text-left"
+                  >
+                    {action.icon === 'user-plus' && <Users className="w-5 h-5 text-blue-600 mb-2" />}
+                    {action.icon === 'shopping-bag' && <Package className="w-5 h-5 text-green-600 mb-2" />}
+                    {action.icon === 'bar-chart' && <Activity className="w-5 h-5 text-purple-600 mb-2" />}
+                    {action.icon === 'settings' && <Settings className="w-5 h-5 text-orange-600 mb-2" />}
+                    <h4 className="font-medium text-sm">{action.title}</h4>
+                    <p className="text-xs text-gray-500">{action.description}</p>
+                  </button>
+                ))
+              ) : (
+                <>
+                  <button 
+                    onClick={() => navigate('/users')}
+                    className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-fast text-left"
+                  >
+                    <Users className="w-5 h-5 text-blue-600 mb-2" />
+                    <h4 className="font-medium text-sm">Gestionar Equipo</h4>
+                    <p className="text-xs text-gray-500">Invitar y administrar usuarios</p>
+                  </button>
+                  <button 
+                    onClick={() => navigate('/marketplace')}
+                    className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-fast text-left"
+                  >
+                    <Package className="w-5 h-5 text-green-600 mb-2" />
+                    <h4 className="font-medium text-sm">Apps Empresariales</h4>
+                    <p className="text-xs text-gray-500">Instalar para todo el equipo</p>
+                  </button>
+                  <button 
+                    onClick={() => navigate('/analytics')}
+                    className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-fast text-left"
+                  >
+                    <Activity className="w-5 h-5 text-purple-600 mb-2" />
+                    <h4 className="font-medium text-sm">Analytics</h4>
+                    <p className="text-xs text-gray-500">Métricas del equipo</p>
+                  </button>
+                  <button 
+                    onClick={() => navigate('/settings')}
+                    className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-fast text-left"
+                  >
+                    <Settings className="w-5 h-5 text-orange-600 mb-2" />
+                    <h4 className="font-medium text-sm">Configuración</h4>
+                    <p className="text-xs text-gray-500">Ajustes de la empresa</p>
+                  </button>
+                </>
               )}
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* User Info */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Información de usuario
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Nombre completo</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {user?.first_name} {user?.last_name}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {user?.email || 'No configurado'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Teléfono</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {user?.phone || 'No configurado'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">País</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {user?.country_code} - {user?.currency_code}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Getting Started */}
-        {dashboardData?.stats?.installed_apps === 0 && (
-          <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
-            <div className="flex items-start gap-4">
-              <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  Comienza con Forvara
-                </h3>
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                  Sigue estos pasos para aprovechar al máximo tu experiencia:
-                </p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                    <span className="text-gray-700 dark:text-gray-300">Cuenta creada</span>
+        {/* Actividad reciente */}
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle>Actividad reciente</CardTitle>
+            <CardDescription>Últimas acciones en tu cuenta</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-12 bg-gray-200 rounded"></div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                    <span className="text-gray-700 dark:text-gray-300">Empresa configurada</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full border-2 border-gray-300 dark:border-gray-600"></div>
-                    <span className="text-gray-700 dark:text-gray-300">
-                      <a href="/marketplace" className="text-blue-600 dark:text-blue-400 hover:underline">
-                        Instalar tu primera aplicación
-                      </a>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full border-2 border-gray-300 dark:border-gray-600"></div>
-                    <span className="text-gray-700 dark:text-gray-300">
-                      <a href="/users" className="text-blue-600 dark:text-blue-400 hover:underline">
-                        Invitar a tu equipo
-                      </a>
-                    </span>
-                  </div>
-                </div>
+                ))}
               </div>
-            </div>
-          </div>
-        )}
+            ) : activities.length > 0 ? (
+              <div className="space-y-3">
+                {activities.map((activity) => (
+                  <div key={activity.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-fast">
+                    <div className={`w-2 h-2 rounded-full ${
+                      activity.type.includes('login') ? 'bg-green-500' :
+                      activity.type.includes('create') ? 'bg-blue-500' :
+                      activity.type.includes('update') ? 'bg-yellow-500' :
+                      activity.type.includes('delete') ? 'bg-red-500' :
+                      'bg-gray-500'
+                    }`}></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{activity.description}</p>
+                      <p className="text-xs text-gray-500">
+                        {activity.user} • {formatRelativeTime(activity.timestamp)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {activities.length >= 5 && (
+                  <button 
+                    onClick={() => navigate('/analytics')}
+                    className="w-full text-center text-xs text-gradient font-medium hover:underline py-2"
+                  >
+                    Ver toda la actividad
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-sm text-gray-500">No hay actividad reciente</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </div>
+
+      {/* Footer informativo */}
+      <div className="text-center py-8">
+        <p className="text-sm text-gray-500">
+          ¿Necesitas ayuda? Visita nuestra{' '}
+          <a href="#" className="text-gradient font-medium hover:underline">
+            documentación
+          </a>{' '}
+          o{' '}
+          <a href="#" className="text-gradient font-medium hover:underline">
+            contacta soporte
+          </a>
+        </p>
+      </div>
+    </PageContainer>
   )
 }
