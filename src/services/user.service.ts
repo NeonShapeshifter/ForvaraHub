@@ -27,5 +27,25 @@ export const userService = {
   // Update user settings
   async updateSettings(settings: any): Promise<any> {
     return apiCall<any>('patch', '/auth/settings', settings)
+  },
+
+  // Get company members
+  async getCompanyMembers(companyId: string): Promise<any[]> {
+    try {
+      return await apiCall<any[]>('get', `/companies/${companyId}/members`)
+    } catch (error) {
+      console.error('Error fetching company members:', error)
+      return []
+    }
+  },
+
+  // Get all users (admin only)
+  async getAllUsers(): Promise<any[]> {
+    try {
+      return await apiCall<any[]>('get', '/admin/users')
+    } catch (error) {
+      console.error('Error fetching all users:', error)
+      return []
+    }
   }
 }

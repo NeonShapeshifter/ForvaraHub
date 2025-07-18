@@ -103,10 +103,13 @@ export default function Marketplace() {
 
     try {
       const response = await api.get(`/companies/${currentCompany.id}/apps`)
-      const installed = new Set(response.data.map((app: any) => app.id))
+      // Ensure response.data is an array
+      const appsData = Array.isArray(response.data) ? response.data : []
+      const installed = new Set(appsData.map((app: any) => app.id))
       setInstalledApps(installed)
     } catch (error) {
       console.error('Error loading installed apps:', error)
+      setInstalledApps(new Set()) // Set empty set on error
     }
   }
 
@@ -127,7 +130,7 @@ export default function Marketplace() {
   }
 
   // Filter apps based on category and search
-  const filteredApps = apps.filter(app => {
+  const filteredApps = Array.isArray(apps) ? apps.filter(app => {
     const matchesCategory = selectedCategory === 'all' || app.category === selectedCategory
     const matchesSearch = !searchQuery ||
       app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -135,7 +138,7 @@ export default function Marketplace() {
       (app.tags || []).some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
 
     return matchesCategory && matchesSearch
-  })
+  }) : []
 
   // Loading state
   if (loading) {

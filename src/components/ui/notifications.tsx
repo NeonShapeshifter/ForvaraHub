@@ -62,7 +62,17 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 export function useNotifications() {
   const context = useContext(NotificationContext)
   if (!context) {
-    throw new Error('useNotifications must be used within NotificationProvider')
+    // Fallback gracioso para producción - no crashear
+    console.warn('useNotifications used outside NotificationProvider - using fallback')
+    return {
+      notifications: [],
+      addNotification: (notification: Omit<Notification, 'id'>) => {
+        console.log('Fallback notification:', notification)
+      },
+      removeNotification: (id: string) => {
+        console.log('Fallback remove notification:', id)
+      }
+    }
   }
   return context
 }

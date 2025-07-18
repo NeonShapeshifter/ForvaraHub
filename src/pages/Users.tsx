@@ -209,7 +209,9 @@ export default function Users() {
       try {
         // Connect to real backend service
         const membersList = await userService.getCompanyMembers(currentCompany!.id)
-        setMembers(membersList)
+        // Ensure membersList is an array
+        const safeMembers = Array.isArray(membersList) ? membersList : []
+        setMembers(safeMembers)
       } catch (error) {
         console.error('Error loading members:', error)
         setMembers([])
@@ -322,7 +324,7 @@ export default function Users() {
   }
 
   // Filtrar miembros según búsqueda
-  const filteredMembers = members.filter(member => {
+  const filteredMembers = Array.isArray(members) ? members.filter(member => {
     const searchLower = searchTerm.toLowerCase()
     const user = member.user_data || {}
     return (
@@ -331,7 +333,7 @@ export default function Users() {
       user.email?.toLowerCase().includes(searchLower) ||
       user.phone?.toLowerCase().includes(searchLower)
     )
-  })
+  }) : []
 
   return (
     <PageContainer>
