@@ -156,7 +156,7 @@ export default function Companies() {
 
       // Call the real backend API
       const response = await api.get('/tenants')
-      const userCompanies = response.data || []
+      const userCompanies = Array.isArray(response.data) ? response.data : []
 
       console.log('✅ Loaded user companies from backend:', userCompanies)
       setCompanies(userCompanies)
@@ -246,7 +246,9 @@ export default function Companies() {
     }
 
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${styles[role as keyof typeof styles] || styles.member}`}>
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border ${
+        styles[role as keyof typeof styles] || styles.member
+      }`}>
         {role === 'owner' && <Crown className="w-3 h-3" />}
         {labels[role as keyof typeof labels] || role}
       </span>
@@ -308,7 +310,7 @@ export default function Companies() {
               <Building2 className="w-5 h-5 text-gray-600" />
             </div>
             <div>
-              <p className="text-2xl font-semibold text-gray-900">{companies.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{Array.isArray(companies) ? companies.length : 0}</p>
               <p className="text-sm text-gray-500">Empresas totales</p>
             </div>
           </div>
@@ -321,7 +323,7 @@ export default function Companies() {
             </div>
             <div>
               <p className="text-2xl font-semibold text-gray-900">
-                {companies.filter(c => c.user_role === 'owner').length}
+                {Array.isArray(companies) ? companies.filter(c => c.user_role === 'owner').length : 0}
               </p>
               <p className="text-sm text-gray-500">Como propietario</p>
             </div>
@@ -335,7 +337,7 @@ export default function Companies() {
             </div>
             <div>
               <p className="text-2xl font-semibold text-gray-900">
-                {companies.filter(c => ['admin', 'member'].includes(c.user_role)).length}
+                {Array.isArray(companies) ? companies.filter(c => ['admin', 'member'].includes(c.user_role)).length : 0}
               </p>
               <p className="text-sm text-gray-500">Como miembro</p>
             </div>
@@ -344,9 +346,9 @@ export default function Companies() {
       </div>
 
       {/* Companies Grid */}
-      {companies.length > 0 ? (
+      {Array.isArray(companies) && companies.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {companies.map((company) => (
+          {Array.isArray(companies) ? companies.map((company) => (
             <div key={company.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
@@ -425,7 +427,7 @@ export default function Companies() {
                 </div>
               </div>
             </div>
-          ))}
+          )) : null}
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">

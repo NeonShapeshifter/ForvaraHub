@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Plus, UserPlus, Mail, Phone, Search, MoreVertical, Shield, Users, User, Eye, ChevronRight, AlertCircle, Building2, Check, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
@@ -190,45 +190,68 @@ export default function Users() {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [selectedMember, setSelectedMember] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const loadingRef = useRef(false)
+  const mountedRef = useRef(true)
 
   // Verificar si el usuario puede gestionar miembros
   const canManageMembers = userRole === 'owner' || userRole === 'admin'
 
-  useEffect(() => {
-    if (currentCompany && currentCompany.id !== 'no-company') {
-      loadMembers()
-    } else {
-      setLoading(false)
+  const loadMembers = useCallback(async () => {
+    // Prevent multiple simultaneous calls
+    if (loadingRef.current) {
+      console.log('⏳ Users: Already loading, skipping call')
+      return
     }
-  }, [currentCompany])
 
-  const loadMembers = async () => {
+    if (!currentCompany || currentCompany.id === 'no-company') {
+      if (mountedRef.current) {
+        setLoading(false)
+        setMembers([])
+      }
+      return
+    }
+
     try {
+      console.log('🔄 Users: Loading members for company:', currentCompany.id)
+      loadingRef.current = true
       setLoading(true)
 
-      try {
-        // Connect to real backend service
-        const membersList = await userService.getCompanyMembers(currentCompany!.id)
-        // Ensure membersList is an array
-        const safeMembers = Array.isArray(membersList) ? membersList : []
+      // Connect to real backend service
+      const membersList = await userService.getCompanyMembers(currentCompany.id)
+      // Ensure membersList is an array
+      const safeMembers = Array.isArray(membersList) ? membersList : []
+      console.log('✅ Users: Loaded members:', safeMembers.length)
+
+      if (mountedRef.current) {
         setMembers(safeMembers)
-      } catch (error) {
-        console.error('Error loading members:', error)
-        setMembers([])
-      } finally {
-        setLoading(false)
       }
 
     } catch (error) {
-      console.error('Error loading members:', error)
-      toast({
-        type: 'error',
-        title: 'Error',
-        message: 'No se pudieron cargar los miembros del equipo'
-      })
-      setLoading(false)
+      console.error('❌ Users: Error loading members:', error)
+      if (mountedRef.current) {
+        setMembers([])
+        toast({
+          type: 'error',
+          title: 'Error',
+          message: 'No se pudieron cargar los miembros del equipo'
+        })
+      }
+    } finally {
+      loadingRef.current = false
+      if (mountedRef.current) {
+        setLoading(false)
+      }
     }
-  }
+  }, [currentCompany])
+
+  useEffect(() => {
+    loadMembers()
+
+    // Cleanup function to mark component as unmounted
+    return () => {
+      mountedRef.current = false
+    }
+  }, [loadMembers])
 
   const handleInvite = async (data: any) => {
     try {
